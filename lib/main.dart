@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'scanner/scanner.dart'; 
+import 'add/add_main.dart'; 
 
 void main() {
   runApp(const MyApp());
@@ -8,7 +8,7 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+  //root of your application
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -23,38 +23,37 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _selectedIndex = 0;
+  final GlobalKey<AddMainState> _addMainKey = GlobalKey<AddMainState>(); //Key allows you to call methods in the child
 
+  int _index = 0;
   void _onItemTapped(int index) {
     setState(() {
-      _selectedIndex = index;
+      _index = index;
+      if(index == 3){
+        _addMainKey.currentState?.reset(); //Return back to Camera page
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    Widget page;
-    switch (_selectedIndex) {
-      case 0:
-        page = Placeholder();
-      case 1:
-        page = Placeholder();
-      case 2:
-        page = ScannerPage();
-      case 3:
-        page = Placeholder();
-      case 4:
-        page = Placeholder();
-      default:
-        throw UnimplementedError('no widget for $_selectedIndex');
-    }
+    final screens = [
+      Placeholder(),
+      Placeholder(),
+      AddMain(key: _addMainKey),
+      Placeholder(),
+      Placeholder(),
+    ];
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Kagame Fluttershy'),
       ),
       body: Center(
-        child: page,
+        child: IndexedStack(
+          index: _index,
+          children: screens,
+        )
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
@@ -79,7 +78,7 @@ class _MyHomePageState extends State<MyHomePage> {
             label: 'Profile',
           ),
         ],
-        currentIndex: _selectedIndex,
+        currentIndex: _index,
         selectedItemColor: Colors.amber[800],
         unselectedItemColor: Colors.blueGrey,
         onTap: _onItemTapped,
