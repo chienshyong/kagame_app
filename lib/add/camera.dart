@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
 
-class Camera extends StatefulWidget {
-  final Function(String) onDataChanged;
-  Camera({required this.onDataChanged});
+class CameraPage extends StatefulWidget {
+  final Function(String) listener;
+  CameraPage({required this.listener});
 
   @override
-  State<Camera> createState() => _CameraState();
+  State<CameraPage> createState() => _CameraPageState();
 }
 
-class _CameraState extends State<Camera> {
+class _CameraPageState extends State<CameraPage> {
   CameraController? _controller;
   List<CameraDescription>? cameras;
   Future<void>? _initializeControllerFuture;
@@ -24,6 +24,9 @@ class _CameraState extends State<Camera> {
 
   Future<void> _setupCamera() async {
     cameras = await availableCameras();
+    if(cameras == null){
+      return;
+    }
     _controller = CameraController(
       cameras![0],
       ResolutionPreset.high,
@@ -47,7 +50,7 @@ class _CameraState extends State<Camera> {
       final image = await _controller!.takePicture();
       print('Picture cached to ${image.path}');
       
-      widget.onDataChanged(image.path); // Return the img path to parent
+      widget.listener(image.path); // Return the img path to parent
     } catch (e) {
       print(e);
     }
@@ -59,7 +62,7 @@ class _CameraState extends State<Camera> {
     final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
-      widget.onDataChanged(pickedFile.path); // Return the img path to parent
+      widget.listener(pickedFile.path); // Return the img path to parent
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kagame_app/add/into_wardrobe.dart';
 import 'camera.dart';
 import 'image_editor.dart';
 
@@ -13,25 +14,49 @@ class AddMainState extends State<AddMain>{
   int _index = 0; //Current page index. Page 0 = camera
   late List<Widget> _pages; //List of pages under scanner tab
 
-  String _imagepath = ''; //Variable to transfer file path from Scanner() to DisplayPicture()
+  String _imagePath = ''; //Variable to transfer file path from Scanner() to DisplayPicture()
 
   @override
   void initState() {
     super.initState();
     _pages = [
-      Camera(onDataChanged: (imagepath) {
-        print("Got data from Camera page");
+      CameraPage(listener: (data) {
+        print("Got data from Camera page: $data");
         setState(() {
           _index = 1;
-          _imagepath = imagepath;
-          _pages[1] = DisplayPicturePage(imagePath: _imagepath,);
+          _imagePath = data;
+          _pages[1] = newImageEditorPage(); //Need to create new page to update inside an IndexedStack
         });
       }),
-      Placeholder() //Don't create a DisplayPicturePage without a valid filepath
+      newImageEditorPage(),
+      newIntoWardrobePage(), //Add clothing item to wardrobe
     ];
   }
 
-  //Reset index when we switch back to "Add" via navigation
+  ImageEditorPage newImageEditorPage(){
+    return ImageEditorPage(imagePath: _imagePath,
+            listener: (data) {
+              print("Got data from Image Editor page: $data");
+              if(data == 'retake'){
+                setState(() {
+                _index = 0;
+                });
+              }
+              else{ //If not 'retake', data is the new file path
+                setState(() {
+                  _index = 2;
+                  _imagePath = data;
+                  _pages[2] = newIntoWardrobePage();
+                });
+              }
+            },);
+  }
+
+  IntoWardrobePage newIntoWardrobePage(){
+    return IntoWardrobePage(imagePath: _imagePath,);
+  }
+
+  //Reset index to camera page when we switch back to "Add" via navigation bar
   void reset() {
     print('Reset called');
     setState(() {
