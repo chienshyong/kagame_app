@@ -145,18 +145,21 @@ class ScaffoldWithNestedNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: navigationShell.currentIndex,
-        destinations: const [
-          NavigationDestination(label: 'Wardrobe', icon: Icon(Icons.chrome_reader_mode_outlined)),
-          NavigationDestination(label: 'Recommend', icon: Icon(Icons.palette)),
-          NavigationDestination(label: 'Add', icon: Icon(Icons.library_add)),
-          NavigationDestination(label: 'Shop', icon: Icon(Icons.shopping_cart)),
-          NavigationDestination(label: 'Profile', icon: Icon(Icons.person)),
-        ],
-        onDestinationSelected: _goBranch,
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        body: navigationShell,
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: navigationShell.currentIndex,
+          destinations: const [
+            NavigationDestination(label: 'Wardrobe', icon: Icon(Icons.chrome_reader_mode_outlined)),
+            NavigationDestination(label: 'Recommend', icon: Icon(Icons.palette)),
+            NavigationDestination(label: 'Add', icon: Icon(Icons.library_add)),
+            NavigationDestination(label: 'Shop', icon: Icon(Icons.shopping_cart)),
+            NavigationDestination(label: 'Profile', icon: Icon(Icons.person)),
+          ],
+          onDestinationSelected: _goBranch,
+        ),
       ),
     );
   }
