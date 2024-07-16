@@ -63,7 +63,7 @@ class _CameraPageState extends State<CameraPage> {
     final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
-      // widget.listener(pickedFile.path); // Return the img path to parent
+      context.go('/add/editor/${Uri.encodeComponent(pickedFile.path)}');
     }
   }
 
