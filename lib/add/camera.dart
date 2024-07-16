@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
 import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
 
 class CameraPage extends StatefulWidget {
-  final Function(String) listener;
-  CameraPage({required this.listener});
+  const CameraPage({Key? key}) : super(key: key);
 
   @override
   State<CameraPage> createState() => _CameraPageState();
@@ -48,9 +49,9 @@ class _CameraPageState extends State<CameraPage> {
       await _initializeControllerFuture;
       _controller!.setFlashMode(FlashMode.off);
       final image = await _controller!.takePicture();
-      print('Picture cached to ${image.path}');
-      
-      widget.listener(image.path); // Return the img path to parent
+      print('Picture cached to ${image.path} : ${Uri.encodeComponent(image.path)}');
+
+      context.go('/add/editor/${Uri.encodeComponent(image.path)}');
     } catch (e) {
       print(e);
     }
@@ -62,7 +63,7 @@ class _CameraPageState extends State<CameraPage> {
     final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
-      widget.listener(pickedFile.path); // Return the img path to parent
+      // widget.listener(pickedFile.path); // Return the img path to parent
     }
   }
 
@@ -89,6 +90,7 @@ class _CameraPageState extends State<CameraPage> {
             bottom: 16,
             right: 16,
             child: FloatingActionButton(
+              heroTag: 'b1',
               onPressed: _takePicture,
               child: Icon(Icons.camera_alt),
             ),
@@ -97,6 +99,7 @@ class _CameraPageState extends State<CameraPage> {
             bottom: 80,
             right: 16,
             child: FloatingActionButton(
+              heroTag: 'b2',
               onPressed: _pickImage,
               child: Icon(Icons.image),
             ),

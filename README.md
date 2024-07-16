@@ -1,16 +1,15 @@
-# kagame_app
+# Kagame App
 
-A new Flutter project.
+## Project Structure
 
-## Getting Started
+App code is all in `/lib`.
 
-This project is a starting point for a Flutter application.
+`main.dart` is the root and implements the router, all the routes within the app, and bottom navbar.
 
-A few resources to get you started if this is your first Flutter project:
+Code is split by content, with one subfolder per navbar tab within `/lib`: Wardrobe, Recommend, Add, Shop and Profile. (TODO)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Navigation and Routing
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Implemented [Stateful Nested Routing](https://codewithandrea.com/articles/flutter-bottom-navigation-bar-nested-routes-gorouter/) using GoRouter. This allows each navbar tab to hold its own navigation stack, remembering its route index even if the user switches to a different tab.
+
+To create a new route, define it within `main.dart`. Navigate to a new route with `context.push('/route/:params')` (append to navigation stack) or `context.go('/route/:params')` (resets navigation stack);

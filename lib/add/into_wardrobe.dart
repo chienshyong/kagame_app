@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 
+import 'package:go_router/go_router.dart';
+
 class IntoWardrobePage extends StatefulWidget {
   final String imagePath;
   IntoWardrobePage({required this.imagePath});
@@ -51,7 +53,7 @@ class _IntoWardrobePageState extends State<IntoWardrobePage>{
             margin: EdgeInsets.all(16.0),
             child: ElevatedButton(
               onPressed: () {
-                print(widget.imagePath);
+                context.pop();
               },
               child: Text('Add to Wardrobe'),
             ),

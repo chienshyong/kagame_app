@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:io';
 
 class ImageEditorPage extends StatefulWidget {
   final String imagePath;
-  final Function(String) listener;
-  ImageEditorPage({Key? key, required this.imagePath, required this.listener}) : super(key: key);
+  ImageEditorPage({Key? key, required this.imagePath}) : super(key: key);
 
   @override
   State<ImageEditorPage> createState() => _ImageEditorPageState();
@@ -13,11 +13,11 @@ class ImageEditorPage extends StatefulWidget {
 class _ImageEditorPageState extends State<ImageEditorPage> {
   late File imageFile;
 
-  Future<void> _removeBackground() async {
-    if (imageFile == File('')) return;
-    // final bytes = await _imageFile!.readAsBytes();
-    // TODO: Call API and remove bg
-  }
+  // Future<void> _removeBackground() async {
+  //   if (imageFile == File('')) return;
+  //   // final bytes = await _imageFile!.readAsBytes();
+  //   // TODO: Call API and remove bg
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +26,7 @@ class _ImageEditorPageState extends State<ImageEditorPage> {
     }
     else{
       imageFile = File('');
-      print('Invalid image path');
+      print('Invalid image path ${widget.imagePath}');
     }
 
     return Scaffold(
@@ -54,13 +54,13 @@ class _ImageEditorPageState extends State<ImageEditorPage> {
             children: [
               ElevatedButton(
                 onPressed: () {
-                  widget.listener("retake");
+                  context.pop();
                 },
                 child: Text('Retake'),
               ),
               ElevatedButton(
                 onPressed: () {
-                  widget.listener(imageFile.path);
+                  context.push('/add/into_wardrobe/${Uri.encodeComponent(widget.imagePath)}');
                 },
                 child: Text('Confirm'),
               ),
