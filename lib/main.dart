@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'login.dart';
+
 import 'add/camera.dart'; 
 import 'add/image_editor.dart'; 
 import 'add/into_wardrobe.dart'; 
+import 'profile/profile.dart'; 
 
 void main() {
   // Private navigators
@@ -16,9 +19,15 @@ void main() {
 
   // The one and only GoRouter instance. Defines all routes in the app.
   final goRouter = GoRouter(
-    initialLocation: '/wardrobe',
+    initialLocation: '/login',
     navigatorKey: _rootNavigatorKey,
     routes: [
+      GoRoute(
+        path: '/login',
+        pageBuilder: (context, state) => NoTransitionPage(
+          child: LoginPage(),
+        ),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           // the UI shell
@@ -103,7 +112,7 @@ void main() {
               GoRoute(
                 path: '/profile',
                 pageBuilder: (context, state) => const NoTransitionPage(
-                  child: Placeholder(),
+                  child: ProfilePage(),
                 ),
               ),
             ],
