@@ -20,10 +20,11 @@ class AuthService {
       }),
     ).timeout(const Duration(seconds: 3),);
 
-    print(response);
-
     if (response.statusCode != 200) {
-      throw Exception('Failed to register');
+      final responseJson = jsonDecode(response.body);
+      final message = responseJson["detail"];
+      print(responseJson["detail"]);
+      throw Exception(message);
     }
   }
 
@@ -46,7 +47,10 @@ class AuthService {
       final responseJson = jsonDecode(response.body);
       await storage.write(key: 'token', value: responseJson['access_token']);
     } else {
-      throw Exception('Failed to login');
+      final responseJson = jsonDecode(response.body);
+      final message = responseJson["detail"];
+      print(responseJson["detail"]);
+      throw Exception(message);
     }
   }
 

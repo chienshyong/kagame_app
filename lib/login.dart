@@ -47,7 +47,7 @@ class LoginPage extends StatelessWidget {
                     context.go('/wardrobe');
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Login failed')),
+                      SnackBar(content: Text(e.toString())),
                     );
                   }
                 }
@@ -75,7 +75,7 @@ class LoginPage extends StatelessWidget {
                   context.go('/wardrobe');
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Registration failed')),
+                    SnackBar(content: Text(e.toString())),
                   );
                 }
               },
