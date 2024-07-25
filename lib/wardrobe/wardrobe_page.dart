@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class WardrobePage extends StatelessWidget {
   const WardrobePage({Key? key}) : super(key: key);
@@ -28,8 +29,8 @@ class WardrobePage extends StatelessWidget {
                 children: [
                   GestureDetector(
                     onTap: () {
-                      // Add action you want to perform when the image is tapped
-                      print('Image tapped');
+                      // Navigate to the home page when the logo is tapped
+                      context.go('/home');
                     },
                     child: Image.asset(
                       'lib/assets/KagaMe.png',

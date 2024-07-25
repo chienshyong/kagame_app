@@ -8,11 +8,13 @@ import 'add/image_editor.dart';
 import 'add/into_wardrobe.dart'; 
 import 'profile/profile.dart'; 
 import 'wardrobe/wardrobe_page.dart';
+import 'home/home_page.dart';
+
 
 void main() {
   // Private navigators
-  final _rootNavigatorKey = GlobalKey<NavigatorState>(); //Index of current tab in bottom navigator
-  final _wardrobeShellKey = GlobalKey<NavigatorState>(debugLabel: 'shellW'); //Remember the index for navigator stack in each tab
+  final _rootNavigatorKey = GlobalKey<NavigatorState>(); // Index of current tab in bottom navigator
+  final _wardrobeShellKey = GlobalKey<NavigatorState>(debugLabel: 'shellW'); // Remember the index for navigator stack in each tab
   final _recommendShellKey = GlobalKey<NavigatorState>(debugLabel: 'shellR');
   final _addShellKey = GlobalKey<NavigatorState>(debugLabel: 'shellA');
   final _shopShellKey = GlobalKey<NavigatorState>(debugLabel: 'shellS');
@@ -29,11 +31,18 @@ void main() {
           child: LoginPage(),
         ),
       ),
+      GoRoute(
+        path: '/home',
+        pageBuilder: (context, state) => NoTransitionPage(
+          child: HomePage(),
+        ),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           // the UI shell
           return ScaffoldWithNestedNavigation(
-              navigationShell: navigationShell);
+            navigationShell: navigationShell,
+          );
         },
         branches: [
           // first branch (Wardrobe)
@@ -43,12 +52,11 @@ void main() {
               GoRoute(
                 path: '/wardrobe',
                 pageBuilder: (context, state) => const NoTransitionPage(
-                  child: WardrobePage(), // Update this line to use WardrobePage
+                  child: WardrobePage(),
                 ),
               ),
             ],
           ),
-
           // second branch (Recommend)
           StatefulShellBranch(
             navigatorKey: _recommendShellKey,
@@ -61,7 +69,6 @@ void main() {
               ),
             ],
           ),
-
           // third branch (Add)
           StatefulShellBranch(
             navigatorKey: _addShellKey,
@@ -92,7 +99,6 @@ void main() {
               ),
             ],
           ),
-
           // fourth branch (Shop)
           StatefulShellBranch(
             navigatorKey: _shopShellKey,
@@ -105,7 +111,6 @@ void main() {
               ),
             ],
           ),
-
           // fifth branch (Profile)
           StatefulShellBranch(
             navigatorKey: _profileShellKey,
