@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'add/camera.dart'; 
 import 'add/image_editor.dart'; 
 import 'add/into_wardrobe.dart'; 
+import 'wardrobe/wardrobe_page.dart'; // Import the new WardrobePage
 
 void main() {
   // Private navigators
@@ -33,7 +34,7 @@ void main() {
               GoRoute(
                 path: '/wardrobe',
                 pageBuilder: (context, state) => const NoTransitionPage(
-                  child: Placeholder(),
+                  child: WardrobePage(), // Update this line to use WardrobePage
                 ),
               ),
             ],
