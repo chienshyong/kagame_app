@@ -52,3 +52,7 @@ app.*.map.json
 
 # Mac/Linux generated files
 *.DS_Store
+.flutter-plugins 2
+ios/Flutter/flutter_export_environment 2.sh
+ios/Flutter/Generated 2.xcconfig
+.metadata
