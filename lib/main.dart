@@ -92,7 +92,8 @@ void main() {
                     builder: (context, state) {
                       final encodedImagePath = state.pathParameters['encodedImagePath']!;
                       final imagePath = Uri.decodeComponent(encodedImagePath);
-                      return IntoWardrobePage(imagePath: imagePath);
+                      final jsonResponse = state.extra as Map<String, dynamic>;
+                      return IntoWardrobePage(imagePath: imagePath, jsonResponse: jsonResponse);
                     },
                   ),
                 ],

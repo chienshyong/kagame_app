@@ -19,6 +19,7 @@ dependencies:
   image: ^3.0.2
   go_router: ^7.0.0 
   flutter_secure_storage: ^7.0.1
+  material_tag_editor: ^0.1.2
   
 dev_dependencies:
   flutter_test:
