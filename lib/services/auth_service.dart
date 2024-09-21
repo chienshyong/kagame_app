@@ -9,16 +9,20 @@ class AuthService {
 
   Future<void> register(String username, String password) async {
     print("Attempting registration");
-    final response = await http.post(
-      Uri.parse('$baseUrl/register'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'username': username,
-        'password': password,
-      }),
-    ).timeout(const Duration(seconds: 3),);
+    final response = await http
+        .post(
+          Uri.parse('$baseUrl/register'),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode(<String, String>{
+            'username': username,
+            'password': password,
+          }),
+        )
+        .timeout(
+          const Duration(seconds: 3),
+        );
 
     if (response.statusCode != 200) {
       final responseJson = jsonDecode(response.body);
@@ -28,31 +32,32 @@ class AuthService {
     }
   }
 
-  Future<void> login(String username, String password) async {
-    print("Attempting login");
-    final response = await http.post(
-      Uri.parse('$baseUrl/login'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'username': username,
-        'password': password,
-      }),
-    ).timeout(const Duration(seconds: 3),);
+Future<void> login(String username, String password) async {
+  print("Attempting login");
+  final response = await http.post(
+    Uri.parse('$baseUrl/token'),  // Ensure the correct endpoint is used
+    headers: <String, String>{
+      'Content-Type': 'application/x-www-form-urlencoded',  // Use form-encoded content type
+    },
+    body: {
+      'username': username,  // Form-urlencoded data
+      'password': password,
+    },
+  ).timeout(const Duration(seconds: 3),);
 
-    print(response);
+  print(response.body);  // Debug print to show the full response
 
-    if (response.statusCode == 200) {
-      final responseJson = jsonDecode(response.body);
-      await storage.write(key: 'token', value: responseJson['access_token']);
-    } else {
-      final responseJson = jsonDecode(response.body);
-      final message = responseJson["detail"];
-      print(responseJson["detail"]);
-      throw Exception(message);
-    }
+  if (response.statusCode == 200) {
+    final responseJson = jsonDecode(response.body);
+    await storage.write(key: 'token', value: responseJson['access_token']);
+  } else {
+    final responseJson = jsonDecode(response.body);
+    final message = responseJson["detail"];
+    print(message);
+    throw Exception(message);
   }
+}
+
 
   Future<String?> getToken() async {
     return await storage.read(key: 'token');

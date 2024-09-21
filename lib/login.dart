@@ -1,14 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
 import 'services/auth_service.dart';
- 
-class LoginPage extends StatelessWidget {
-  LoginPage({Key? key}) : super(key: key);
 
+class LoginPage extends StatefulWidget {
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
   final AuthService authService = AuthService();
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController(text: 'dev_username');  // Prefilled username
+  final TextEditingController _passwordController = TextEditingController(text: 'dev_password');  // Prefilled password
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,26 +39,26 @@ class LoginPage extends StatelessWidget {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
-                if(_usernameController.text == ""){ //Dev entry: TODO remove
-                  context.go('/wardrobe');
-                }
-                else{
+                final username = _usernameController.text;
+                final password = _passwordController.text;
+
+                print(
+                    "Username: $username, Password: $password"); // Debug the inputs
+
+                if (username.isNotEmpty && password.isNotEmpty) {
                   try {
-                    await authService.login(
-                      _usernameController.text,
-                      _passwordController.text,
-                    ).timeout(Duration(seconds: 3), onTimeout: () {
-                      throw Exception('Login request timed out');
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Login successful')),
-                    );
+                    await authService.login(username, password);
                     context.go('/wardrobe');
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(e.toString())),
                     );
                   }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text("Username and password cannot be empty")),
+                  );
                 }
               },
               child: Text('Login'),
@@ -57,21 +66,31 @@ class LoginPage extends StatelessWidget {
             ElevatedButton(
               onPressed: () async {
                 try {
-                await authService.register(
+                  await authService
+                      .register(
                     _usernameController.text,
                     _passwordController.text,
-                  ).timeout(Duration(seconds: 3), onTimeout: () {
+                  )
+                      .timeout(Duration(seconds: 3), onTimeout: () {
                     throw Exception('Register request timed out');
                   });
+
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Registration successful')),
                   );
-                  await authService.login( //Login automatically after register
-                      _usernameController.text,
-                      _passwordController.text,
-                    ).timeout(Duration(seconds: 3), onTimeout: () {
-                      throw Exception('Login request timed out');
-                    });
+
+                  // Auto login after successful registration
+                  await authService
+                      .login(
+                    _usernameController.text,
+                    _passwordController.text,
+                  )
+                      .timeout(Duration(seconds: 3), onTimeout: () {
+                    throw Exception('Login request timed out');
+                  });
+
+                  await Future.delayed(
+                      Duration(milliseconds: 500)); // Optional delay for async
                   context.go('/wardrobe');
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
