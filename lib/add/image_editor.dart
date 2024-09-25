@@ -86,7 +86,7 @@ class _ImageEditorPageState extends State<ImageEditorPage> {
                 child: Text('Remove Background'),
               ),
             ),
-            ButtonBar(
+            OverflowBar(
               alignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
