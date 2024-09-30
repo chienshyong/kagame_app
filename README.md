@@ -2,10 +2,10 @@
 
 ## Installation
 
--Install Android studio https://developer.android.com/studio/install#windows
--Install Flutter from VS Code https://docs.flutter.dev/get-started/install/windows/mobile
--`flutter doctor` to check reqs (install cmdline-tools, license)
--Developed with Java (JDK) version 21, Flutter version 3.24.3, 
+- Install Android studio https://developer.android.com/studio/install#windows
+- Install Flutter from VS Code https://docs.flutter.dev/get-started/install/windows/mobile
+- `flutter doctor` to check reqs (install cmdline-tools, license)
+- Developed on Flutter version 3.24.3, Java (JDK) version 21
 
 ## Project Structure
 

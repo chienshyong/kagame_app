@@ -21,7 +21,7 @@ class _ImageEditorPageState extends State<ImageEditorPage> {
   // Future<void> _removeBackground() async {
   //   if (imageFile == File('')) return;
   //   // final bytes = await _imageFile!.readAsBytes();
-  //   // TODO: Call API and remove bg
+  //   // Call API and remove bg
   // }
 
   Future<void> _uploadImage() async {
@@ -34,9 +34,10 @@ class _ImageEditorPageState extends State<ImageEditorPage> {
       'POST',
       Uri.parse('$baseUrl/wardrobe/item'),
     );
-    request.files.add(await http.MultipartFile.fromPath('file', widget.imagePath));
+    request.files
+        .add(await http.MultipartFile.fromPath('file', widget.imagePath));
     request.headers['Authorization'] = 'Bearer $token';
-    
+
     final response = await request.send();
     setState(() {
       _isUploading = false;
@@ -47,10 +48,14 @@ class _ImageEditorPageState extends State<ImageEditorPage> {
       );
       final responseData = await response.stream.bytesToString();
       final jsonResponse = jsonDecode(responseData);
-      context.push('/add/into_wardrobe/${Uri.encodeComponent(widget.imagePath)}', extra: jsonResponse);
+      context.push(
+          '/add/into_wardrobe/${Uri.encodeComponent(widget.imagePath)}',
+          extra: jsonResponse);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Image upload failed with status code: ${response.statusCode}')),
+        SnackBar(
+            content: Text(
+                'Image upload failed with status code: ${response.statusCode}')),
       );
     }
   }
@@ -59,22 +64,21 @@ class _ImageEditorPageState extends State<ImageEditorPage> {
   Widget build(BuildContext context) {
     if (File(widget.imagePath).existsSync()) {
       imageFile = File(widget.imagePath);
-    }
-    else{
+    } else {
       imageFile = File('');
       print('Invalid image path ${widget.imagePath}');
     }
 
     return Scaffold(
-      body: Stack(
-        children: [Column(
+      body: Stack(children: [
+        Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
               child: Center(
                 child: widget.imagePath != ''
-                  ? Image.file(imageFile)
-                  : Text('Invalid image path'),
+                    ? Image.file(imageFile)
+                    : Text('Invalid image path'),
               ),
             ),
             Container(
@@ -108,8 +112,7 @@ class _ImageEditorPageState extends State<ImageEditorPage> {
               child: CircularProgressIndicator(),
             ),
           ),
-        ]
-      ),
+      ]),
     );
   }
 }

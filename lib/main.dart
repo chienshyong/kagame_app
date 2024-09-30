@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+// Page imports
 import 'login.dart';
-
-import 'add/camera.dart'; 
-import 'add/image_editor.dart'; 
-import 'add/into_wardrobe.dart'; 
-import 'profile/profile.dart'; 
-import 'wardrobe/wardrobe_page.dart';
 import 'home/home_page.dart';
-
+import 'wardrobe/wardrobe_page.dart';
+import 'wardrobe/category_page.dart';
+import 'wardrobe/item_page.dart';
+import 'add/camera.dart';
+import 'add/image_editor.dart';
+import 'add/into_wardrobe.dart';
+import 'profile/profile.dart';
 
 void main() {
   // Private navigators
-  final _rootNavigatorKey = GlobalKey<NavigatorState>(); // Index of current tab in bottom navigator
-  final _wardrobeShellKey = GlobalKey<NavigatorState>(debugLabel: 'shellW'); // Remember the index for navigator stack in each tab
-  final _recommendShellKey = GlobalKey<NavigatorState>(debugLabel: 'shellR');
+  final _rootNavigatorKey =
+      GlobalKey<NavigatorState>(); // Index of current tab in bottom navigator
+  final _homeShellKey = GlobalKey<NavigatorState>(debugLabel:'shellH');
+  final _wardrobeShellKey = GlobalKey<NavigatorState>(debugLabel: 'shellW');
   final _addShellKey = GlobalKey<NavigatorState>(debugLabel: 'shellA');
   final _shopShellKey = GlobalKey<NavigatorState>(debugLabel: 'shellS');
   final _profileShellKey = GlobalKey<NavigatorState>(debugLabel: 'shellP');
@@ -31,12 +33,6 @@ void main() {
           child: LoginPage(),
         ),
       ),
-      GoRoute(
-        path: '/home',
-        pageBuilder: (context, state) => NoTransitionPage(
-          child: HomePage(),
-        ),
-      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           // the UI shell
@@ -45,28 +41,43 @@ void main() {
           );
         },
         branches: [
-          // first branch (Wardrobe)
+          // first branch (Home)
           StatefulShellBranch(
-            navigatorKey: _wardrobeShellKey,
+            navigatorKey: _homeShellKey,
             routes: [
               GoRoute(
-                path: '/wardrobe',
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: WardrobePage(),
+                path: '/home',
+                pageBuilder: (context, state) => NoTransitionPage(
+                  child: HomePage(),
                 ),
               ),
             ],
           ),
-          // second branch (Recommend)
+          // second branch (Wardrobe)
           StatefulShellBranch(
-            navigatorKey: _recommendShellKey,
+            navigatorKey: _wardrobeShellKey,
             routes: [
               GoRoute(
-                path: '/recommend',
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: Placeholder(),
-                ),
-              ),
+                  path: '/wardrobe',
+                  pageBuilder: (context, state) => NoTransitionPage(
+                        child: WardrobePage(),
+                      ),
+                  routes: [
+                    GoRoute(
+                      path: 'category/:category',
+                      builder: (context, state) {
+                        final category = state.pathParameters['category'];
+                        return CategoryPage(category: category!);
+                      },
+                    ),
+                    GoRoute(
+                      path: 'item/:id',
+                      builder: (context, state) {
+                        final id = state.pathParameters['id'];
+                        return ItemPage(id: id!);
+                      },
+                    ),
+                  ]),
             ],
           ),
           // third branch (Add)
@@ -75,14 +86,15 @@ void main() {
             routes: [
               GoRoute(
                 path: '/add',
-                pageBuilder: (context, state) => const NoTransitionPage(
+                pageBuilder: (context, state) => NoTransitionPage(
                   child: CameraPage(),
                 ),
                 routes: [
                   GoRoute(
                     path: 'editor/:encodedImagePath',
                     builder: (context, state) {
-                      final encodedImagePath = state.pathParameters['encodedImagePath']!;
+                      final encodedImagePath =
+                          state.pathParameters['encodedImagePath']!;
                       final imagePath = Uri.decodeComponent(encodedImagePath);
                       return ImageEditorPage(imagePath: imagePath);
                     },
@@ -90,10 +102,12 @@ void main() {
                   GoRoute(
                     path: 'into_wardrobe/:encodedImagePath',
                     builder: (context, state) {
-                      final encodedImagePath = state.pathParameters['encodedImagePath']!;
+                      final encodedImagePath =
+                          state.pathParameters['encodedImagePath']!;
                       final imagePath = Uri.decodeComponent(encodedImagePath);
                       final jsonResponse = state.extra as Map<String, dynamic>;
-                      return IntoWardrobePage(imagePath: imagePath, jsonResponse: jsonResponse);
+                      return IntoWardrobePage(
+                          imagePath: imagePath, jsonResponse: jsonResponse);
                     },
                   ),
                 ],
@@ -106,7 +120,7 @@ void main() {
             routes: [
               GoRoute(
                 path: '/shop',
-                pageBuilder: (context, state) => const NoTransitionPage(
+                pageBuilder: (context, state) => NoTransitionPage(
                   child: Placeholder(),
                 ),
               ),
@@ -118,7 +132,7 @@ void main() {
             routes: [
               GoRoute(
                 path: '/profile',
-                pageBuilder: (context, state) => const NoTransitionPage(
+                pageBuilder: (context, state) => NoTransitionPage(
                   child: ProfilePage(),
                 ),
               ),
@@ -168,10 +182,13 @@ class ScaffoldWithNestedNavigation extends StatelessWidget {
         bottomNavigationBar: NavigationBar(
           selectedIndex: navigationShell.currentIndex,
           destinations: const [
-            NavigationDestination(label: 'Wardrobe', icon: Icon(Icons.chrome_reader_mode_outlined)),
-            NavigationDestination(label: 'Recommend', icon: Icon(Icons.palette)),
+            NavigationDestination(label: 'Home', icon: Icon(Icons.home)),
+            NavigationDestination(
+                label: 'Wardrobe',
+                icon: Icon(Icons.chrome_reader_mode_outlined)),
             NavigationDestination(label: 'Add', icon: Icon(Icons.library_add)),
-            NavigationDestination(label: 'Shop', icon: Icon(Icons.shopping_cart)),
+            NavigationDestination(
+                label: 'Shop', icon: Icon(Icons.shopping_cart)),
             NavigationDestination(label: 'Profile', icon: Icon(Icons.person)),
           ],
           onDestinationSelected: _goBranch,

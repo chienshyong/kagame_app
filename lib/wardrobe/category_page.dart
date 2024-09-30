@@ -1,22 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class WardrobePage extends StatelessWidget {
-  WardrobePage({Key? key}) : super(key: key);
+class CategoryPage extends StatelessWidget {
+  final String category;
 
-  final List<Map<String, String>> images = [
-    {'url': 'https://dummyimage.com/600x400&text=shirts', 'label': 'Shirts'},
-    {'url': 'https://dummyimage.com/400x600&text=shorts', 'label': 'Shorts'},
-    {'url': 'https://dummyimage.com/400x400&text=pants', 'label': 'Pants'},
-    {'url': 'https://dummyimage.com/400x500&text=dresses', 'label': 'Dresses'},
-    // Add more dynamically as needed
-  ];
+  CategoryPage({required this.category});
 
   @override
   Widget build(BuildContext context) {
+    final List<Map<String, String>> images = [
+      {
+        'url': 'https://dummyimage.com/600x400&text=$category',
+        'label': 'a',
+        'id': 'a'
+      },
+      {
+        'url': 'https://dummyimage.com/400x600&text=$category',
+        'label': 'b',
+        'id': 'a'
+      },
+      {
+        'url': 'https://dummyimage.com/400x400&text=$category',
+        'label': 'c',
+        'id': 'a'
+      },
+      {
+        'url': 'https://dummyimage.com/400x500&text=$category',
+        'label': 'd',
+        'id': 'a'
+      },
+      {
+        'url': 'https://dummyimage.com/600x400&text=$category',
+        'label': 'e',
+        'id': 'a'
+      },
+      {
+        'url': 'https://dummyimage.com/400x600&text=$category',
+        'label': 'f',
+        'id': 'a'
+      },
+      {
+        'url': 'https://dummyimage.com/400x400&text=$category',
+        'label': 'g',
+        'id': 'a'
+      },
+      {
+        'url': 'https://dummyimage.com/400x500&text=$category',
+        'label': 'h',
+        'id': 'a'
+      },
+    ];
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('My Wardrobe')
+        title: Text('My Wardrobe ($category)')
       ),
       body: SafeArea(
         child: Column(
@@ -70,10 +107,10 @@ class WardrobePage extends StatelessWidget {
             //Images
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(1.0),
                 child: GridView.builder(
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2, // 2 columns
+                    crossAxisCount: 3, // 3 columns
                     crossAxisSpacing: 8.0,
                     mainAxisSpacing: 8.0,
                   ),
@@ -81,9 +118,7 @@ class WardrobePage extends StatelessWidget {
                   itemBuilder: (context, index) {
                     return GestureDetector(
                         onTap: () {
-                          // Navigate to Navigator page on tap
-                          context.push(
-                              '/wardrobe/category/${images[index]['label']!}');
+                          context.push('/wardrobe/item/${images[index]['id']!}');
                         },
                         child: Column(
                           children: <Widget>[
@@ -96,14 +131,7 @@ class WardrobePage extends StatelessWidget {
                                       .cover, // Ensures the image covers the entire square
                                 ),
                               ),
-                            ),
-                            SizedBox(
-                                height: 8.0), // Space between image and text
-                            Text(
-                              images[index]['label']!,
-                              style: TextStyle(
-                                  fontSize: 16.0, fontWeight: FontWeight.bold),
-                            ),
+                            )
                           ],
                         ));
                   },

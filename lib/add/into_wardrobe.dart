@@ -32,7 +32,6 @@ class _IntoWardrobePageState extends State<IntoWardrobePage>{
   late File imageFile;
   String? _selectedValue;
   List<String> _dropdownItems = [];
-  String? _selectedCategory;
 
   @override
   void initState() {
