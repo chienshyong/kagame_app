@@ -19,15 +19,9 @@ class IntoWardrobePage extends StatefulWidget {
 
 class _IntoWardrobePageState extends State<IntoWardrobePage>{
   final AuthService authService = AuthService();
-  List<String> _values = [];
-  final FocusNode _focusNode = FocusNode();
-  final TextEditingController _textEditingController = TextEditingController();
-
-  _onDelete(index) {
-    setState(() {
-      _values.removeAt(index);
-    });
-  }
+  List<String> _tagvalues = []; //List of descriptive tags
+  final FocusNode _focusNode = FocusNode(); //Control, monitor, and manage the descriptive tag editor
+  final TextEditingController _textEditingController = TextEditingController(); //Manage state of the descriptive tag editor
 
   late File imageFile;
   String? _selectedValue;
@@ -36,7 +30,7 @@ class _IntoWardrobePageState extends State<IntoWardrobePage>{
   @override
   void initState() {
     super.initState();
-    _values = List<String>.from(widget.jsonResponse["description"]); // Set initial value
+    _tagvalues = List<String>.from(widget.jsonResponse["description"]); // Set initial value
     _fetchDropdownItems();
   }
 
@@ -53,6 +47,13 @@ class _IntoWardrobePageState extends State<IntoWardrobePage>{
       // Handle error
       throw Exception('Failed to load dropdown items');
     }
+  }
+
+  //Remove a tag
+  _onDelete(index) {
+    setState(() {
+      _tagvalues.removeAt(index);
+    });
   }
 
   @override
@@ -133,7 +134,7 @@ class _IntoWardrobePageState extends State<IntoWardrobePage>{
                 ),
               ),
               TagEditor(
-                length: _values.length,
+                length: _tagvalues.length,
                 controller: _textEditingController,
                 focusNode: _focusNode,
                 delimiters: [',', ' '],
@@ -143,7 +144,7 @@ class _IntoWardrobePageState extends State<IntoWardrobePage>{
                 textStyle: const TextStyle(color: Colors.grey),
                 onSubmitted: (outstandingValue) {
                   setState(() {
-                    _values.add(outstandingValue);
+                    _tagvalues.add(outstandingValue);
                   });
                 },
                 inputDecoration: const InputDecoration(
@@ -152,12 +153,12 @@ class _IntoWardrobePageState extends State<IntoWardrobePage>{
                 ),
                 onTagChanged: (newValue) {
                   setState(() {
-                    _values.add(newValue);
+                    _tagvalues.add(newValue);
                   });
                 },
                 tagBuilder: (context, index) => _Chip(
                   index: index,
-                  label: _values[index],
+                  label: _tagvalues[index],
                   onDeleted: _onDelete,
                 ),
                 // InputFormatters example, this disallow \ and /
@@ -167,8 +168,8 @@ class _IntoWardrobePageState extends State<IntoWardrobePage>{
               ),
               const Divider(),
               ElevatedButton(
-                onPressed: context.pop,
-                child: const Text('Add to Wardrobe'),
+                onPressed: () {context.go('/add');},
+                child: const Text('Confirm tags'),
               ),
             ],
           ),
@@ -178,6 +179,7 @@ class _IntoWardrobePageState extends State<IntoWardrobePage>{
   }
 }
 
+//Widget defining individual tags
 class _Chip extends StatelessWidget {
   const _Chip({
     required this.label,

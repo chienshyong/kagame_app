@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
 import '../services/auth_service.dart';
+import 'package:path_provider/path_provider.dart'; // To get temporary directories
 
 class ImageEditorPage extends StatefulWidget {
   final String imagePath;
@@ -18,11 +19,44 @@ class _ImageEditorPageState extends State<ImageEditorPage> {
   late File imageFile;
   bool _isUploading = false;
 
-  // Future<void> _removeBackground() async {
-  //   if (imageFile == File('')) return;
-  //   // final bytes = await _imageFile!.readAsBytes();
-  //   // Call API and remove bg
-  // }
+  Future<void> _removeBackground() async {
+    if (imageFile == File('')) return;
+
+    // Call API and remove bg
+    setState(() {
+      _isUploading = true;
+    });
+    final String baseUrl = authService.baseUrl;
+    final token = await authService.getToken();
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/image/remove-bg'),
+    );
+    request.files
+        .add(await http.MultipartFile.fromPath('file', widget.imagePath));
+    request.headers['Authorization'] = 'Bearer $token';
+
+    final response = await request.send();
+    if (response.statusCode == 200) {
+      final imageBytes = await response.stream.toBytes();
+      final directory = await getTemporaryDirectory();
+      final tempImageFile = File('${directory.path}/modified_image.png');
+      await tempImageFile.writeAsBytes(imageBytes);
+      setState(() {
+        imageFile = tempImageFile; // Update the imageFile with the new modified file
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'Remove background failed with status code: ${response.statusCode}')),
+      );
+    }
+
+    setState(() {
+      _isUploading = false;
+    });
+  }
 
   Future<void> _uploadImage() async {
     setState(() {
@@ -35,7 +69,7 @@ class _ImageEditorPageState extends State<ImageEditorPage> {
       Uri.parse('$baseUrl/wardrobe/item'),
     );
     request.files
-        .add(await http.MultipartFile.fromPath('file', widget.imagePath));
+        .add(await http.MultipartFile.fromPath('file', imageFile.path));
     request.headers['Authorization'] = 'Bearer $token';
 
     final response = await request.send();
@@ -49,7 +83,7 @@ class _ImageEditorPageState extends State<ImageEditorPage> {
       final responseData = await response.stream.bytesToString();
       final jsonResponse = jsonDecode(responseData);
       context.push(
-          '/add/into_wardrobe/${Uri.encodeComponent(widget.imagePath)}',
+          '/add/into_wardrobe/${Uri.encodeComponent(imageFile.path)}',
           extra: jsonResponse);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -61,14 +95,18 @@ class _ImageEditorPageState extends State<ImageEditorPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
     if (File(widget.imagePath).existsSync()) {
       imageFile = File(widget.imagePath);
     } else {
       imageFile = File('');
       print('Invalid image path ${widget.imagePath}');
     }
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(children: [
         Column(
@@ -76,17 +114,16 @@ class _ImageEditorPageState extends State<ImageEditorPage> {
           children: [
             Expanded(
               child: Center(
-                child: widget.imagePath != ''
-                    ? Image.file(imageFile)
-                    : Text('Invalid image path'),
+                child: // Display the picked image or the modified image
+                  imageFile.path.isEmpty
+                      ? Text('No image selected.')
+                      : Image.file(imageFile) // Show the original or modified image
               ),
             ),
             Container(
               margin: EdgeInsets.all(16.0),
               child: ElevatedButton(
-                onPressed: () {
-                  //Remove bg
-                },
+                onPressed: _removeBackground,
                 child: Text('Remove Background'),
               ),
             ),

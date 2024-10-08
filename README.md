@@ -16,7 +16,7 @@ App code is all in `/lib`.
 
 Code is split by content, with one subfolder per navbar tab within `/lib`: Wardrobe, Recommend, Add, Shop and Profile. (TODO)
 
-`/services` include all helper functions for calling the API.
+`/services` include common helper functions (eg. calling the API).
 
 ## Navigation and Routing
 
