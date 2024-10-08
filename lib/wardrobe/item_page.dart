@@ -199,9 +199,9 @@ class _ItemPageState extends State<ItemPage> {
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      context.push('/wardrobe/reccomend/${widget.id}');
+                      context.push('/wardrobe/recommend/${widget.id}');
                     },
-                    child: Text('Reccomend'),
+                    child: Text('Recommend'),
                   ),
                 ],
               )

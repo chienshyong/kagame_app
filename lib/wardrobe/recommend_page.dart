@@ -4,15 +4,15 @@ import 'package:http/http.dart' as http;
 import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
 
-class ReccomendPage extends StatefulWidget {
+class RecommendPage extends StatefulWidget {
   final String id;
-  ReccomendPage({required this.id});
+  RecommendPage({required this.id});
   
   @override
-  State<StatefulWidget> createState() => _ReccomendPageState();
+  State<StatefulWidget> createState() => _RecommendPageState();
 }
 
-class _ReccomendPageState extends State<ReccomendPage> {
+class _RecommendPageState extends State<RecommendPage> {
   final AuthService authService = AuthService();
   bool isLoading = false;
 
