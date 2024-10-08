@@ -7,6 +7,7 @@ import 'home/home_page.dart';
 import 'wardrobe/wardrobe_page.dart';
 import 'wardrobe/category_page.dart';
 import 'wardrobe/item_page.dart';
+import 'wardrobe/reccomend_page.dart';
 import 'add/camera.dart';
 import 'add/image_editor.dart';
 import 'add/into_wardrobe.dart';
@@ -75,6 +76,13 @@ void main() {
                       builder: (context, state) {
                         final id = state.pathParameters['id'];
                         return ItemPage(id: id!);
+                      },
+                    ),
+                    GoRoute(
+                      path: 'reccomend/:id',
+                      builder: (context, state) {
+                        final id = state.pathParameters['id'];
+                        return ReccomendPage(id: id!);
                       },
                     ),
                   ]),

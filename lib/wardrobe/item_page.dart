@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:material_tag_editor/tag_editor.dart';
-
 import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
 
@@ -55,10 +54,10 @@ class _ItemPageState extends State<ItemPage> {
           isLoading = false;
         });
       } else {
-        throw Exception('Failed to load images');
+        throw Exception('Failed to load image');
       }
     } catch (error) {
-      print('Error fetching images: $error');
+      print('Error fetching image: $error');
       setState(() {
         isLoading = false;
       });
@@ -193,20 +192,16 @@ class _ItemPageState extends State<ItemPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   ElevatedButton(
-                    onPressed: () {context.go('/add');},
+                    onPressed: () {
+                      // Handle update
+                    },
                     child: const Text('Update Details'),
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      // Handle edit action
+                      context.push('/wardrobe/reccomend/${widget.id}');
                     },
-                    child: Text('Build Outfit'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Handle save action
-                    },
-                    child: Text('Discover'),
+                    child: Text('Reccomend'),
                   ),
                 ],
               )
