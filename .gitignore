@@ -56,3 +56,4 @@ app.*.map.json
 ios/Flutter/flutter_export_environment 2.sh
 ios/Flutter/Generated 2.xcconfig
 .metadata
+macos/Flutter/GeneratedPluginRegistrant.swift

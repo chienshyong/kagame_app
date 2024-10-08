@@ -11,6 +11,7 @@ import 'add/camera.dart';
 import 'add/image_editor.dart';
 import 'add/into_wardrobe.dart';
 import 'profile/profile.dart';
+import 'shop/shop_page.dart'; 
 
 void main() {
   // Private navigators
@@ -121,7 +122,7 @@ void main() {
               GoRoute(
                 path: '/shop',
                 pageBuilder: (context, state) => NoTransitionPage(
-                  child: Placeholder(),
+                  child: ShopPage(),
                 ),
               ),
             ],
