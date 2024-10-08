@@ -1,59 +1,72 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../services/auth_service.dart';
 
-class CategoryPage extends StatelessWidget {
+class CategoryPage extends StatefulWidget {
   final String category;
-
   CategoryPage({required this.category});
 
   @override
-  Widget build(BuildContext context) {
-    final List<Map<String, String>> images = [
-      {
-        'url': 'https://dummyimage.com/600x400&text=$category',
-        'label': 'a',
-        'id': 'a'
-      },
-      {
-        'url': 'https://dummyimage.com/400x600&text=$category',
-        'label': 'b',
-        'id': 'a'
-      },
-      {
-        'url': 'https://dummyimage.com/400x400&text=$category',
-        'label': 'c',
-        'id': 'a'
-      },
-      {
-        'url': 'https://dummyimage.com/400x500&text=$category',
-        'label': 'd',
-        'id': 'a'
-      },
-      {
-        'url': 'https://dummyimage.com/600x400&text=$category',
-        'label': 'e',
-        'id': 'a'
-      },
-      {
-        'url': 'https://dummyimage.com/400x600&text=$category',
-        'label': 'f',
-        'id': 'a'
-      },
-      {
-        'url': 'https://dummyimage.com/400x400&text=$category',
-        'label': 'g',
-        'id': 'a'
-      },
-      {
-        'url': 'https://dummyimage.com/400x500&text=$category',
-        'label': 'h',
-        'id': 'a'
-      },
-    ];
+  State<CategoryPage> createState() => _CategoryPageState();
+}
 
+class _CategoryPageState extends State<CategoryPage> {
+  final AuthService authService = AuthService();
+  List<Map<String, String>> images = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchImagesFromApi();
+  }
+
+  Future<void> fetchImagesFromApi() async {
+    final String baseUrl = authService.baseUrl;
+    final token = await authService.getToken();
+    final request = http.MultipartRequest(
+      'GET',
+      Uri.parse('$baseUrl/wardrobe/category/${widget.category}'),
+    );
+    request.headers['Authorization'] = 'Bearer $token';
+
+    try {
+      final response = await request.send();
+
+      if (response.statusCode == 200) {
+        final responseBody = await response.stream.bytesToString(); // Convert response to string
+        final Map<String, dynamic> jsonResponse = json.decode(responseBody); // Decode JSON data as Map
+
+        // Extract items list from the JSON response
+        final List<dynamic> items = jsonResponse['items'];
+
+        // Map items to images list
+        setState(() {
+          images = items.map((item) => {
+            'url': item['url'] as String,
+            'name': item['name'] as String,
+            'id': item['_id'] as String,
+          }).toList();
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load images');
+      }
+    } catch (error) {
+      print('Error fetching images: $error');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+  
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('My Wardrobe ($category)')
+        title: Text('My Wardrobe (${widget.category})')
       ),
       body: SafeArea(
         child: Column(

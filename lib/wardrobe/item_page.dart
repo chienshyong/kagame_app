@@ -1,4 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:material_tag_editor/tag_editor.dart';
+
+import 'package:go_router/go_router.dart';
+import '../services/auth_service.dart';
 
 class ItemPage extends StatefulWidget {
   final String id;
@@ -9,10 +16,81 @@ class ItemPage extends StatefulWidget {
 }
 
 class _ItemPageState extends State<ItemPage> {
-  String _title = "Sample Title"; // Initial title
+  final AuthService authService = AuthService();
+  List<String> _tagvalues = []; //List of descriptive tags
+  final FocusNode _focusNode = FocusNode(); //Control, monitor, and manage the descriptive tag editor
+  final TextEditingController _textEditingController = TextEditingController(); //Manage state of the descriptive tag editor
+  bool isLoading = true;
+
+  String? _selectedValue;
+  List<String> _dropdownItems = [];
+
+  //Placeholders while API is called
+  Map<String, dynamic> jsonResponse = {'image_url': 'https://craftsnippets.com/articles_images/placeholder/placeholder.jpg', 'category': '', 'color': '', 'name': ''};
+
+  @override
+  void initState() {
+    super.initState();
+    fetchItemFromApi();
+    _fetchDropdownItems();
+  }
+
+  Future<void> fetchItemFromApi() async {
+    final String baseUrl = authService.baseUrl;
+    final token = await authService.getToken();
+    final request = http.MultipartRequest(
+      'GET',
+      Uri.parse('$baseUrl/wardrobe/item/${widget.id}'),
+    );
+    request.headers['Authorization'] = 'Bearer $token';
+
+    try {
+      final response = await request.send();
+
+      if (response.statusCode == 200) {
+        final responseBody = await response.stream.bytesToString(); // Convert response to string
+        setState(() {
+          jsonResponse = json.decode(responseBody); // Decode JSON data as Map
+          _tagvalues = List<String>.from(jsonResponse["description"]); // Set initial value
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load images');
+      }
+    } catch (error) {
+      print('Error fetching images: $error');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _fetchDropdownItems() async {
+    final String baseUrl = authService.baseUrl;
+    final response = await http.get(Uri.parse('$baseUrl/wardrobe/available_categories'));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      setState(() {
+        _dropdownItems = List<String>.from(data);
+      });
+    } else {
+      // Handle error
+      throw Exception('Failed to load dropdown items');
+    }
+  }
+
+  //Remove a tag
+  _onDelete(index) {
+    setState(() {
+      _tagvalues.removeAt(index);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    TextEditingController _colorController = TextEditingController(text: jsonResponse["color"]);
+    
     return Scaffold(
       appBar: AppBar(
         title: Text('Item Page'),
@@ -23,45 +101,101 @@ class _ItemPageState extends State<ItemPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              // Big image
               Image.network(
-                'https://dummyimage.com/300x400&text=cool stuff',
+                jsonResponse['image_url']!,
                 width: double.infinity,
                 fit: BoxFit.cover, // Adjusts the image fit
               ),
-              SizedBox(height: 16.0), // Space between image and title
-
-              // Editable title field
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Title',
-                  border: OutlineInputBorder(),
+              Container(
+                margin: EdgeInsets.all(16.0),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Name (Optional)',
+                    hintStyle: TextStyle(color: Colors.grey),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
                 ),
-                onChanged: (value) {
+              ),
+              Container(
+                margin: EdgeInsets.all(16.0),
+                child: DropdownButton<String>(
+                  value: _selectedValue,
+                  hint: Text(jsonResponse["category"]),
+                  items: _dropdownItems
+                      .map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedValue = newValue;
+                    });
+                  },
+                ),
+              ),
+              Container(
+                margin: EdgeInsets.all(16.0),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Color',
+                    hintStyle: TextStyle(color: Colors.grey),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                  controller: _colorController,
+                ),
+              ),
+              TagEditor(
+                length: _tagvalues.length,
+                controller: _textEditingController,
+                focusNode: _focusNode,
+                delimiters: [',', ' '],
+                hasAddButton: true,
+                resetTextOnSubmitted: true,
+                // This is set to grey just to illustrate the `textStyle` prop
+                textStyle: const TextStyle(color: Colors.grey),
+                onSubmitted: (outstandingValue) {
                   setState(() {
-                    _title = value; // Update title as user types
+                    _tagvalues.add(outstandingValue);
                   });
                 },
-                controller: TextEditingController(text: _title), // Pre-fill with initial title
+                inputDecoration: const InputDecoration(
+                  border: InputBorder.none,
+                  hintText: 'Add tags...',
+                ),
+                onTagChanged: (newValue) {
+                  setState(() {
+                    _tagvalues.add(newValue);
+                  });
+                },
+                tagBuilder: (context, index) => _Chip(
+                  index: index,
+                  label: _tagvalues[index],
+                  onDeleted: _onDelete,
+                ),
+                // InputFormatters example, this disallow \ and /
+                inputFormatters: [
+                  FilteringTextInputFormatter.deny(RegExp(r'[/\\]'))
+                ],
               ),
-              SizedBox(height: 16.0), // Space between title and description
-
-              // Description
-              Text(
-                'Description:',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 8.0),
-              Text(
-                'This is the description of the item. You can customize this text and add more information here as needed.',
-                style: TextStyle(fontSize: 16),
-              ),
-              SizedBox(height: 32.0), // Space between description and buttons
 
               // Buttons at the bottom
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  ElevatedButton(
+                    onPressed: () {context.go('/add');},
+                    child: const Text('Update Details'),
+                  ),
                   ElevatedButton(
                     onPressed: () {
                       // Handle edit action
@@ -74,18 +208,40 @@ class _ItemPageState extends State<ItemPage> {
                     },
                     child: Text('Discover'),
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Handle edit action
-                    },
-                    child: Text('Save'),
-                  ),
                 ],
-              ),
+              )
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+//Widget defining individual tags
+class _Chip extends StatelessWidget {
+  const _Chip({
+    required this.label,
+    required this.onDeleted,
+    required this.index,
+  });
+
+  final String label;
+  final ValueChanged<int> onDeleted;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    return Chip(
+      labelPadding: const EdgeInsets.only(left: 8.0),
+      label: Text(label),
+      deleteIcon: const Icon(
+        Icons.close,
+        size: 18,
+      ),
+      onDeleted: () {
+        onDeleted(index);
+      },
     );
   }
 }
