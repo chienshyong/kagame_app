@@ -12,6 +12,33 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+
+  List<Color> _skinToneColors = [
+  const Color(0xFFf6ede4),
+  const Color(0xFFf3e7db),
+  const Color(0xFFf7ead0),
+  const Color(0xFFeadaba),
+  const Color(0xFFd7bd96),
+  const Color(0xFFa07e56),
+  const Color(0xFF825c43),
+  const Color(0xFF604134),
+  const Color(0xFF3a312a),
+  const Color(0xFF292420),
+  ];
+
+  Map<Color, String> _skinToneDescription = {
+    Color(0xFFf6ede4):"Very fair skin with cool, pink undertones",
+    Color(0xFFf3e7db):"Fair skin with neutral to cool undertones",
+    Color(0xFFf7ead0):"Light skin with neutral undertones",
+    Color(0xFFeadaba):"Light to medium skin with warm or golden undertones",
+    Color(0xFFd7bd96):"Medium skin with neutral to warm undertones",
+    Color(0xFFa07e56):"Medium to olive skin with warm or golden undertones",
+    Color(0xFF825c43):"Olive to light brown skin with golden or neutral undertones",
+    Color(0xFF604134):"Medium brown skin with neutral to warm undertones",
+    Color(0xFF3a312a):"Dark brown skin with rich, warm undertones",
+    Color(0xFF292420):"Deep skin with cool or neutral undertones"
+  };
+
   final AuthService authService = AuthService();
 
   // Controllers for text fields
@@ -211,6 +238,36 @@ class _ProfilePageState extends State<ProfilePage> {
                 nextFocusNode: _bioFocusNode,
               ),
               SizedBox(height: 16),
+              Text("Pick the closest skin tone to yours:"),
+              SizedBox(height: 8),
+              Wrap(
+                spacing: 8.0,
+                children: _skinToneColors.map((color) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _skinToneController.text = '${_skinToneDescription[color]}';
+                      });
+                    },
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(8.0),
+                        border: Border.all(
+                          color: _skinToneController.text ==
+                              '#${color.value.toRadixString(16).substring(2).toUpperCase()}'
+                              ? Colors.black
+                              : Colors.transparent,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              SizedBox(height: 24),
 
               // Bio field
               _buildTextField(
