@@ -24,6 +24,8 @@ class _ItemPageState extends State<ItemPage> {
   String? _selectedValue;
   List<String> _dropdownItems = [];
 
+  late TextEditingController _nameFieldController = TextEditingController();  // Controller for Name TextField
+
   //Placeholders while API is called
   Map<String, dynamic> jsonResponse = {'image_url': 'https://craftsnippets.com/articles_images/placeholder/placeholder.jpg', 'category': '', 'color': '', 'name': ''};
 
@@ -50,7 +52,8 @@ class _ItemPageState extends State<ItemPage> {
         final responseBody = await response.stream.bytesToString(); // Convert response to string
         setState(() {
           jsonResponse = json.decode(responseBody); // Decode JSON data as Map
-          _tagvalues = List<String>.from(jsonResponse["description"]); // Set initial value
+          _tagvalues = List<String>.from(jsonResponse["tags"]); // Set initial value
+          _nameFieldController.text = jsonResponse["name"];
           isLoading = false;
         });
       } else {
@@ -86,10 +89,57 @@ class _ItemPageState extends State<ItemPage> {
     });
   }
 
+  //Update the item details
+  Future<void> _updateItem() async {
+    String textFieldValue = _nameFieldController.text;
+    String? dropdownValue = _selectedValue;
+    List<String> tags = _tagvalues;
+
+    if (dropdownValue == null) {
+      dropdownValue = jsonResponse["category"];
+    }
+
+    print('TextField Value: $textFieldValue');
+    print('Dropdown Value: $dropdownValue');
+    print('Tags: $tags');
+
+    // Create JSON object
+    Map<String, dynamic> data = {
+      "name": textFieldValue,
+      "category": dropdownValue,
+      "tags": tags,
+    };
+
+    // Convert data to JSON
+    String jsonData = jsonEncode(data);
+
+    final String baseUrl = authService.baseUrl;
+    final token = await authService.getToken();
+    // Send PATCH request with JSON
+    final response = await http.patch(
+      Uri.parse('$baseUrl/wardrobe/item/${jsonResponse["_id"]}'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonData,
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Item updated')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'Update item failed with status code: ${response.statusCode}')),
+      );
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
-    TextEditingController _colorController = TextEditingController(text: jsonResponse["color"]);
-    
+  Widget build(BuildContext context) {   
     return Scaffold(
       appBar: AppBar(
         title: Text('Item Page'),
@@ -108,8 +158,9 @@ class _ItemPageState extends State<ItemPage> {
               Container(
                 margin: EdgeInsets.all(16.0),
                 child: TextField(
+                  controller: _nameFieldController,
                   decoration: InputDecoration(
-                    hintText: 'Name (Optional)',
+                    hintText: 'Name',
                     hintStyle: TextStyle(color: Colors.grey),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10.0),
@@ -136,21 +187,6 @@ class _ItemPageState extends State<ItemPage> {
                       _selectedValue = newValue;
                     });
                   },
-                ),
-              ),
-              Container(
-                margin: EdgeInsets.all(16.0),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Color',
-                    hintStyle: TextStyle(color: Colors.grey),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  controller: _colorController,
                 ),
               ),
               TagEditor(
@@ -193,7 +229,7 @@ class _ItemPageState extends State<ItemPage> {
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      // Handle update
+                      _updateItem();
                     },
                     child: const Text('Update Details'),
                   ),

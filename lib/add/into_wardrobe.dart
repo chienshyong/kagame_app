@@ -27,11 +27,14 @@ class _IntoWardrobePageState extends State<IntoWardrobePage>{
   String? _selectedValue;
   List<String> _dropdownItems = [];
 
+  late TextEditingController _nameFieldController;  // Controller for Name TextField
+
   @override
   void initState() {
     super.initState();
-    _tagvalues = List<String>.from(widget.jsonResponse["description"]); // Set initial value
+    _tagvalues = List<String>.from(widget.jsonResponse["tags"]); // Set initial value
     _fetchDropdownItems();
+    _nameFieldController = TextEditingController(text: widget.jsonResponse["name"]);
   }
 
   Future<void> _fetchDropdownItems() async {
@@ -56,10 +59,58 @@ class _IntoWardrobePageState extends State<IntoWardrobePage>{
     });
   }
 
+  //Update the item details
+  Future<void> _updateItem() async {
+    String textFieldValue = _nameFieldController.text;
+    String? dropdownValue = _selectedValue;
+    List<String> tags = _tagvalues;
+
+    if (dropdownValue == null) {
+      dropdownValue = widget.jsonResponse["category"];
+    }
+
+    print('TextField Value: $textFieldValue');
+    print('Dropdown Value: $dropdownValue');
+    print('Tags: $tags');
+
+    // Create JSON object
+    Map<String, dynamic> data = {
+      "name": textFieldValue,
+      "category": dropdownValue,
+      "tags": tags,
+    };
+
+    // Convert data to JSON
+    String jsonData = jsonEncode(data);
+
+    final String baseUrl = authService.baseUrl;
+    final token = await authService.getToken();
+    // Send PATCH request with JSON
+    final response = await http.patch(
+      Uri.parse('$baseUrl/wardrobe/item/${widget.jsonResponse["id"]}'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonData,
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Item updated')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'Update item failed with status code: ${response.statusCode}')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    TextEditingController _colorController = TextEditingController(text: widget.jsonResponse["color"][0]);
-    
+   
     if (File(widget.imagePath).existsSync()) {
       imageFile = File(widget.imagePath);
     }
@@ -88,8 +139,9 @@ class _IntoWardrobePageState extends State<IntoWardrobePage>{
               Container(
                 margin: EdgeInsets.all(16.0),
                 child: TextField(
+                  controller: _nameFieldController,
                   decoration: InputDecoration(
-                    hintText: 'Name (Optional)',
+                    hintText: 'Name',
                     hintStyle: TextStyle(color: Colors.grey),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10.0),
@@ -103,7 +155,7 @@ class _IntoWardrobePageState extends State<IntoWardrobePage>{
                 margin: EdgeInsets.all(16.0),
                 child: DropdownButton<String>(
                   value: _selectedValue,
-                  hint: Text(widget.jsonResponse["category"][0]),
+                  hint: Text(widget.jsonResponse["category"]),
                   items: _dropdownItems
                       .map((String value) {
                     return DropdownMenuItem<String>(
@@ -116,21 +168,6 @@ class _IntoWardrobePageState extends State<IntoWardrobePage>{
                       _selectedValue = newValue;
                     });
                   },
-                ),
-              ),
-              Container(
-                margin: EdgeInsets.all(16.0),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Color',
-                    hintStyle: TextStyle(color: Colors.grey),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  controller: _colorController,
                 ),
               ),
               TagEditor(
@@ -168,7 +205,7 @@ class _IntoWardrobePageState extends State<IntoWardrobePage>{
               ),
               const Divider(),
               ElevatedButton(
-                onPressed: () {context.go('/add');},
+                onPressed: _updateItem,
                 child: const Text('Confirm tags'),
               ),
             ],
