@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../services/auth_service.dart';
+import 'product_detail_page.dart';
 
 class ShopPage extends StatefulWidget {
   ShopPage({Key? key}) : super(key: key);
@@ -13,7 +14,7 @@ class ShopPage extends StatefulWidget {
 
 class _ShopPageState extends State<ShopPage> {
   final AuthService authService = AuthService();
-  List<Map<String, String>> products = [];
+  List<Map<String, dynamic>> products = []; // Changed to dynamic
   bool isLoading = true;
 
   @override
@@ -23,46 +24,56 @@ class _ShopPageState extends State<ShopPage> {
   }
 
   Future<void> fetchProducts() async {
-    setState(() {
-      isLoading = true;
-    });
-    
-    final String baseUrl = authService.baseUrl;
-    final token = await authService.getToken();
-    final Uri uri = Uri.parse('$baseUrl/shop/items?retailer=Nike&limit=100');
+  setState(() {
+    isLoading = true;
+  });
 
-    try {
-      final response = await http.get(
-        uri,
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-      );
+  final String baseUrl = authService.baseUrl;
+  final token = await authService.getToken();
+  final Uri uri = Uri.parse('$baseUrl/shop/items?limit=100');
 
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
+  try {
+    final response = await http.get(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
 
-        setState(() {
-          products = data.map((item) {
-            return {
-              'url': item['image_url'] as String,
-              'label': item['name'] as String,
-              'price': item['price'] as String,
-              'link': item['product_link'] as String,
-            };
-          }).toList();
-          isLoading = false;
-        });
-      } else {
-        throw Exception('Failed to load products');
-      }
-    } catch (error) {
-      print('Error fetching products: $error');
+    print('Response status: ${response.statusCode}');
+    // Optionally, limit the length of the printed body for large responses
+    print('Response body: ${response.body.substring(0, 500)}...');
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+
       setState(() {
+        products = data.map((item) {
+          return {
+            'id': item['id']?.toString() ?? '', // Include the 'id' field here
+            'url': item['image_url']?.toString() ?? '',
+            'label': item['name']?.toString() ?? '',
+            'price': item['price']?.toString() ?? '',
+            'product_url': item['product_url']?.toString() ?? '',
+            // Include any other fields you need
+          };
+        }).toList();
         isLoading = false;
       });
+
+      print('Products loaded successfully: ${products.length} items.');
+    } else {
+      print('Failed to load products: ${response.body}');
+      throw Exception('Failed to load products');
     }
+  } catch (error) {
+    print('Error fetching products: $error');
+    setState(() {
+      isLoading = false;
+    });
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -103,14 +114,17 @@ class _ShopPageState extends State<ShopPage> {
                                     width: 1.0,
                                   ),
                                 ),
-                                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12.0),
                                 child: TextField(
                                   decoration: InputDecoration(
                                     hintText: 'Search Products',
                                     border: InputBorder.none,
-                                    prefixIcon: Icon(Icons.search, color: Colors.grey),
+                                    prefixIcon:
+                                        Icon(Icons.search, color: Colors.grey),
                                     suffixIcon: IconButton(
-                                      icon: Icon(Icons.filter_list, color: Colors.grey),
+                                      icon: Icon(Icons.filter_list,
+                                          color: Colors.grey),
                                       onPressed: () {
                                         print('Filter icon tapped');
                                       },
@@ -138,7 +152,13 @@ class _ShopPageState extends State<ShopPage> {
                           final product = products[index];
                           return GestureDetector(
                             onTap: () {
-                              context.push(product['link']!);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      ProductDetailPage(product: product),
+                                ),
+                              );
                             },
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,7 +169,9 @@ class _ShopPageState extends State<ShopPage> {
                                     child: Image.network(
                                       product['url']!,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) => Icon(Icons.error),
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              Icon(Icons.error),
                                     ),
                                   ),
                                 ),
