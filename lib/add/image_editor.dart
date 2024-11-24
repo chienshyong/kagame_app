@@ -40,7 +40,13 @@ class _ImageEditorPageState extends State<ImageEditorPage> {
     if (response.statusCode == 200) {
       final imageBytes = await response.stream.toBytes();
       final directory = await getTemporaryDirectory();
-      final tempImageFile = File('${directory.path}/modified_image.png');
+      File tempImageFile = File('${directory.path}/modified_image.png');
+      // Increment the filename until a non-existing file is found
+      int counter = 1;
+      while (await tempImageFile.exists()) {
+        tempImageFile = File('${directory.path}/modified_image${counter}.png');
+        counter++;
+      }
       await tempImageFile.writeAsBytes(imageBytes);
       setState(() {
         imageFile = tempImageFile; // Update the imageFile with the new modified file
