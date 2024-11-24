@@ -197,6 +197,14 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
     );
   }
 
+  Future<void> _refreshAllProducts() async {
+    await fetchProducts();
+  }
+
+  Future<void> _refreshRecommendedProducts() async {
+    await fetchRecommendedProducts();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -274,17 +282,23 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
                     children: [
                       isLoading
                           ? Center(child: CircularProgressIndicator())
-                          : CustomScrollView(
-                              slivers: [
-                                buildProductGrid(products),
-                              ],
+                          : RefreshIndicator(
+                              onRefresh: _refreshAllProducts,
+                              child: CustomScrollView(
+                                slivers: [
+                                  buildProductGrid(products),
+                                ],
+                              ),
                             ),
                       isLoadingRecommendations
                           ? Center(child: CircularProgressIndicator())
-                          : CustomScrollView(
-                              slivers: [
-                                buildProductGrid(recommendedProducts),
-                              ],
+                          : RefreshIndicator(
+                              onRefresh: _refreshRecommendedProducts,
+                              child: CustomScrollView(
+                                slivers: [
+                                  buildProductGrid(recommendedProducts),
+                                ],
+                              ),
                             ),
                     ],
                   ),
