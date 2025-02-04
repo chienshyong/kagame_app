@@ -8,9 +8,7 @@ import 'wardrobe/wardrobe_page.dart';
 import 'wardrobe/category_page.dart';
 import 'wardrobe/item_page.dart';
 import 'wardrobe/recommend_page.dart';
-import 'add/camera.dart';
-import 'add/image_editor.dart';
-import 'add/into_wardrobe.dart';
+import 'add/add.dart';
 import 'profile/profile.dart';
 import 'shop/shop_page.dart'; 
 
@@ -96,30 +94,8 @@ void main() {
               GoRoute(
                 path: '/add',
                 pageBuilder: (context, state) => NoTransitionPage(
-                  child: CameraPage(),
+                  child: MultiImagePickerPage(),
                 ),
-                routes: [
-                  GoRoute(
-                    path: 'editor/:encodedImagePath',
-                    builder: (context, state) {
-                      final encodedImagePath =
-                          state.pathParameters['encodedImagePath']!;
-                      final imagePath = Uri.decodeComponent(encodedImagePath);
-                      return ImageEditorPage(imagePath: imagePath);
-                    },
-                  ),
-                  GoRoute(
-                    path: 'into_wardrobe/:encodedImagePath',
-                    builder: (context, state) {
-                      final encodedImagePath =
-                          state.pathParameters['encodedImagePath']!;
-                      final imagePath = Uri.decodeComponent(encodedImagePath);
-                      final jsonResponse = state.extra as Map<String, dynamic>;
-                      return IntoWardrobePage(
-                          imagePath: imagePath, jsonResponse: jsonResponse);
-                    },
-                  ),
-                ],
               ),
             ],
           ),
