@@ -80,14 +80,21 @@ class _MultiImagePickerPageState extends State<MultiImagePickerPage> {
     await request.send();
   }
 
-  @override
+    @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Select Multiple Images'),
+        title: Text('Add to your Wardrobe'),
       ),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.all(15.0),
+            child: Text(
+              'Upload photos of your clothing to your wardrobe. Our virtual assistant will label and sort them automatically!',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+          ),
           Expanded(
             child: GridView.builder(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -109,7 +116,7 @@ class _MultiImagePickerPageState extends State<MultiImagePickerPage> {
               padding: const EdgeInsets.all(8.0),
               child: Column(
                 children: [
-                  Text('Classifying and adding to your wardrobe... ($_currentUploadIndex/${_images.length})'),
+                  Text('Uploading... ($_currentUploadIndex/${_images.length})'),
                   LinearProgressIndicator(value: _uploadProgress),
                 ],
               ),

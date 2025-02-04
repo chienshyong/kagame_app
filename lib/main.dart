@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 
 // Page imports
 import 'login.dart';
-import 'home/home_page.dart';
 import 'wardrobe/wardrobe_page.dart';
 import 'wardrobe/category_page.dart';
 import 'wardrobe/item_page.dart';
@@ -16,7 +15,6 @@ void main() {
   // Private navigators
   final _rootNavigatorKey =
       GlobalKey<NavigatorState>(); // Index of current tab in bottom navigator
-  final _homeShellKey = GlobalKey<NavigatorState>(debugLabel:'shellH');
   final _wardrobeShellKey = GlobalKey<NavigatorState>(debugLabel: 'shellW');
   final _addShellKey = GlobalKey<NavigatorState>(debugLabel: 'shellA');
   final _shopShellKey = GlobalKey<NavigatorState>(debugLabel: 'shellS');
@@ -41,18 +39,6 @@ void main() {
           );
         },
         branches: [
-          // first branch (Home)
-          StatefulShellBranch(
-            navigatorKey: _homeShellKey,
-            routes: [
-              GoRoute(
-                path: '/home',
-                pageBuilder: (context, state) => NoTransitionPage(
-                  child: HomePage(),
-                ),
-              ),
-            ],
-          ),
           // second branch (Wardrobe)
           StatefulShellBranch(
             navigatorKey: _wardrobeShellKey,
@@ -167,9 +153,8 @@ class ScaffoldWithNestedNavigation extends StatelessWidget {
         bottomNavigationBar: NavigationBar(
           selectedIndex: navigationShell.currentIndex,
           destinations: const [
-            NavigationDestination(label: 'Home', icon: Icon(Icons.home)),
             NavigationDestination(
-                label: 'Wardrobe',
+                label: 'My Wardrobe',
                 icon: Icon(Icons.chrome_reader_mode_outlined)),
             NavigationDestination(label: 'Add', icon: Icon(Icons.library_add)),
             NavigationDestination(
