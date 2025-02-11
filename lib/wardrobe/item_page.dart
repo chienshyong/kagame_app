@@ -25,6 +25,7 @@ class _ItemPageState extends State<ItemPage> {
   List<String> _dropdownItems = [];
 
   late TextEditingController _nameFieldController = TextEditingController();  // Controller for Name TextField
+  TextEditingController _promptController = TextEditingController(); // Controller for Prompt TextField
 
   //Placeholders while API is called
   Map<String, dynamic> jsonResponse = {'image_url': 'https://craftsnippets.com/articles_images/placeholder/placeholder.jpg', 'category': '', 'color': '', 'name': ''};
@@ -34,6 +35,17 @@ class _ItemPageState extends State<ItemPage> {
     super.initState();
     fetchItemFromApi();
     _fetchDropdownItems();
+  }
+
+  // 2️⃣ Define the function to handle input changes
+  void _onPromptChanged(String value) {
+    print("User typed: $value");
+  }
+
+  @override
+  void dispose() {
+    _promptController.dispose(); // 3️⃣ Dispose the controller when widget is destroyed
+    super.dispose();
   }
 
   Future<void> fetchItemFromApi() async {
@@ -157,38 +169,59 @@ class _ItemPageState extends State<ItemPage> {
               ),
               Container(
                 margin: EdgeInsets.all(16.0),
-                child: TextField(
-                  controller: _nameFieldController,
-                  decoration: InputDecoration(
-                    hintText: 'Name',
-                    hintStyle: TextStyle(color: Colors.grey),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
+                child: Row(
+                  children: [
+                    Text(
+                      "Item Name:",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
+                    SizedBox(width: 10), // Spacing between text and TextField
+                    Expanded( // Ensures TextField takes up remaining space
+                      child: TextField(
+                        controller: _nameFieldController,
+                        decoration: InputDecoration(
+                          hintText: 'Enter your name',
+                          hintStyle: TextStyle(color: Colors.grey),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Container(
                 margin: EdgeInsets.all(16.0),
-                child: DropdownButton<String>(
-                  value: _selectedValue,
-                  hint: Text(jsonResponse["category"]),
-                  items: _dropdownItems
-                      .map((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _selectedValue = newValue;
-                    });
-                  },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min, // Ensures Row takes minimal space
+                  children: [
+                    Text(
+                      "Category:",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(width: 10), // Space between label and dropdown
+                    DropdownButton<String>(
+                      value: _selectedValue,
+                      hint: Text(jsonResponse["category"]),
+                      items: _dropdownItems.map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _selectedValue = newValue;
+                        });
+                      },
+                    ),
+                  ],
                 ),
               ),
+
               TagEditor(
                 length: _tagvalues.length,
                 controller: _textEditingController,
@@ -223,6 +256,40 @@ class _ItemPageState extends State<ItemPage> {
                 ],
               ),
 
+              // Prompt TextInput
+              Container(
+                margin: EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    // Label Text "Prompt:"
+                    Text(
+                      "Prompt (optional):",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(width: 10), // Space between label and input field
+
+                    // TextField for user input
+                    Expanded( // Allows input field to take available space
+                      child: TextField(
+                        controller: _promptController, // TextEditingController to store input
+                        onChanged: _onPromptChanged, // Call function when text changes
+                        decoration: InputDecoration(
+                          hintText: "e.g. date night", // Placeholder text
+                          hintStyle: TextStyle(color: Colors.grey), // Gray hint text
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+
+
               // Buttons at the bottom
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -231,13 +298,13 @@ class _ItemPageState extends State<ItemPage> {
                     onPressed: () {
                       _updateItem();
                     },
-                    child: const Text('Update Details'),
+                    child: const Text('Save Changes'),
                   ),
                   ElevatedButton(
                     onPressed: () {
                       context.push('/wardrobe/recommend/${widget.id}');
                     },
-                    child: Text('Recommend'),
+                    child: Text('Recommend Outfit'),
                   ),
                 ],
               )
