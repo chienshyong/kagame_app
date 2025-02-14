@@ -30,8 +30,8 @@ ios/Flutter/Flutter.podspec
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
+.flutter-plugins*
+.flutter-plugins-dependencies*
 .pub-cache/
 .pub/
 /build/
@@ -52,8 +52,9 @@ app.*.map.json
 
 # Mac/Linux generated files
 *.DS_Store
-.flutter-plugins 2
-ios/Flutter/flutter_export_environment 2.sh
-ios/Flutter/Generated 2.xcconfig
+.flutter-plugins
+ios/Flutter/flutter_export_environment*
+ios/Flutter/Generated*
 .metadata
 macos/Flutter/GeneratedPluginRegistrant.swift
+ios/Flutter/.Generated*
