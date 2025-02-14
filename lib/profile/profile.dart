@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../services/auth_service.dart';
 
+import 'stylequiz.dart';
+
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
 
@@ -12,18 +14,19 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  String _styleResult = "Not determined yet";
 
   List<Color> _skinToneColors = [
-  const Color(0xFFf6ede4),
-  const Color(0xFFf3e7db),
-  const Color(0xFFf7ead0),
-  const Color(0xFFeadaba),
-  const Color(0xFFd7bd96),
-  const Color(0xFFa07e56),
-  const Color(0xFF825c43),
-  const Color(0xFF604134),
-  const Color(0xFF3a312a),
-  const Color(0xFF292420),
+    const Color(0xFFf6ede4),
+    const Color(0xFFf3e7db),
+    const Color(0xFFf7ead0),
+    const Color(0xFFeadaba),
+    const Color(0xFFd7bd96),
+    const Color(0xFFa07e56),
+    const Color(0xFF825c43),
+    const Color(0xFF604134),
+    const Color(0xFF3a312a),
+    const Color(0xFF292420),
   ];
 
   Map<Color, String> _skinToneDescription = {
@@ -87,7 +90,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // Formatter to enforce DD/MM/YYYY format
   final birthdayFormatter = TextInputFormatter.withFunction(
-    (oldValue, newValue) {
+        (oldValue, newValue) {
       String text = newValue.text;
 
       // Store the old cursor position before adding slashes
@@ -118,7 +121,7 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     },
   );
-  
+
 
   @override
   Widget build(BuildContext context) {
@@ -150,10 +153,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     return Text('No user found.');
                   } else {
                     return Text('Hello, ${snapshot.data}!',
-                      style: TextStyle(
-                        fontSize: 30.0,
-                        color: Colors.black,
-                      )
+                        style: TextStyle(
+                          fontSize: 30.0,
+                          color: Colors.black,
+                        )
                     );
                   }
                 },
@@ -223,10 +226,36 @@ class _ProfilePageState extends State<ProfilePage> {
 
               // Race field
               _buildTextField(
-                label: 'Race',
+                label: 'Ethnicity',
                 controller: _raceController,
                 focusNode: _raceFocusNode,
                 nextFocusNode: _skinToneFocusNode,
+              ),
+              SizedBox(height: 16),
+              Text(
+                "My style is: $_styleResult",
+                style: TextStyle(fontSize: 16),
+              ),
+              SizedBox(height: 8),
+              Center(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    String? result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => QuizPage()),
+                    );
+                    if (result != null && result.isNotEmpty) {
+                      setState(() {
+                        _styleResult = result;
+                      });
+                    }
+                  },
+                  child: Text('Find my style'),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    textStyle: TextStyle(fontSize: 16),
+                  ),
+                ),
               ),
               SizedBox(height: 16),
 
@@ -359,7 +388,7 @@ class _ProfilePageState extends State<ProfilePage> {
       if (parsedDate.day != day || parsedDate.month != month || parsedDate.year != year) {
         return false;
       }
-      
+
       return true; // Date is valid
     } catch (e) {
       return false; // Invalid date, such as 30/02/2021

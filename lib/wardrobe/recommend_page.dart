@@ -107,7 +107,8 @@ class _RecommendPageState extends State<RecommendPage> {
                 ),
                 SizedBox(height: 8),
                 Text(
-                  'This will\ngo well with...',
+                  'This will\ngo well with',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
@@ -132,44 +133,182 @@ class _RecommendPageState extends State<RecommendPage> {
 
           SizedBox(height: 16),
 
-          // Infinite scroll grid section
           Expanded(
-            child: GridView.builder(
-              controller: _scrollController,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 8.0,
-                mainAxisSpacing: 8.0,
-                childAspectRatio: 0.8,
-              ),
-              itemCount: _items.length + 1,
-              itemBuilder: (context, index) {
-                if (index == _items.length) {
-                  return isLoading
-                      ? Center(child: CircularProgressIndicator())
-                      : SizedBox(); // Show loading indicator when loading
-                }
+            child: TabbedPage()
+            ),
 
-                // Replace with your image network URL for real items
-                return Column(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: NetworkImage(
-                                'https://dummyimage.com/200x300/000/fff&text=${_items[index]}'), // Placeholder
-                            fit: BoxFit.cover,
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+          // // Infinite scroll grid section
+          // Expanded(
+          //   child: GridView.builder(
+          //     controller: _scrollController,
+          //     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          //       crossAxisCount: 2,
+          //       crossAxisSpacing: 8.0,
+          //       mainAxisSpacing: 8.0,
+          //       childAspectRatio: 0.8,
+          //     ),
+          //     itemCount: _items.length + 1,
+          //     itemBuilder: (context, index) {
+          //       if (index == _items.length) {
+          //         return isLoading
+          //             ? Center(child: CircularProgressIndicator())
+          //             : SizedBox(); // Show loading indicator when loading
+          //       }
+
+          //       // Replace with your image network URL for real items
+          //       return Column(
+          //         children: [
+          //           Expanded(
+          //             child: Container(
+          //               decoration: BoxDecoration(
+          //                 image: DecorationImage(
+          //                   image: NetworkImage(
+          //                       'https://dummyimage.com/200x300/000/fff&text=${_items[index]}'), // Placeholder
+          //                   fit: BoxFit.cover,
+          //                 ),
+          //                 borderRadius: BorderRadius.circular(10),
+          //               ),
+          //             ),
+          //           ),
+          //         ],
+          //       );
+          //     },
+          //   ),
+          // ),
+        ],
+      ),
+    );
+  }
+}
+
+class TabbedPage extends StatefulWidget {
+  @override
+  _TabbedPageState createState() => _TabbedPageState();
+}
+
+class _TabbedPageState extends State<TabbedPage> {
+  final AuthService authService = AuthService();
+  bool isLoading = false;
+
+  // Dummy image list for the infinite scroll
+  List<String> _items = List.generate(10, (index) => 'Item $index');
+
+  // Scroll controller to detect when the user scrolls to the bottom
+  ScrollController _scrollController = ScrollController();
+
+  //Placeholders while API is called
+  Map<String, dynamic> jsonResponse = {'image_url': 'https://craftsnippets.com/articles_images/placeholder/placeholder.jpg', 'category': '', 'color': '', 'name': ''};
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 2, // Number of tabs
+      child: Column(
+        children: [
+          TabBar(
+            tabs: [
+              Tab(text: "From Partner Brands"),
+              Tab(text: "From Your Wardrobe"),
+            ],
+          ),
+
+      
+        Expanded(child: TabBarView(
+          children: [
+            Center( // From Partner Brands Tab
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text("Recommendations with items from our partner brands"),
+                  Expanded(
+                    child: GridView.builder(
+                      controller: _scrollController,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 8.0,
+                        mainAxisSpacing: 8.0,
+                        childAspectRatio: 0.8,
+                      ),
+                      itemCount: _items.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == _items.length) {
+                          return isLoading
+                              ? Center(child: CircularProgressIndicator())
+                              : SizedBox(); // Show loading indicator when loading
+                        }
+
+                        // Replace with your image network URL for real items
+                        return Column(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: NetworkImage(
+                                        'https://dummyimage.com/200x300/000/fff&text=${_items[index]}'), // Placeholder
+                                    fit: BoxFit.cover,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ),
                   ],
-                );
-              },
-            ),
+                ),
+              ),
+
+              Center( // From Your Wardrobe Tab
+                child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text("Recommendations with items from your personal wardrobe"),
+                  Expanded(
+                    child: GridView.builder(
+                      controller: _scrollController,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 8.0,
+                        mainAxisSpacing: 8.0,
+                        childAspectRatio: 0.8,
+                      ),
+                      itemCount: _items.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == _items.length) {
+                          return isLoading
+                              ? Center(child: CircularProgressIndicator())
+                              : SizedBox(); // Show loading indicator when loading
+                        }
+
+                        // Replace with your image network URL for real items
+                        return Column(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: NetworkImage(
+                                        'https://dummyimage.com/200x300/000/fff&text=${_items[index]}'), // Placeholder
+                                    fit: BoxFit.cover,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
+        ),
         ],
       ),
     );

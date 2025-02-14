@@ -12,9 +12,9 @@ class WardrobePage extends StatefulWidget {
 }
 
 class _WardrobePageState extends State<WardrobePage> with RouteAware{
-  final AuthService authService = AuthService();
-  List<Map<String, String>> images = [];
-  bool isLoading = true;
+  final AuthService authService = AuthService(); // Handles API authentication
+  List<Map<String, String>> images = []; // Stores fetch wardrobe items
+  bool isLoading = true; // Tracks API loading state
 
   @override
   void initState() {
@@ -102,6 +102,7 @@ class _WardrobePageState extends State<WardrobePage> with RouteAware{
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 12.0),
                       child: TextField(
+                        textAlign: TextAlign.center,
                         decoration: InputDecoration(
                           hintText: 'Search Wardrobe',
                           border: InputBorder.none,
