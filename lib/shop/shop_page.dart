@@ -23,9 +23,9 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
   @override
   void initState() {
     super.initState();
-    fetchProducts();
-    fetchRecommendedProducts();
-    _tabController = TabController(length: 2, vsync: this);
+    fetchRecommendedProducts(); // Load recommended first
+    fetchProducts(); // Load all products second
+    _tabController = TabController(length: 2, vsync: this, initialIndex: 0); // Set recommended as default
   }
 
   Future<void> fetchProducts() async {
@@ -224,8 +224,8 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
                         bottom: TabBar(
                           controller: _tabController,
                           tabs: [
-                            Tab(text: 'All Products'),
-                            Tab(text: 'Recommended'),
+                            Tab(text: 'Recommended'), // First tab (Left)
+                            Tab(text: 'All Products'), // Second tab (Right)
                           ],
                         ),
                         flexibleSpace: FlexibleSpaceBar(
@@ -280,26 +280,26 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
                   body: TabBarView(
                     controller: _tabController,
                     children: [
-                      isLoading
-                          ? Center(child: CircularProgressIndicator())
-                          : RefreshIndicator(
-                              onRefresh: _refreshAllProducts,
-                              child: CustomScrollView(
-                                slivers: [
-                                  buildProductGrid(products),
-                                ],
-                              ),
-                            ),
                       isLoadingRecommendations
                           ? Center(child: CircularProgressIndicator())
                           : RefreshIndicator(
-                              onRefresh: _refreshRecommendedProducts,
-                              child: CustomScrollView(
-                                slivers: [
-                                  buildProductGrid(recommendedProducts),
-                                ],
-                              ),
-                            ),
+                        onRefresh: _refreshRecommendedProducts,
+                        child: CustomScrollView(
+                          slivers: [
+                            buildProductGrid(recommendedProducts),
+                          ],
+                        ),
+                      ),
+                      isLoading
+                          ? Center(child: CircularProgressIndicator())
+                          : RefreshIndicator(
+                        onRefresh: _refreshAllProducts,
+                        child: CustomScrollView(
+                          slivers: [
+                            buildProductGrid(products),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
