@@ -65,7 +65,7 @@ class _WardrobePageState extends State<WardrobePage> with RouteAware{
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('My Wardrobe')
+        title: Text('My Wardrobe'),
       ),
       body: SafeArea(
         child: RefreshIndicator(
@@ -74,54 +74,76 @@ class _WardrobePageState extends State<WardrobePage> with RouteAware{
           },
           child: Column(
             children: [
-              // Logo and Search bar
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      // Navigate to the home page when the logo is tapped
-                      context.go('/home');
-                    },
-                    child: Image.asset(
-                      'lib/assets/KagaMe.png',
-                      width: 120.0,
-                      height: 60.0,
-                    ),
-                  ),
-                  SizedBox(
-                      width: 16.0), // Space between the image and the search bar
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(30.0),
-                        border: Border.all(
-                          color: Colors.grey,
-                          width: 1.0,
-                        ),
+              // Logo and Search Bar (Top Section)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                      },
+                      child: Image.asset(
+                        'lib/assets/KagaMe.png',
+                        width: 120.0,
+                        height: 60.0,
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                      child: TextField(
-                        textAlign: TextAlign.center,
-                        decoration: InputDecoration(
-                          hintText: 'Search Wardrobe',
-                          border: InputBorder.none,
-                          prefixIcon: Icon(Icons.search, color: Colors.grey),
-                          suffixIcon: IconButton(
-                            icon: Icon(Icons.filter_list, color: Colors.grey),
-                            onPressed: () {
-                              // Add filter action here
-                              print('Filter icon tapped');
-                            },
+                    ),
+                    SizedBox(width: 16.0), // Space between logo and search bar
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(30.0),
+                          border: Border.all(
+                            color: Colors.grey,
+                            width: 1.0,
+                          ),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                        child: TextField(
+                          textAlign: TextAlign.center,
+                          decoration: InputDecoration(
+                            hintText: 'Search Wardrobe',
+                            border: InputBorder.none,
+                            prefixIcon: Icon(Icons.search, color: Colors.grey),
+                            suffixIcon: IconButton(
+                              icon: Icon(Icons.filter_list, color: Colors.grey),
+                              onPressed: () {
+                                print('Filter icon tapped');
+                              },
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-          
-              //Images
+
+              // Recommended and All Products Tabs (Middle Section)
+              Container(
+                color: Colors.grey[200], // Background for tabs
+                padding: EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        // Handle recommended tab logic
+                      },
+                      child: Text("Recommended", style: TextStyle(fontSize: 16.0)),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        // Handle all products tab logic
+                      },
+                      child: Text("All Products", style: TextStyle(fontSize: 16.0)),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Images GridView (Bottom Section)
               Expanded(
                 child: isLoading
                     ? Center(child: CircularProgressIndicator())
@@ -129,39 +151,38 @@ class _WardrobePageState extends State<WardrobePage> with RouteAware{
                   padding: const EdgeInsets.all(8.0),
                   child: GridView.builder(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2, // 2 columns
+                      crossAxisCount: 2,
                       crossAxisSpacing: 8.0,
                       mainAxisSpacing: 8.0,
                     ),
-                    itemCount: images.length, // Dynamic item count
+                    itemCount: images.length,
                     itemBuilder: (context, index) {
                       return GestureDetector(
-                          onTap: () {
-                            // Navigate to Navigator page on tap
-                            context.push(
-                                '/wardrobe/category/${images[index]['label']!}');
-                          },
-                          child: Column(
-                            children: <Widget>[
-                              Expanded(
-                                child: AspectRatio(
-                                  aspectRatio: 1, // Forces the image to be square
-                                  child: Image.network(
-                                    images[index]['url']!,
-                                    fit: BoxFit
-                                        .cover, // Ensures the image covers the entire square
-                                  ),
+                        onTap: () {
+                          context.push(
+                              '/wardrobe/category/${images[index]['label']!}');
+                        },
+                        child: Column(
+                          children: <Widget>[
+                            Expanded(
+                              child: AspectRatio(
+                                aspectRatio: 1,
+                                child: Image.network(
+                                  images[index]['url']!,
+                                  fit: BoxFit.cover,
                                 ),
                               ),
-                              SizedBox(
-                                  height: 8.0), // Space between image and text
-                              Text(
-                                images[index]['label']!,
-                                style: TextStyle(
-                                    fontSize: 16.0, fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ));
+                            ),
+                            SizedBox(height: 8.0),
+                            Text(
+                              images[index]['label']!,
+                              style: TextStyle(
+                                  fontSize: 16.0,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      );
                     },
                   ),
                 ),

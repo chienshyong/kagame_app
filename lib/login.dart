@@ -9,8 +9,8 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final AuthService authService = AuthService();
-  final TextEditingController _usernameController = TextEditingController(text: 'dev_username');  // Prefilled username
-  final TextEditingController _passwordController = TextEditingController(text: 'dev_password');  // Prefilled password
+  final TextEditingController _usernameController = TextEditingController(text: 'JWardrobe');  // Prefilled username
+  final TextEditingController _passwordController = TextEditingController(text: 'JWardrobe');  // Prefilled password
 
   @override
   void dispose() {
