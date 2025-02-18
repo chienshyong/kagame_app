@@ -146,7 +146,12 @@ class _CategoryPageState extends State<CategoryPage> {
 
   /// Refresh images manually
   Future<void> refreshImages() async {
-    await cacheManager.emptyCache(); // Clear cached image files
+    for (var image in cachedImages) {
+      String url = image['url'] ?? '';
+      if (url.isNotEmpty) {
+        await cacheManager.removeFile(url); // Remove only this image
+      }
+    }
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove('category_images_${widget.category}'); // Remove stored URLs
     setState(() {
