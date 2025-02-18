@@ -125,6 +125,37 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       routerConfig: router,
+      theme: ThemeData(
+        primarySwatch: Colors.deepOrange, // Changes primary color
+        scaffoldBackgroundColor: Colors.white, // Background color
+        textTheme: TextTheme(
+          bodyMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        appBarTheme: AppBarTheme(
+          backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+          titleTextStyle: TextStyle(color: Colors.black, fontSize: 20),
+        ),
+        navigationBarTheme: NavigationBarThemeData(
+          backgroundColor: Colors.white, // Background color of NavigationBar
+          elevation: 10, // Adds a shadow effect
+          indicatorColor: Colors.black12, // Selection indicator color
+          
+          iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
+            (Set<WidgetState> states) {
+              if (states.contains(WidgetState.selected)) {
+                return IconThemeData(
+                  color: Colors.black, // Color when selected
+                  size: 30, // Large icon when selected
+                );
+              }
+              return IconThemeData(
+                color: Colors.grey, // Color when unselected
+                size: 24, // Smaller icon when unselected
+              );
+            },
+          ),
+        )
+      ),
     );
   }
 }
@@ -152,14 +183,21 @@ class ScaffoldWithNestedNavigation extends StatelessWidget {
         body: navigationShell,
         bottomNavigationBar: NavigationBar(
           selectedIndex: navigationShell.currentIndex,
+          labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected, // Only show selected label
           destinations: const [
             NavigationDestination(
                 label: 'My Wardrobe',
                 icon: Icon(Icons.chrome_reader_mode_outlined)),
-            NavigationDestination(label: 'Add', icon: Icon(Icons.library_add)),
+                // icon: Icon(Icons.all_inbox)), // alternative icon
             NavigationDestination(
-                label: 'Shop', icon: Icon(Icons.shopping_cart)),
-            NavigationDestination(label: 'Profile', icon: Icon(Icons.person)),
+                label: 'Add Clothes', 
+                icon: Icon(Icons.library_add)),
+            NavigationDestination(
+                label: 'Shop', 
+                icon: Icon(Icons.shopping_cart)),
+            NavigationDestination(
+                label: 'Profile', 
+                icon: Icon(Icons.person)),
           ],
           onDestinationSelected: _goBranch,
         ),

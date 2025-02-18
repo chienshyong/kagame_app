@@ -239,8 +239,8 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
                                   },
                                   child: Image.asset(
                                     'lib/assets/KagaMe.png',
-                                    width: 100.0,
-                                    height: 50.0,
+                                    width: 120.0,
+                                    height: 60.0,
                                   ),
                                 ),
                                 SizedBox(width: 16.0),
@@ -258,6 +258,7 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
                                     child: TextField(
                                       decoration: InputDecoration(
                                         hintText: 'Search Products',
+                                        hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
                                         border: InputBorder.none,
                                         prefixIcon: Icon(Icons.search, color: Colors.grey),
                                         suffixIcon: IconButton(
@@ -266,6 +267,7 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
                                             print('Filter icon tapped');
                                           },
                                         ),
+                                        contentPadding: EdgeInsets.symmetric(vertical: 12.0), // Adjust padding
                                       ),
                                     ),
                                   ),

@@ -88,8 +88,12 @@ class _WardrobePageState extends State<WardrobePage> with RouteAware{
                       height: 60.0,
                     ),
                   ),
+                  
+                  // Space between the image and the search bar
                   SizedBox(
-                      width: 16.0), // Space between the image and the search bar
+                      width: 16.0),
+                      
+                  // Search bar
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
@@ -102,9 +106,9 @@ class _WardrobePageState extends State<WardrobePage> with RouteAware{
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 12.0),
                       child: TextField(
-                        textAlign: TextAlign.center,
                         decoration: InputDecoration(
                           hintText: 'Search Wardrobe',
+                          hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
                           border: InputBorder.none,
                           prefixIcon: Icon(Icons.search, color: Colors.grey),
                           suffixIcon: IconButton(
@@ -114,6 +118,7 @@ class _WardrobePageState extends State<WardrobePage> with RouteAware{
                               print('Filter icon tapped');
                             },
                           ),
+                          contentPadding: EdgeInsets.symmetric(vertical: 12.0), // Adjust padding
                         ),
                       ),
                     ),
@@ -121,7 +126,7 @@ class _WardrobePageState extends State<WardrobePage> with RouteAware{
                 ],
               ),
           
-              //Images
+              // Images
               Expanded(
                 child: isLoading
                     ? Center(child: CircularProgressIndicator())
