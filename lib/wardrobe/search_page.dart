@@ -23,14 +23,13 @@ class _SearchPageState extends State<SearchPage> with RouteAware{
     fetchImagesFromApi(); // Fetch new images
   }
 
-
   /// Fetch images from API 
   Future<void> fetchImagesFromApi() async {
     final String baseUrl = authService.baseUrl;
     final token = await authService.getToken();
     final request = http.MultipartRequest(
       'GET',
-      Uri.parse('$baseUrl/wardrobe/categories'),
+      Uri.parse('$baseUrl/wardrobe/search/${widget.query}'),
     );
     request.headers['Authorization'] = 'Bearer $token';
 
@@ -41,27 +40,33 @@ class _SearchPageState extends State<SearchPage> with RouteAware{
         final responseBody = await response.stream.bytesToString();
         final Map<String, dynamic> jsonResponse = json.decode(responseBody);
 
-        // Extract categories list from the JSON response
-        final List<dynamic> categories = jsonResponse['categories'];
+        final List<dynamic> items = jsonResponse['items'];
 
-        List<Map<String, String>> fetchedImages = categories.map((item) => {
-              'url': item['url'] as String,
-              'label': item['category'] as String
+        List<Map<String, String>> fetchedImages = items.map((item) => {
+              'id': item['_id'] as String,
+              'name': item['name'] as String,
+              'url': item['url'] as String
             }).toList();
 
 
         setState(() {
           images = fetchedImages;
+          isLoading = false;
         });
 
         }
       } catch (error) {
       print('Error fetching images: $error');
+      setState(() {
+          isLoading = false;
+        });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    TextEditingController searchController = TextEditingController();
+
     return Scaffold(
       appBar: AppBar(title: Text('Search: ${widget.query}')),
       body: SafeArea(
@@ -95,18 +100,18 @@ class _SearchPageState extends State<SearchPage> with RouteAware{
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 12.0),
                     child: TextField(
-                      textAlign: TextAlign.center,
+                    controller: searchController,
+                    textAlign: TextAlign.center,
+                    onSubmitted: (query) {
+                      if (query.isNotEmpty) {
+                        context.push('/wardrobe/search/$query');
+                      }
+                    },
                       decoration: InputDecoration(
                         hintText: 'Search Wardrobe',
+                        hintStyle: TextStyle(color: Colors.grey),
                         border: InputBorder.none,
                         prefixIcon: Icon(Icons.search, color: Colors.grey),
-                        suffixIcon: IconButton(
-                          icon: Icon(Icons.filter_list, color: Colors.grey),
-                          onPressed: () {
-                            // Add filter action here
-                            print('Filter icon tapped');
-                          },
-                        ),
                       ),
                     ),
                   ),
@@ -132,7 +137,7 @@ class _SearchPageState extends State<SearchPage> with RouteAware{
                         onTap: () {
                           // Navigate to Navigator page on tap
                           context.push(
-                              '/wardrobe/category/${images[index]['label']!}');
+                              '/wardrobe/item/${images[index]['id']!}');
                         },
                         child: Column(
                           children: <Widget>[
@@ -149,7 +154,7 @@ class _SearchPageState extends State<SearchPage> with RouteAware{
                             SizedBox(
                                 height: 8.0), // Space between image and text
                             Text(
-                              images[index]['label']!,
+                              images[index]['name']!,
                               style: TextStyle(
                                   fontSize: 16.0, fontWeight: FontWeight.bold),
                             ),
