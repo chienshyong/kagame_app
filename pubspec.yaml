@@ -24,7 +24,8 @@ dependencies:
   flutter_cache_manager: ^3.3.0
   cached_network_image: ^3.3.0
   shared_preferences: ^2.2.2
-  
+  syncfusion_flutter_sliders: ^27.2.5
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
