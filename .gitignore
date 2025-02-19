@@ -58,3 +58,4 @@ ios/Flutter/Generated*
 .metadata
 macos/Flutter/GeneratedPluginRegistrant.swift
 ios/Flutter/.Generated*
+/.run/main.dart.run.xml
