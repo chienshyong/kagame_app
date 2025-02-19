@@ -128,17 +128,17 @@ class _CategoryPageState extends State<CategoryPage> {
       } else {
         throw Exception('Failed to load images');
       }
-    } catch (error) {
-      print('Error fetching images: $error');
-    } finally {
       setState(() {
         isFetching = false;
       });
+    } catch (error) {
+      print('Error fetching images: $error');
     }
   }
 
   /// Replace cached images with new images once they are all fetched
   void updateUIWithNewImages() {
+    isLoading = false;
     setState(() {
       cachedImages = List.from(newImages); // Update displayed images
     });
