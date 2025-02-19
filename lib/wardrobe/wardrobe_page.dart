@@ -163,57 +163,52 @@ class _WardrobePageState extends State<WardrobePage> with RouteAware{
 
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('My Wardrobe'), actions: [
-        IconButton(
-          icon: Icon(Icons.refresh),
-          onPressed: refreshImages, // Manual refresh button
-        ),
-      ]),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Logo and Search bar
-            Row(
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    // Navigate to the home page when the logo is tapped
-                    context.go('/home');
-                  },
-                  child: Image.asset(
-                    'lib/assets/KagaMe.png',
-                    width: 120.0,
-                    height: 60.0,
-                  ),
-                ),
-                SizedBox(
-                    width: 16.0), // Space between the image and the search bar
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30.0),
-                      border: Border.all(
-                        color: Colors.grey,
-                        width: 1.0,
-                      ),
+Widget build(BuildContext context) {
+  TextEditingController searchController = TextEditingController();
+
+  return Scaffold(
+    appBar: AppBar(title: Text('My Wardrobe'), actions: [
+      IconButton(
+        icon: Icon(Icons.refresh),
+        onPressed: refreshImages, // Manual refresh button
+      ),
+    ]),
+    body: SafeArea(
+      child: Column(
+        children: [
+          // Logo and Search bar
+          Row(
+            children: [
+              Image.asset(
+                'lib/assets/KagaMe.png',
+                width: 120.0,
+                height: 60.0,
+              ),
+              SizedBox(width: 16.0), // Space between the image and the search bar
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30.0),
+                    border: Border.all(
+                      color: Colors.grey,
+                      width: 1.0,
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                    child: TextField(
-                      textAlign: TextAlign.center,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                  child: TextField(
+                    controller: searchController,
+                    textAlign: TextAlign.center,
+                    onSubmitted: (query) {
+                      if (query.isNotEmpty) {
+                        context.push('/wardrobe/search/$query');
+                      }
+                    },
                       decoration: InputDecoration(
                         hintText: 'Search Wardrobe',
+                        hintStyle: TextStyle(color: Colors.grey),
                         border: InputBorder.none,
                         prefixIcon: Icon(Icons.search, color: Colors.grey),
-                        suffixIcon: IconButton(
-                          icon: Icon(Icons.filter_list, color: Colors.grey),
-                          onPressed: () {
-                            // Add filter action here
-                            print('Filter icon tapped');
-                          },
-                        ),
                       ),
                     ),
                   ),

@@ -163,6 +163,8 @@ class _CategoryPageState extends State<CategoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    TextEditingController searchController = TextEditingController();
+    
     return Scaffold(
       appBar: AppBar(title: Text('My Wardrobe (${widget.category})'), actions: [
         IconButton(
@@ -176,13 +178,10 @@ class _CategoryPageState extends State<CategoryPage> {
             // Logo and Search Bar
             Row(
               children: [
-                GestureDetector(
-                  onTap: () => context.go('/home'),
-                  child: Image.asset(
-                    'lib/assets/KagaMe.png',
-                    width: 120.0,
-                    height: 60.0,
-                  ),
+                Image.asset(
+                  'lib/assets/KagaMe.png',
+                  width: 120.0,
+                  height: 60.0,
                 ),
                 SizedBox(width: 16.0),
                 Expanded(
@@ -194,14 +193,18 @@ class _CategoryPageState extends State<CategoryPage> {
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 12.0),
                     child: TextField(
+                    controller: searchController,
+                    textAlign: TextAlign.center,
+                    onSubmitted: (query) {
+                      if (query.isNotEmpty) {
+                        context.push('/wardrobe/search/$query');
+                      }
+                    },
                       decoration: InputDecoration(
                         hintText: 'Search Wardrobe',
+                        hintStyle: TextStyle(color: Colors.grey),
                         border: InputBorder.none,
                         prefixIcon: Icon(Icons.search, color: Colors.grey),
-                        suffixIcon: IconButton(
-                          icon: Icon(Icons.filter_list, color: Colors.grey),
-                          onPressed: () => print('Filter icon tapped'),
-                        ),
                       ),
                     ),
                   ),

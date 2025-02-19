@@ -7,6 +7,7 @@ import 'wardrobe/wardrobe_page.dart';
 import 'wardrobe/category_page.dart';
 import 'wardrobe/item_page.dart';
 import 'wardrobe/recommend_page.dart';
+import 'wardrobe/search_page.dart';
 import 'add/add.dart';
 import 'profile/profile.dart';
 import 'shop/shop_page.dart'; 
@@ -68,6 +69,13 @@ void main() {
                       builder: (context, state) {
                         final id = state.pathParameters['id'];
                         return RecommendPage(id: id!);
+                      },
+                    ),
+                    GoRoute(
+                      path: 'search/:query',
+                      builder: (context, state) {
+                        final query = state.pathParameters['query'];
+                        return SearchPage(query: query!);
                       },
                     ),
                   ]),
