@@ -37,14 +37,14 @@ class _ItemPageState extends State<ItemPage> {
     _fetchDropdownItems();
   }
 
-  // 2️⃣ Define the function to handle input changes
+  // Define the function to handle input changes
   void _onPromptChanged(String value) {
     print("User typed: $value");
   }
 
   @override
   void dispose() {
-    _promptController.dispose(); // 3️⃣ Dispose the controller when widget is destroyed
+    _promptController.dispose(); // Dispose the controller when widget is destroyed
     super.dispose();
   }
 
@@ -76,6 +76,10 @@ class _ItemPageState extends State<ItemPage> {
       setState(() {
         isLoading = false;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Item does not exist')),
+      );
+      context.pop();
     }
   }
 
@@ -99,6 +103,26 @@ class _ItemPageState extends State<ItemPage> {
     setState(() {
       _tagvalues.removeAt(index);
     });
+  }
+
+  //Delete the item
+  Future<void> _deleteItem() async {
+    final String baseUrl = authService.baseUrl;
+    final token = await authService.getToken();
+    // Send DELETE request
+    final response = await http.delete(
+      Uri.parse('$baseUrl/wardrobe/item/${jsonResponse["_id"]}'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      }
+    );
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Item deleted')),
+      );
+      context.pop();
+    }
   }
 
   //Update the item details
@@ -149,6 +173,8 @@ class _ItemPageState extends State<ItemPage> {
       );
     }
   }
+
+  
 
   @override
   Widget build(BuildContext context) {   
@@ -298,7 +324,13 @@ class _ItemPageState extends State<ItemPage> {
                     onPressed: () {
                       _updateItem();
                     },
-                    child: const Text('Save Changes'),
+                    child: const Text('Save'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      _deleteItem();
+                    },
+                    child: const Text('Delete'),
                   ),
                   ElevatedButton(
                     onPressed: () {
