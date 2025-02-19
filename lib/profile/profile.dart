@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:syncfusion_flutter_sliders/sliders.dart';
+import 'package:http/http.dart' as http;
 
 import '../services/auth_service.dart';
 
@@ -13,8 +17,75 @@ class ProfilePage extends StatefulWidget {
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends State<ProfilePage> with RouteAware{
+  Future<void> getProfileData() async {
+    final String baseUrl = authService.baseUrl;
+    final token = await authService.getToken();
+    try{
+      final response = await http.get(
+        Uri.parse('$baseUrl/profile/retrieve'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonResponse = json.decode(response.body);
+
+        setState(() {
+          _genderSelected = jsonResponse["gender"] ?? "Prefer not to say";
+          _birthdayController.text = jsonResponse['birthday'] ?? "";
+          _locationController.text = jsonResponse['location'] ?? "";
+          _heightController.text = jsonResponse['height'] ?? "";
+          _weightController.text = jsonResponse['weight'] ?? "";
+          _raceController.text = jsonResponse['ethnicity'] ?? "";
+          _skinToneController.text = jsonResponse['skin_tone'] ?? "";
+        });
+      }
+    }
+    catch (error){
+      print('Error fetching profile: $error');
+    }
+  }
+
+
+  Future<void> updateProfileData() async {
+    final String baseUrl = authService.baseUrl;
+    final token = await authService.getToken();
+    Map<String, dynamic> updatedProfile = {
+      "gender": _genderSelected,
+      "birthday": _birthdayController.text,
+      "location": _locationController.text,
+      "height": _heightController.text.toString(),
+      "weight": _weightController.text.toString(),
+      "ethnicity": _raceController.text,
+      "skin_tone": _skinToneController.text,
+      "style": _styleResult,
+      "happiness_current_wardrobe": _happinessLevel.toInt().toString()
+    };
+
+    String jsonData = jsonEncode(updatedProfile);
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/profile/update'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonData,
+    );
+
+    if (response.statusCode != 200) {
+      final responseJson = jsonDecode(response.body);
+      final message = responseJson["detail"];
+      print(responseJson["detail"]);
+      throw Exception(message);
+    }
+  }
+
   String _styleResult = "Not determined yet";
+  double _happinessLevel = 1;
+  List<String> _genderDropdownList = <String>["Prefer not to say", "Female", "Male"];
+  String _genderSelected = "Prefer not to say";
 
   List<Color> _skinToneColors = [
     const Color(0xFFf6ede4),
@@ -63,6 +134,12 @@ class _ProfilePageState extends State<ProfilePage> {
   final FocusNode _weightFocusNode = FocusNode();
   final FocusNode _skinToneFocusNode = FocusNode();
   final FocusNode _bioFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    getProfileData();
+  }
 
   @override
   void dispose() {
@@ -171,12 +248,28 @@ class _ProfilePageState extends State<ProfilePage> {
               SizedBox(height: 24),
 
               // Gender field
-              _buildTextField(
-                label: 'Gender',
-                controller: _genderController,
-                focusNode: _genderFocusNode,
-                nextFocusNode: _birthdayFocusNode,
-              ),
+              // _buildTextField(
+              //   label: 'Gender',
+              //   controller: _genderController,
+              //   focusNode: _genderFocusNode,
+              //   nextFocusNode: _birthdayFocusNode,
+              // ),
+              Text("Gender"),
+              DropdownButton<String>(
+                value: _genderSelected,
+                icon: const Icon(Icons.arrow_downward),
+                elevation: 16,
+                style: const TextStyle(color: Colors.deepPurple),
+                underline: Container(height: 2, color: Colors.deepPurpleAccent),
+                onChanged: (String? value) {
+                setState(() {
+                _genderSelected = value!;
+                });
+                },
+                items: _genderDropdownList.map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(value: value, child: Text(value));
+                }).toList(),
+                ),
               SizedBox(height: 16),
 
               // Birthday field
@@ -224,7 +317,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               SizedBox(height: 16),
 
-              // Race field
+              // Ethnicity field
               _buildTextField(
                 label: 'Ethnicity',
                 controller: _raceController,
@@ -232,41 +325,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 nextFocusNode: _skinToneFocusNode,
               ),
               SizedBox(height: 16),
-              Text(
-                "My style is: $_styleResult",
-                style: TextStyle(fontSize: 16),
-              ),
-              SizedBox(height: 8),
-              Center(
-                child: ElevatedButton(
-                  onPressed: () async {
-                    String? result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => QuizPage()),
-                    );
-                    if (result != null && result.isNotEmpty) {
-                      setState(() {
-                        _styleResult = result;
-                      });
-                    }
-                  },
-                  child: Text('Find my style'),
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    textStyle: TextStyle(fontSize: 16),
-                  ),
-                ),
-              ),
-              SizedBox(height: 16),
 
               // Skin Tone field
-              _buildTextField(
-                label: 'Skin Tone',
-                controller: _skinToneController,
-                focusNode: _skinToneFocusNode,
-                nextFocusNode: _bioFocusNode,
-              ),
-              SizedBox(height: 16),
               Text("Pick the closest skin tone to yours:"),
               SizedBox(height: 8),
               Wrap(
@@ -296,14 +356,71 @@ class _ProfilePageState extends State<ProfilePage> {
                   );
                 }).toList(),
               ),
-              SizedBox(height: 24),
-
-              // Bio field
+              SizedBox(height: 16),
               _buildTextField(
-                label: 'Bio',
-                controller: _bioController,
-                focusNode: _bioFocusNode,
-                maxLines: 3,
+                label: 'Skin Tone',
+                controller: _skinToneController,
+                focusNode: _skinToneFocusNode,
+                nextFocusNode: _bioFocusNode,
+              ),
+              SizedBox(height: 16),
+
+              // Style Quiz
+              Text(
+                "My style is: $_styleResult",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              SizedBox(height: 8),
+              Center(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    String? result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => QuizPage()),
+                    );
+                    if (result != null && result.isNotEmpty) {
+                      setState(() {
+                        _styleResult = result;
+                      });
+                    }
+                  },
+                  child: Text('Find my style'),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    textStyle: TextStyle(fontSize: 16),
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
+
+              // Happiness Slider
+              Text(
+                "How happy are you with your current wardrobe?",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              SizedBox(height: 8),
+              Center(
+                child: SfSlider(
+                  min: 1,
+                  max: 10,
+                  value: _happinessLevel,
+                  interval: 1,
+                  showTicks: true,
+                  showLabels: true,
+                  enableTooltip: true,
+                  minorTicksPerInterval: 0,
+                  stepSize: 1,
+                  onChanged: (dynamic value) {
+                    setState(() {
+                      _happinessLevel = value;
+                    });
+                  },
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                "Your rating: ${_happinessLevel.toInt()}",
+                style: TextStyle(fontSize: 16),
               ),
               SizedBox(height: 24),
 
@@ -312,6 +429,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: ElevatedButton(
                   onPressed: () {
                     // Handle submission logic here
+                    updateProfileData();
                     if (_validateBirthday(_birthdayController.text)) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text("Profile Updated.")),
