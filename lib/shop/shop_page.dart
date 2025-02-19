@@ -18,14 +18,13 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
   List<Map<String, dynamic>> recommendedProducts = []; // Recommended products
   bool isLoading = true;
   bool isLoadingRecommendations = true;
-  late TabController _tabController;
+  int selectedTab = 0; // Track selected tab (0 = Recommended, 1 = All Products)
 
   @override
   void initState() {
     super.initState();
     fetchRecommendedProducts(); // Load recommended first
     fetchProducts(); // Load all products second
-    _tabController = TabController(length: 2, vsync: this, initialIndex: 0); // Set recommended as default
   }
 
   Future<void> fetchProducts() async {
@@ -46,7 +45,6 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
       );
 
       print('Response status: ${response.statusCode}');
-      // Optionally, limit the length of the printed body for large responses
       print('Response body: ${response.body.substring(0, 500)}...');
 
       if (response.statusCode == 200) {
@@ -60,7 +58,6 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
               'label': item['name']?.toString() ?? '',
               'price': item['price']?.toString() ?? '',
               'product_url': item['product_url']?.toString() ?? '',
-              // Include any other fields you need
             };
           }).toList();
           isLoading = false;
@@ -97,7 +94,6 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
       );
 
       print('Recommendations Response status: ${response.statusCode}');
-      // Optionally, limit the length of the printed body for large responses
       print('Recommendations Response body: ${response.body.substring(0, 500)}...');
 
       if (response.statusCode == 200) {
@@ -111,7 +107,6 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
               'label': item['name']?.toString() ?? '',
               'price': item['price']?.toString() ?? '',
               'product_url': item['product_url']?.toString() ?? '',
-              // Include any other fields you need
             };
           }).toList();
           isLoadingRecommendations = false;
@@ -132,7 +127,6 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
 
   @override
   void dispose() {
-    _tabController.dispose();
     super.dispose();
   }
 
@@ -221,13 +215,6 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
                         floating: true,
                         snap: true,
                         expandedHeight: 80.0,
-                        bottom: TabBar(
-                          controller: _tabController,
-                          tabs: [
-                            Tab(text: 'Recommended'), // First tab (Left)
-                            Tab(text: 'All Products'), // Second tab (Right)
-                          ],
-                        ),
                         flexibleSpace: FlexibleSpaceBar(
                           background: Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -279,28 +266,71 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
                       ),
                     ];
                   },
-                  body: TabBarView(
-                    controller: _tabController,
+                  body: Column(
                     children: [
-                      isLoadingRecommendations
-                          ? Center(child: CircularProgressIndicator())
-                          : RefreshIndicator(
-                        onRefresh: _refreshRecommendedProducts,
-                        child: CustomScrollView(
-                          slivers: [
-                            buildProductGrid(recommendedProducts),
+                      // Recommended and All Products Tabs (Middle Section)
+                      Container(
+                        color: Colors.grey[200], // Background for tabs
+                        padding: EdgeInsets.symmetric(vertical: 8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  selectedTab = 0;
+                                });
+                              },
+                              child: Text(
+                                "Recommended",
+                                style: TextStyle(
+                                  fontSize: 16.0,
+                                  fontWeight: selectedTab == 0 ? FontWeight.bold : FontWeight.normal,
+                                  color: selectedTab == 0 ? Colors.blue : Colors.black,
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  selectedTab = 1;
+                                });
+                              },
+                              child: Text(
+                                "All Products",
+                                style: TextStyle(
+                                  fontSize: 16.0,
+                                  fontWeight: selectedTab == 1 ? FontWeight.bold : FontWeight.normal,
+                                  color: selectedTab == 1 ? Colors.blue : Colors.black,
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                      isLoading
-                          ? Center(child: CircularProgressIndicator())
-                          : RefreshIndicator(
-                        onRefresh: _refreshAllProducts,
-                        child: CustomScrollView(
-                          slivers: [
-                            buildProductGrid(products),
-                          ],
-                        ),
+                      // Images GridView (Bottom Section)
+                      Expanded(
+                        child: selectedTab == 0
+                            ? (isLoadingRecommendations
+                                ? Center(child: CircularProgressIndicator())
+                                : RefreshIndicator(
+                                    onRefresh: _refreshRecommendedProducts,
+                                    child: CustomScrollView(
+                                      slivers: [
+                                        buildProductGrid(recommendedProducts),
+                                      ],
+                                    ),
+                                  ))
+                            : (isLoading
+                                ? Center(child: CircularProgressIndicator())
+                                : RefreshIndicator(
+                                    onRefresh: _refreshAllProducts,
+                                    child: CustomScrollView(
+                                      slivers: [
+                                        buildProductGrid(products),
+                                      ],
+                                    ),
+                                  )),
                       ),
                     ],
                   ),
