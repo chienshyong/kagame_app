@@ -18,7 +18,7 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
   List<Map<String, dynamic>> recommendedProducts = []; // Recommended products
   bool isLoading = true;
   bool isLoadingRecommendations = true;
-  int selectedTab = 0; // Track selected tab (0 = Recommended, 1 = All Products)
+  int selectedTab = 0; // 0 = Recommended, 1 = All Products
 
   @override
   void initState() {
@@ -58,6 +58,11 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
               'label': item['name']?.toString() ?? '',
               'price': item['price']?.toString() ?? '',
               'product_url': item['product_url']?.toString() ?? '',
+              'category': item['category']?.toString() ?? '',
+              'clothing_type': item['clothing_type']?.toString() ?? '',
+              'color': item['color']?.toString() ?? '',
+              'material': item['material']?.toString() ?? '',
+              'other_tags': item['other_tags']?.toString() ?? '',
             };
           }).toList();
           isLoading = false;
@@ -107,6 +112,11 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
               'label': item['name']?.toString() ?? '',
               'price': item['price']?.toString() ?? '',
               'product_url': item['product_url']?.toString() ?? '',
+              'category': item['category']?.toString() ?? '',
+              'clothing_type': item['clothing_type']?.toString() ?? '',
+              'color': item['color']?.toString() ?? '',
+              'material': item['material']?.toString() ?? '',
+              'other_tags': item['other_tags']?.toString() ?? '',
             };
           }).toList();
           isLoadingRecommendations = false;
@@ -125,11 +135,6 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
     }
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
   Widget buildProductGrid(List<Map<String, dynamic>> productList) {
     return SliverPadding(
       padding: const EdgeInsets.all(8.0),
@@ -141,7 +146,7 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
           childAspectRatio: 0.7,
         ),
         delegate: SliverChildBuilderDelegate(
-          (BuildContext context, int index) {
+              (BuildContext context, int index) {
             final product = productList[index];
             return GestureDetector(
               onTap: () {
@@ -168,18 +173,12 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
                   SizedBox(height: 8.0),
                   Text(
                     product['label']!,
-                    style: TextStyle(
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 4.0),
                   Text(
                     product['price']!,
-                    style: TextStyle(
-                      fontSize: 14.0,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: TextStyle(fontSize: 14.0, fontWeight: FontWeight.w500),
                   ),
                 ],
               ),
@@ -206,136 +205,134 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
         child: isLoading && isLoadingRecommendations
             ? Center(child: CircularProgressIndicator())
             : DefaultTabController(
-                length: 2,
-                child: NestedScrollView(
-                  headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-                    return [
-                      SliverAppBar(
-                        pinned: true,
-                        floating: true,
-                        snap: true,
-                        expandedHeight: 80.0,
-                        flexibleSpace: FlexibleSpaceBar(
-                          background: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              children: [
-                                GestureDetector(
-                                  onTap: () {
-                                    context.go('/home');
-                                  },
-                                  child: Image.asset(
-                                    'lib/assets/KagaMe.png',
-                                    width: 120.0,
-                                    height: 60.0,
-                                  ),
-                                ),
-                                SizedBox(width: 16.0),
-                                Expanded(
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(30.0),
-                                      border: Border.all(
-                                        color: Colors.grey,
-                                        width: 1.0,
-                                      ),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                                    child: TextField(
-                                      decoration: InputDecoration(
-                                        hintText: 'Search Products',
-                                        hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
-                                        border: InputBorder.none,
-                                        prefixIcon: Icon(Icons.search, color: Colors.grey),
-                                        suffixIcon: IconButton(
-                                          icon: Icon(Icons.filter_list, color: Colors.grey),
-                                          onPressed: () {
-                                            print('Filter icon tapped');
-                                          },
-                                        ),
-                                        contentPadding: EdgeInsets.symmetric(vertical: 12.0), // Adjust padding
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+          length: 2,
+          child: NestedScrollView(
+            headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+              return [
+                SliverAppBar(
+                  pinned: true,
+                  floating: true,
+                  snap: true,
+                  expandedHeight: 80.0,
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              context.go('/home');
+                            },
+                            child: Image.asset(
+                              'lib/assets/KagaMe.png',
+                              width: 120.0,
+                              height: 60.0,
                             ),
+                          ),
+                          SizedBox(width: 16.0),
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(30.0),
+                                border: Border.all(
+                                  color: Colors.grey,
+                                  width: 1.0,
+                                ),
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                              child: TextField(
+                                decoration: InputDecoration(
+                                  hintText: 'Search Products',
+                                  hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
+                                  border: InputBorder.none,
+                                  prefixIcon: Icon(Icons.search, color: Colors.grey),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(Icons.filter_list, color: Colors.grey),
+                                    onPressed: () {
+                                      print('Filter icon tapped');
+                                    },
+                                  ),
+                                  contentPadding: EdgeInsets.symmetric(vertical: 12.0),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ];
+            },
+            body: Column(
+              children: [
+                Container(
+                  color: Colors.grey[200],
+                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            selectedTab = 0;
+                          });
+                        },
+                        child: Text(
+                          "Recommended",
+                          style: TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: selectedTab == 0 ? FontWeight.bold : FontWeight.normal,
+                            color: selectedTab == 0 ? Colors.blue : Colors.black,
                           ),
                         ),
                       ),
-                    ];
-                  },
-                  body: Column(
-                    children: [
-                      // Recommended and All Products Tabs (Middle Section)
-                      Container(
-                        color: Colors.grey[200], // Background for tabs
-                        padding: EdgeInsets.symmetric(vertical: 8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            TextButton(
-                              onPressed: () {
-                                setState(() {
-                                  selectedTab = 0;
-                                });
-                              },
-                              child: Text(
-                                "Recommended",
-                                style: TextStyle(
-                                  fontSize: 16.0,
-                                  fontWeight: selectedTab == 0 ? FontWeight.bold : FontWeight.normal,
-                                  color: selectedTab == 0 ? Colors.blue : Colors.black,
-                                ),
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                setState(() {
-                                  selectedTab = 1;
-                                });
-                              },
-                              child: Text(
-                                "All Products",
-                                style: TextStyle(
-                                  fontSize: 16.0,
-                                  fontWeight: selectedTab == 1 ? FontWeight.bold : FontWeight.normal,
-                                  color: selectedTab == 1 ? Colors.blue : Colors.black,
-                                ),
-                              ),
-                            ),
-                          ],
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            selectedTab = 1;
+                          });
+                        },
+                        child: Text(
+                          "All Products",
+                          style: TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: selectedTab == 1 ? FontWeight.bold : FontWeight.normal,
+                            color: selectedTab == 1 ? Colors.blue : Colors.black,
+                          ),
                         ),
-                      ),
-                      // Images GridView (Bottom Section)
-                      Expanded(
-                        child: selectedTab == 0
-                            ? (isLoadingRecommendations
-                                ? Center(child: CircularProgressIndicator())
-                                : RefreshIndicator(
-                                    onRefresh: _refreshRecommendedProducts,
-                                    child: CustomScrollView(
-                                      slivers: [
-                                        buildProductGrid(recommendedProducts),
-                                      ],
-                                    ),
-                                  ))
-                            : (isLoading
-                                ? Center(child: CircularProgressIndicator())
-                                : RefreshIndicator(
-                                    onRefresh: _refreshAllProducts,
-                                    child: CustomScrollView(
-                                      slivers: [
-                                        buildProductGrid(products),
-                                      ],
-                                    ),
-                                  )),
                       ),
                     ],
                   ),
                 ),
-              ),
+                Expanded(
+                  child: selectedTab == 0
+                      ? (isLoadingRecommendations
+                      ? Center(child: CircularProgressIndicator())
+                      : RefreshIndicator(
+                    onRefresh: _refreshRecommendedProducts,
+                    child: CustomScrollView(
+                      slivers: [
+                        buildProductGrid(recommendedProducts),
+                      ],
+                    ),
+                  ))
+                      : (isLoading
+                      ? Center(child: CircularProgressIndicator())
+                      : RefreshIndicator(
+                    onRefresh: _refreshAllProducts,
+                    child: CustomScrollView(
+                      slivers: [
+                        buildProductGrid(products),
+                      ],
+                    ),
+                  )),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
