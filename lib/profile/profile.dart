@@ -241,23 +241,24 @@ final birthdayFormatter = TextInputFormatter.withFunction(
               SizedBox(height: 24),
 
               // Gender (Dropdown)
-              Text("Gender"),
-              DropdownButton<String>(
+              DropdownButtonFormField<String>(
                 value: _genderSelected,
-                icon: const Icon(Icons.arrow_downward),
-                elevation: 16,
-                style: const TextStyle(color: Colors.deepPurple),
-                underline: Container(
-                  height: 2,
-                  color: Colors.deepPurpleAccent,
+                decoration: InputDecoration(
+                  labelText: "Gender",
+                  border: OutlineInputBorder(),
                 ),
+                icon: const Icon(Icons.arrow_downward),
+                style: const TextStyle(color: Colors.black),
                 onChanged: (String? value) {
                   setState(() {
                     _genderSelected = value!;
                   });
                 },
                 items: _genderDropdownList.map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(value: value, child: Text(value));
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
                 }).toList(),
               ),
               SizedBox(height: 16),
