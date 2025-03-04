@@ -146,7 +146,7 @@ class _RecommendPageState extends State<RecommendPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ProductDetailPage(product: recommendedProduct),
+                          builder: (context) => ProductDetailPage(productId: recommendedProduct['_id']),
                         ),
                       );
                     },
