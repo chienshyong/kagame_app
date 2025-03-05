@@ -36,7 +36,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     final uri = Uri.parse('$baseUrl/shop/item/${widget.productId}');
 
     try {
-      final response = await http.get(uri, headers: {'Authorization': 'Bearer $token'});
+      final response =
+          await http.get(uri, headers: {'Authorization': 'Bearer $token'});
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
@@ -66,7 +67,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     final uri = Uri.parse('$baseUrl/shop/similar_items?id=$productId&n=5');
 
     try {
-      final response = await http.get(uri, headers: {'Authorization': 'Bearer $token'});
+      final response =
+          await http.get(uri, headers: {'Authorization': 'Bearer $token'});
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
@@ -97,10 +99,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     final token = await authService.getToken();
     final baseUrl = authService.baseUrl;
     final String productId = productDoc!['id'] ?? '';
-    final uri = Uri.parse('$baseUrl/shop/item-outfit-search?item_id=$productId');
+    final uri =
+        Uri.parse('$baseUrl/shop/item-outfit-search?item_id=$productId');
 
     try {
-      final response = await http.get(uri, headers: {'Authorization': 'Bearer $token'});
+      final response =
+          await http.get(uri, headers: {'Authorization': 'Bearer $token'});
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
@@ -158,22 +162,33 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(name, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                  Text(brandName, style: TextStyle(fontSize: 20, color: Colors.grey)),
+                  Text(name,
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  Text(brandName,
+                      style: TextStyle(fontSize: 20, color: Colors.grey)),
                   SizedBox(height: 8),
-                  Text('\$${price.toString()}', style: TextStyle(fontSize: 20, color: Colors.green)),
+                  Text('\$${price.toString()}',
+                      style: TextStyle(fontSize: 20, color: Colors.green)),
                   SizedBox(height: 16),
-                  Text('Tags:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text('Tags:',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   Wrap(
                     spacing: 8.0,
                     children: (tags is List)
-                        ? tags.map<Widget>((tag) => Chip(label: Text(tag.toString()))).toList()
+                        ? tags
+                            .map<Widget>(
+                                (tag) => Chip(label: Text(tag.toString())))
+                            .toList()
                         : [],
                   ),
                   SizedBox(height: 16),
 
                   // Similar Items
-                  Text('Similar Items', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text('Similar Items',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   isLoadingSimilar
                       ? Center(child: CircularProgressIndicator())
                       : (similarProducts.isNotEmpty
@@ -182,7 +197,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   SizedBox(height: 24),
 
                   // Recommended Outfits
-                  Text('Recommended Outfits', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text('Recommended Outfits',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   buildRecommendedOutfitsSection(),
                 ],
               ),
@@ -225,8 +242,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     errorBuilder: (ctx, e, st) => Icon(Icons.error),
                   ),
                   SizedBox(height: 8),
-                  Text(sp['label'] ?? "", style: TextStyle(fontSize: 16), maxLines: 2, overflow: TextOverflow.ellipsis),
-                  Text('\$${sp['price']}', style: TextStyle(fontSize: 16, color: Colors.green)),
+                  Text(sp['label'] ?? "",
+                      style: TextStyle(fontSize: 16),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis),
+                  Text('\$${sp['price']}',
+                      style: TextStyle(fontSize: 16, color: Colors.green)),
                 ],
               ),
             ),
@@ -245,7 +266,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: recommendedOutfits.map((outfit) => buildOutfitCard(outfit)).toList(),
+      children:
+          recommendedOutfits.map((outfit) => buildOutfitCard(outfit)).toList(),
     );
   }
 
@@ -261,11 +283,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(styleName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          Text(outfitName, style: TextStyle(color: Colors.grey[700], fontSize: 14)),
+          Text(styleName,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          Text(outfitName,
+              style: TextStyle(color: Colors.grey[700], fontSize: 14)),
           SizedBox(height: 8),
 
-          // Instead of a list of items, we show them in top/bottom/shoes order
+          // Show top/bottom/shoes layout
           OutfitStackWidget(
             originalDoc: productDoc!,
             outfitItems: outfitItems,
@@ -293,7 +317,6 @@ class OutfitStackWidget extends StatefulWidget {
 class _OutfitStackWidgetState extends State<OutfitStackWidget> {
   final AuthService authService = AuthService();
 
-  // We'll store the doc for tops/bottoms/shoes
   Map<String, dynamic>? topsDoc;
   Map<String, dynamic>? bottomsDoc;
   Map<String, dynamic>? shoesDoc;
@@ -308,8 +331,8 @@ class _OutfitStackWidgetState extends State<OutfitStackWidget> {
   }
 
   void _assignOriginalDoc() {
-    // We rely on doc["category"] being exactly "tops", "bottoms", or "shoes".
-    final originalCat = widget.originalDoc['category']?.toString().toLowerCase() ?? '';
+    final originalCat =
+        widget.originalDoc['category']?.toString().toLowerCase() ?? '';
     if (originalCat == 'tops') {
       topsDoc = widget.originalDoc;
     } else if (originalCat == 'bottoms') {
@@ -322,7 +345,6 @@ class _OutfitStackWidgetState extends State<OutfitStackWidget> {
   Future<void> _fetchMatchedItems() async {
     final fetchFutures = <Future>[];
 
-    // For each recommended item, fetch its doc
     for (final outfitItem in widget.outfitItems) {
       final matchData = outfitItem['match'];
       if (matchData == null) continue;
@@ -334,7 +356,6 @@ class _OutfitStackWidgetState extends State<OutfitStackWidget> {
     }
 
     try {
-      // Wait for all to complete
       await Future.wait(fetchFutures);
     } catch (e) {
       debugPrint("Error in _fetchMatchedItems: $e");
@@ -349,11 +370,12 @@ class _OutfitStackWidgetState extends State<OutfitStackWidget> {
     final uri = Uri.parse('$baseUrl/shop/item/$itemId');
 
     try {
-      final response = await http.get(uri, headers: {'Authorization': 'Bearer $token'});
+      final response =
+          await http.get(uri, headers: {'Authorization': 'Bearer $token'});
       if (response.statusCode == 200) {
         final doc = json.decode(response.body);
-
         final cat = doc['category']?.toString().toLowerCase() ?? '';
+
         if (cat == 'tops') {
           topsDoc = doc;
         } else if (cat == 'bottoms') {
@@ -389,24 +411,34 @@ class _OutfitStackWidgetState extends State<OutfitStackWidget> {
 
   Widget _buildSlot(Map<String, dynamic>? doc, String placeholder) {
     if (doc == null) {
-      // No item in this slot
       return Container(
-        width: double.infinity,
-        height: 250,
+        margin: EdgeInsets.symmetric(
+            horizontal:
+                MediaQuery.of(context).size.width * 0.08), // Default 10% padding
         color: Colors.grey[300],
         alignment: Alignment.center,
         child: Text("No $placeholder"),
       );
     }
 
-    // If doc is present, get the cropped or fallback
     final cropped = doc['cropped_image_url'] ?? '';
     final fallback = doc['image_url'] ?? '';
     final imageUrl = (cropped.isNotEmpty) ? cropped : fallback;
 
-    // Is it shoes category?
-    final cat = doc['category']?.toString().toLowerCase();
-    final isShoes = (cat == 'shoes');
+    // Determine padding based on category
+    final category = doc['category']?.toString().toLowerCase() ?? '';
+    final double sidePadding;
+
+    if (category == 'bottoms') {
+      sidePadding =
+          MediaQuery.of(context).size.width * 0.18; // 20% padding for bottoms
+    } else if (category == 'shoes') {
+      sidePadding =
+          MediaQuery.of(context).size.width * 0.25; // 30% padding for shoes
+    } else {
+      sidePadding = MediaQuery.of(context).size.width *
+          0.1; // 10% padding for tops & others
+    }
 
     return GestureDetector(
       onTap: () {
@@ -421,34 +453,20 @@ class _OutfitStackWidgetState extends State<OutfitStackWidget> {
         }
       },
       child: Container(
-        width: double.infinity,
-        height: 250,
-        color: Colors.grey[200],
-        child: _buildImageWidget(imageUrl, isShoes),
-      ),
-    );
-  }
-
-  /// If it's shoes, only show bottom half. Otherwise, show entire image.
-  Widget _buildImageWidget(String url, bool isShoes) {
-    if (isShoes) {
-      return ClipRect(
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          heightFactor: 0.5,
-          child: Image.network(
-            url,
-            fit: BoxFit.cover,
-            errorBuilder: (ctx, e, st) => Center(child: Icon(Icons.error)),
+        margin: EdgeInsets.symmetric(
+            horizontal: sidePadding), // Apply category-based padding
+        child: Image.network(
+          imageUrl,
+          width:
+              double.infinity, // Ensure it spans the full width (minus padding)
+          fit: BoxFit.contain, // Maintain aspect ratio
+          errorBuilder: (ctx, e, st) => Container(
+            color: Colors.grey[300],
+            alignment: Alignment.center,
+            child: Text("Error loading image"),
           ),
         ),
-      );
-    } else {
-      return Image.network(
-        url,
-        fit: BoxFit.contain,
-        errorBuilder: (ctx, e, st) => Center(child: Icon(Icons.error)),
-      );
-    }
+      ),
+    );
   }
 }
