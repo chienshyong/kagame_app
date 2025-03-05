@@ -210,7 +210,8 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
             headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
               return [
                 SliverAppBar(
-                  pinned: true,
+                  backgroundColor: Colors.white,
+                  pinned: false,
                   floating: true,
                   snap: true,
                   expandedHeight: 80.0,
@@ -229,7 +230,7 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
                               height: 60.0,
                             ),
                           ),
-                          SizedBox(width: 16.0),
+                          SizedBox(width: 16.0), // Space between the image and the search bar
                           Expanded(
                             child: Container(
                               decoration: BoxDecoration(
@@ -240,7 +241,7 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
                                   width: 1.0,
                                 ),
                               ),
-                              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                              padding: const EdgeInsets.symmetric(horizontal: 12.0), // padding for elements in search bar
                               child: TextField(
                                 decoration: InputDecoration(
                                   hintText: 'Search Products',
@@ -253,7 +254,7 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
                                       print('Filter icon tapped');
                                     },
                                   ),
-                                  contentPadding: EdgeInsets.symmetric(vertical: 12.0),
+                                  contentPadding: EdgeInsets.symmetric(vertical: 12.0), // padding for hint text of search bar
                                 ),
                               ),
                             ),
@@ -265,7 +266,7 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
                 ),
               ];
             },
-            body: Column(
+            body: Column( // Tabs for "recommended" and "all products"
               children: [
                 Container(
                   color: Colors.grey[200],
@@ -306,7 +307,7 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
                     ],
                   ),
                 ),
-                Expanded(
+                Expanded( // widget for handling conditional content display
                   child: selectedTab == 0
                       ? (isLoadingRecommendations
                       ? Center(child: CircularProgressIndicator())
