@@ -25,6 +25,12 @@ dependencies:
   cached_network_image: ^3.3.0
   shared_preferences: ^2.2.2
   syncfusion_flutter_sliders: ^27.2.5
+  flutter_launcher_icons: ^0.13.1 
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "lib/assets/app_icon.png"  # Path to your logo image
 
 dev_dependencies:
   flutter_test:
