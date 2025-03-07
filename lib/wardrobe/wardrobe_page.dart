@@ -186,9 +186,6 @@ Widget build(BuildContext context) {
                       child: Row(
                         children: [
                           GestureDetector(
-                            onTap: () {
-                              context.go('/home');
-                            },
                             child: Image.asset(
                               'lib/assets/KagaMe.png',
                               width: 120.0,

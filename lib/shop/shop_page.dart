@@ -207,9 +207,6 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
                             child: Row(
                               children: [
                                 GestureDetector(
-                                  onTap: () {
-                                    context.go('/home');
-                                  },
                                   child: Image.asset(
                                     'lib/assets/KagaMe.png',
                                     width: 120.0,
