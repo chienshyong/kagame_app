@@ -18,13 +18,12 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
   List<Map<String, dynamic>> recommendedProducts = []; // Recommended products
   bool isLoading = true;
   bool isLoadingRecommendations = true;
-  int selectedTab = 0; // 0 = Recommended, 1 = All Products
 
   @override
   void initState() {
     super.initState();
-    fetchRecommendedProducts(); // Load recommended first
-    fetchProducts();            // Load all products second
+    fetchRecommendedProducts();
+    fetchProducts();
   }
 
   Future<void> fetchProducts() async {
@@ -43,9 +42,6 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
           'Authorization': 'Bearer $token',
         },
       );
-
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body.substring(0, 500)}...');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
@@ -67,14 +63,10 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
           }).toList();
           isLoading = false;
         });
-
-        print('Products loaded successfully: ${products.length} items.');
       } else {
-        print('Failed to load products: ${response.body}');
         throw Exception('Failed to load products');
       }
     } catch (error) {
-      print('Error fetching products: $error');
       setState(() {
         isLoading = false;
       });
@@ -98,9 +90,6 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
         },
       );
 
-      print('Recommendations Response status: ${response.statusCode}');
-      print('Recommendations Response body: ${response.body.substring(0, 500)}...');
-
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
 
@@ -121,14 +110,10 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
           }).toList();
           isLoadingRecommendations = false;
         });
-
-        print('Recommended products loaded successfully: ${recommendedProducts.length} items.');
       } else {
-        print('Failed to load recommended products: ${response.body}');
         throw Exception('Failed to load recommended products');
       }
     } catch (error) {
-      print('Error fetching recommended products: $error');
       setState(() {
         isLoadingRecommendations = false;
       });
@@ -150,13 +135,10 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
             final product = productList[index];
             return GestureDetector(
               onTap: () {
-                // Pass only the product ID to the detail page
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ProductDetailPage(
-                      productId: product['id'],
-                    ),
+                    builder: (context) => ProductDetailPage(productId: product['id']),
                   ),
                 );
               },
@@ -205,16 +187,17 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: isLoading && isLoadingRecommendations
+        child: (isLoading && isLoadingRecommendations)
             ? Center(child: CircularProgressIndicator())
             : DefaultTabController(
                 length: 2,
                 child: NestedScrollView(
                   headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
                     return [
+                      // SliverAppBar with logo and search bar
                       SliverAppBar(
                         backgroundColor: Colors.white,
-                  pinned: false,
+                        pinned: false,
                         floating: true,
                         snap: true,
                         expandedHeight: 80.0,
@@ -233,7 +216,7 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
                                     height: 60.0,
                                   ),
                                 ),
-                                SizedBox(width: 16.0), // Space between the image and the search bar
+                                SizedBox(width: 16.0),
                                 Expanded(
                                   child: Container(
                                     decoration: BoxDecoration(
@@ -244,7 +227,7 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
                                         width: 1.0,
                                       ),
                                     ),
-                                    padding: const EdgeInsets.symmetric(horizontal: 12.0), // padding for elements in search bar
+                                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
                                     child: TextField(
                                       decoration: InputDecoration(
                                         hintText: 'Search Products',
@@ -257,7 +240,7 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
                                             print('Filter icon tapped');
                                           },
                                         ),
-                                        contentPadding: EdgeInsets.symmetric(vertical: 12.0), // padding for hint text of search bar
+                                        contentPadding: EdgeInsets.symmetric(vertical: 12.0),
                                       ),
                                     ),
                                   ),
@@ -267,77 +250,76 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
                           ),
                         ),
                       ),
-                    ];
-                  },
-                  body: Column( // Tabs for "recommended" and "all products"
-                    children: [
-                      Container(
-                        color: Colors.grey[200],
-                        padding: EdgeInsets.symmetric(vertical: 8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            TextButton(
-                              onPressed: () {
-                                setState(() {
-                                  selectedTab = 0;
-                                });
-                              },
-                              child: Text(
-                                "Recommended",
-                                style: TextStyle(
-                                  fontSize: 16.0,
-                                  fontWeight: selectedTab == 0 ? FontWeight.bold : FontWeight.normal,
-                                  color: selectedTab == 0 ? Colors.blue : Colors.black,
-                                ),
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                setState(() {
-                                  selectedTab = 1;
-                                });
-                              },
-                              child: Text(
-                                "All Products",
-                                style: TextStyle(
-                                  fontSize: 16.0,
-                                  fontWeight: selectedTab == 1 ? FontWeight.bold : FontWeight.normal,
-                                  color: selectedTab == 1 ? Colors.blue : Colors.black,
-                                ),
-                              ),
-                            ),
-                          ],
+                      // Persistent header for the TabBar
+                      SliverPersistentHeader(
+                        pinned: true,
+                        delegate: _SliverAppBarDelegate(
+                          TabBar(
+                            indicatorColor: Colors.blue,
+                            labelColor: Colors.black,
+                            tabs: [
+                              Tab(text: "Recommended For You"),
+                              Tab(text: "All Products"),
+                            ],
+                          ),
                         ),
                       ),
-                      Expanded( // widget for handling conditional content display
-                        child: selectedTab == 0
-                            ? (isLoadingRecommendations
-                                ? Center(child: CircularProgressIndicator())
-                                : RefreshIndicator(
-                                    onRefresh: _refreshRecommendedProducts,
-                                    child: CustomScrollView(
-                                      slivers: [
-                                        buildProductGrid(recommendedProducts),
-                                      ],
-                                    ),
-                                  ))
-                            : (isLoading
-                                ? Center(child: CircularProgressIndicator())
-                                : RefreshIndicator(
-                                    onRefresh: _refreshAllProducts,
-                                    child: CustomScrollView(
-                                      slivers: [
-                                        buildProductGrid(products),
-                                      ],
-                                    ),
-                                  )),
-                      ),
+                    ];
+                  },
+                  body: TabBarView(
+                    children: [
+                      // Recommended For You tab content
+                      isLoadingRecommendations
+                          ? Center(child: CircularProgressIndicator())
+                          : RefreshIndicator(
+                              onRefresh: _refreshRecommendedProducts,
+                              child: CustomScrollView(
+                                slivers: [
+                                  buildProductGrid(recommendedProducts),
+                                ],
+                              ),
+                            ),
+                      // All Products tab content
+                      isLoading
+                          ? Center(child: CircularProgressIndicator())
+                          : RefreshIndicator(
+                              onRefresh: _refreshAllProducts,
+                              child: CustomScrollView(
+                                slivers: [
+                                  buildProductGrid(products),
+                                ],
+                              ),
+                            ),
                     ],
                   ),
                 ),
               ),
       ),
     );
+  }
+}
+
+// Helper class to embed the TabBar in a sliver header.
+class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  final TabBar tabBar;
+  _SliverAppBarDelegate(this.tabBar);
+  
+  @override
+  double get minExtent => tabBar.preferredSize.height;
+  
+  @override
+  double get maxExtent => tabBar.preferredSize.height;
+  
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      color: Colors.white,
+      child: tabBar,
+    );
+  }
+  
+  @override
+  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
+    return false;
   }
 }
