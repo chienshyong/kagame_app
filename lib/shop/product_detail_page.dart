@@ -139,7 +139,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     final imageUrl = productDoc!['image_url'] ?? '';
     final name = productDoc!['name'] ?? '';
     final price = productDoc!['price'] ?? '';
-    final brandName = productDoc!['brand'] ?? 'Brand Name';
+    final retailerName = productDoc!['retailer'] ?? 'Brand Name';
     final tags = productDoc!['other_tags'] ?? [];
 
     return Scaffold(
@@ -152,8 +152,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             Image.network(
               imageUrl,
               width: double.infinity,
-              height: 300,
-              fit: BoxFit.cover,
+              height: 400,
+              fit: BoxFit.contain,
               errorBuilder: (ctx, e, st) => Icon(Icons.error),
             ),
             // Product info
@@ -164,26 +164,26 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 children: [
                   Text(name,
                       style:
-                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                  Text(brandName,
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text(retailerName,
                       style: TextStyle(fontSize: 20, color: Colors.grey)),
-                  SizedBox(height: 8),
                   Text('\$${price.toString()}',
-                      style: TextStyle(fontSize: 20, color: Colors.green)),
-                  SizedBox(height: 16),
+                      style: TextStyle(fontSize: 18, color: Colors.green)),
                   Text('Tags:',
                       style:
                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 4),
                   Wrap(
-                    spacing: 8.0,
+                    spacing: 4.0,
+                    runSpacing: 6.0,
                     children: (tags is List)
                         ? tags
                             .map<Widget>(
-                                (tag) => Chip(label: Text(tag.toString())))
+                                (tag) => Chip(label: Text(tag.toString()), padding: EdgeInsets.all(2), materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,))
                             .toList()
                         : [],
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: 8),
 
                   // Similar Items
                   Text('Similar Items',
@@ -194,8 +194,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       : (similarProducts.isNotEmpty
                           ? buildSimilarItems()
                           : Text('No similar items found')),
-                  SizedBox(height: 24),
-
                   // Recommended Outfits
                   Text('Recommended Outfits',
                       style:
@@ -212,7 +210,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
   Widget buildSimilarItems() {
     return Container(
-      height: 250,
+      height: 232,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: similarProducts.length,
@@ -230,7 +228,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             },
             child: Container(
               width: 150,
-              margin: EdgeInsets.all(8.0),
+              margin: EdgeInsets.all(4.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -247,7 +245,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis),
                   Text('\$${sp['price']}',
-                      style: TextStyle(fontSize: 16, color: Colors.green)),
+                      style: TextStyle(fontSize: 14, color: Colors.green)),
                 ],
               ),
             ),
@@ -277,7 +275,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     final outfitItems = outfit['items'] as List<dynamic>? ?? [];
 
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 12.0),
+      margin: EdgeInsets.symmetric(vertical: 8.0),
       padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       color: Colors.grey[100],
       child: Column(
