@@ -20,7 +20,7 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
   final AuthService authService = AuthService();
 
   // Controllers for text fields
-  final TextEditingController _ageController = TextEditingController();  // <-- New
+  final TextEditingController _ageController = TextEditingController();
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController _raceController = TextEditingController();
   final TextEditingController _birthdayController = TextEditingController();
@@ -29,11 +29,11 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _skinToneController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
-  final TextEditingController _clothingPrefsController = TextEditingController();     // <-- New
-  final TextEditingController _clothingDislikesController = TextEditingController();  // <-- New
+  final TextEditingController _clothingPrefsController = TextEditingController();
+  final TextEditingController _clothingDislikesController = TextEditingController();
 
   // FocusNodes
-  final FocusNode _ageFocusNode = FocusNode();  // <-- New
+  final FocusNode _ageFocusNode = FocusNode();
   final FocusNode _genderFocusNode = FocusNode();
   final FocusNode _raceFocusNode = FocusNode();
   final FocusNode _birthdayFocusNode = FocusNode();
@@ -42,22 +42,40 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
   final FocusNode _weightFocusNode = FocusNode();
   final FocusNode _skinToneFocusNode = FocusNode();
   final FocusNode _bioFocusNode = FocusNode();
-  final FocusNode _clothingPrefsFocusNode = FocusNode();    // <-- New
-  final FocusNode _clothingDislikesFocusNode = FocusNode(); // <-- New
+  final FocusNode _clothingPrefsFocusNode = FocusNode();
+  final FocusNode _clothingDislikesFocusNode = FocusNode();
 
   // Other state
   String _styleResult = "Not determined yet";
-  double _happinessLevel = 1;
+  double? _happinessLevel = 1;
 
   // Example dropdown list
   List<String> _genderDropdownList = <String>["Prefer not to say", "Female", "Male"];
   String _genderSelected = "Prefer not to say";
 
   List<Color> _skinToneColors = [
-    // ...
+    const Color(0xFFf6ede4),
+    const Color(0xFFf3e7db),
+    const Color(0xFFf7ead0),
+    const Color(0xFFeadaba),
+    const Color(0xFFd7bd96),
+    const Color(0xFFa07e56),
+    const Color(0xFF825c43),
+    const Color(0xFF604134),
+    const Color(0xFF3a312a),
+    const Color(0xFF292420),
   ];
   Map<Color, String> _skinToneDescription = {
-    // ...
+    Color(0xFFf6ede4):"Very fair skin with cool, pink undertones",
+    Color(0xFFf3e7db):"Fair skin with neutral to cool undertones",
+    Color(0xFFf7ead0):"Light skin with neutral undertones",
+    Color(0xFFeadaba):"Light to medium skin with warm or golden undertones",
+    Color(0xFFd7bd96):"Medium skin with neutral to warm undertones",
+    Color(0xFFa07e56):"Medium to olive skin with warm or golden undertones",
+    Color(0xFF825c43):"Olive to light brown skin with golden or neutral undertones",
+    Color(0xFF604134):"Medium brown skin with neutral to warm undertones",
+    Color(0xFF3a312a):"Dark brown skin with rich, warm undertones",
+    Color(0xFF292420):"Deep skin with cool or neutral undertones"
   };
 
   @override
@@ -118,7 +136,7 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
           _weightController.text = jsonResponse["weight"] ?? "";
           _raceController.text = jsonResponse["ethnicity"] ?? "";
           _skinToneController.text = jsonResponse["skin_tone"] ?? "";
-          // New fields
+          _happinessLevel = double.parse(jsonResponse["happiness_current_wardrobe"]) ?? null;
           _clothingPrefsController.text = jsonResponse["clothing_preferences"] ?? "";
           _clothingDislikesController.text = jsonResponse["clothing_dislikes"] ?? "";
         });
@@ -142,9 +160,13 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
       "ethnicity": _raceController.text,
       "skin_tone": _skinToneController.text,
       "style": _styleResult,
-      "happiness_current_wardrobe": _happinessLevel.toInt().toString(),
-      "clothing_preferences": _clothingPrefsController.text,     // <-- New
-      "clothing_dislikes": _clothingDislikesController.text      // <-- New
+      "happiness_current_wardrobe": _happinessLevel?.toInt().toString(),
+      // "clothing_likes": {
+      //   for (var item in _clothingPrefsController.text.split(",").map((e) => e.trim())) if (item.isNotEmpty) item: true
+      // },
+      // "clothing_dislikes": {
+      //   for (var item in _clothingDislikesController.text.split(",").map((e) => e.trim())) if (item.isNotEmpty) item: false
+      // }
     };
 
     String jsonData = jsonEncode(updatedProfile);
@@ -166,36 +188,36 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
     }
   }
 
-final birthdayFormatter = TextInputFormatter.withFunction(
-  (oldValue, newValue) {
-    String text = newValue.text;
-    int selectionIndex = newValue.selection.end;
+  final birthdayFormatter = TextInputFormatter.withFunction(
+        (oldValue, newValue) {
+      String text = newValue.text;
+      int selectionIndex = newValue.selection.end;
 
-    // Remove all '/' to prevent double slashes
-    text = text.replaceAll('/', '');
+      // Remove all '/' to prevent double slashes
+      text = text.replaceAll('/', '');
 
-    // Automatically insert slashes at the appropriate places
-    if (text.length > 2) {
-      text = text.substring(0, 2) + '/' + text.substring(2);
-      if (selectionIndex >= 2) selectionIndex++;
-    }
-    if (text.length > 5) {
-      text = text.substring(0, 5) + '/' + text.substring(5);
-      if (selectionIndex >= 5) selectionIndex++;
-    }
+      // Automatically insert slashes at the appropriate places
+      if (text.length > 2) {
+        text = text.substring(0, 2) + '/' + text.substring(2);
+        if (selectionIndex >= 2) selectionIndex++;
+      }
+      if (text.length > 5) {
+        text = text.substring(0, 5) + '/' + text.substring(5);
+        if (selectionIndex >= 5) selectionIndex++;
+      }
 
-    // Limit to 10 characters (DD/MM/YYYY)
-    if (text.length > 10) {
-      text = text.substring(0, 10);
-    }
+      // Limit to 10 characters (DD/MM/YYYY)
+      if (text.length > 10) {
+        text = text.substring(0, 10);
+      }
 
-    // Always return a TextEditingValue
-    return TextEditingValue(
-      text: text,
-      selection: TextSelection.collapsed(offset: selectionIndex),
-    );
-  },
-);
+      // Always return a TextEditingValue
+      return TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: selectionIndex),
+      );
+    },
+  );
 
 
   @override
@@ -409,27 +431,27 @@ final birthdayFormatter = TextInputFormatter.withFunction(
               ),
               SizedBox(height: 8),
               Text(
-                "Your rating: ${_happinessLevel.toInt()}",
+                "Your rating: ${_happinessLevel?.toInt()}",
                 style: TextStyle(fontSize: 16),
               ),
               SizedBox(height: 24),
 
               // Clothing Preferences
-              _buildTextField(
-                label: 'Clothing Preferences (Optional)',
-                controller: _clothingPrefsController,
-                focusNode: _clothingPrefsFocusNode,
-                nextFocusNode: _clothingDislikesFocusNode,
-              ),
-              SizedBox(height: 16),
+              // _buildTextField(
+              //   label: 'Clothing Likes (Optional)',
+              //   controller: _clothingPrefsController,
+              //   focusNode: _clothingPrefsFocusNode,
+              //   nextFocusNode: _clothingDislikesFocusNode,
+              // ),
+              // SizedBox(height: 16),
 
               // Clothing Dislikes
-              _buildTextField(
-                label: 'Clothing Dislikes (Optional)',
-                controller: _clothingDislikesController,
-                focusNode: _clothingDislikesFocusNode,
-              ),
-              SizedBox(height: 24),
+              // _buildTextField(
+              //   label: 'Clothing Dislikes (Optional)',
+              //   controller: _clothingDislikesController,
+              //   focusNode: _clothingDislikesFocusNode,
+              // ),
+              // SizedBox(height: 24),
 
               // Submit Button
               Center(
@@ -460,37 +482,37 @@ final birthdayFormatter = TextInputFormatter.withFunction(
     );
   }
 
-Widget _buildTextField({
-  required String label,
-  required TextEditingController controller,
-  required FocusNode focusNode,
-  FocusNode? nextFocusNode,
-  TextInputType keyboardType = TextInputType.text,
-  List<TextInputFormatter>? inputFormatters,
-  int maxLines = 1,
-  bool readOnly = false,         // <-- Add this
-}) {
-  return TextField(
-    controller: controller,
-    focusNode: focusNode,
-    keyboardType: keyboardType,
-    inputFormatters: inputFormatters,
-    maxLines: maxLines,
-    readOnly: readOnly,          // <-- Then pass it in here
-    textInputAction: nextFocusNode != null ? TextInputAction.next : TextInputAction.done,
-    onSubmitted: (_) {
-      if (nextFocusNode != null) {
-        FocusScope.of(context).requestFocus(nextFocusNode);
-      } else {
-        focusNode.unfocus();
-      }
-    },
-    decoration: InputDecoration(
-      labelText: label,
-      border: OutlineInputBorder(),
-    ),
-  );
-}
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    required FocusNode focusNode,
+    FocusNode? nextFocusNode,
+    TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+    int maxLines = 1,
+    bool readOnly = false,
+  }) {
+    return TextField(
+      controller: controller,
+      focusNode: focusNode,
+      keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
+      maxLines: maxLines,
+      readOnly: readOnly,
+      textInputAction: nextFocusNode != null ? TextInputAction.next : TextInputAction.done,
+      onSubmitted: (_) {
+        if (nextFocusNode != null) {
+          FocusScope.of(context).requestFocus(nextFocusNode);
+        } else {
+          focusNode.unfocus();
+        }
+      },
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(),
+      ),
+    );
+  }
 
   // Validate if the birthday matches DD/MM/YYYY
   bool _validateBirthday(String birthday) {
