@@ -4,9 +4,8 @@ import 'dart:convert';
 import '../services/auth_service.dart';
 
 class ProductDetailPage extends StatefulWidget {
-  final Map<String, dynamic> product;
-
-  ProductDetailPage({required this.product});
+  final String productId;
+  const ProductDetailPage({required this.productId});
 
   @override
   _ProductDetailPageState createState() => _ProductDetailPageState();
@@ -15,345 +14,353 @@ class ProductDetailPage extends StatefulWidget {
 class _ProductDetailPageState extends State<ProductDetailPage> {
   final AuthService authService = AuthService();
 
-  // Similar Products
+  /// Main product
+  Map<String, dynamic>? productDoc;
+  bool isLoadingProduct = true;
+
+  /// Similar products
   List<Map<String, dynamic>> similarProducts = [];
   bool isLoadingSimilar = true;
 
-  // Recommended Outfits
+  /// Recommended outfits
   List<dynamic> recommendedOutfits = [];
-  Map<String?, dynamic> clothingLikes = {};
-  Map<String?, dynamic> clothingDislikes = {};
-
   bool isLoadingOutfits = false;
 
-  void toggleLike(String? itemName) {
-    bool isAdded = false;
-    if (clothingDislikes.containsKey(itemName)) {
-      clothingDislikes.remove(itemName);
-      updateClothingDislikes(itemName!, false, []);
-    }
-    if (clothingLikes.containsKey(itemName)) {
-      clothingLikes.remove(itemName);
-    } else if (!clothingLikes.containsKey(itemName)) {
-      clothingLikes[itemName] = true;
-      isAdded = true;
-    }
-    updateClothingLikes(itemName!, isAdded);
-  }
-
-  void toggleDislike(String? itemName, String? itemCategory, BuildContext context, String? clothingType, String? otherTags, String? color) async {
-    if (clothingLikes.containsKey(itemName)) {
-      clothingLikes.remove(itemName);
-      updateClothingLikes(itemName!, false);
-    }
-    List<dynamic> feedbackList = [itemCategory, itemName];
-    bool isAdded = false;
-    if (clothingDislikes.containsKey(itemName)) {
-      clothingDislikes.remove(itemName);
-    } else if (!clothingDislikes.containsKey(itemName)) {
-      clothingDislikes[itemName] = true;
-      isAdded = true;
-      String? feedbackData = await _feedbackFormBuilder(context);
-      if (feedbackData == "Type of item") {
-        feedbackList.add("Type of item");
-        feedbackList.add(clothingType);
-      } else if (feedbackData == "Style") {
-        feedbackList.add("Style");
-        feedbackList.add(otherTags);
-      } else if (feedbackData == "Colour") {
-        feedbackList.add("Colour");
-        feedbackList.add(color);
-      }
-    }
-    updateClothingDislikes(itemName!, isAdded, feedbackList);
-  }
-
-  Future<void> updateClothingLikes(String itemName, bool isAdded) async {
-    final String baseUrl = authService.baseUrl;
-    final token = await authService.getToken();
-
-    Map<String, bool> updatedClothingLikesItem = {};
-
-    if (isAdded) {
-      updatedClothingLikesItem = {itemName: true};
-    } else if (!isAdded) {
-      updatedClothingLikesItem = {itemName: false};
-    }
-
-    String jsonData = jsonEncode(updatedClothingLikesItem);
-
-    final response = await http.post(
-      Uri.parse('$baseUrl/profile/updateclothinglikes'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonData,
-    );
-
-    if (response.statusCode != 200) {
-      final responseJson = jsonDecode(response.body);
-      final message = responseJson["detail"];
-      print(responseJson["detail"]);
-      throw Exception(message);
-    }
-  }
-
-  Future<void> updateClothingDislikes(String itemName, bool isAdded, List<Object?> feedbackList) async {
-    final String baseUrl = authService.baseUrl;
-    final token = await authService.getToken();
-
-    Map<String, dynamic> updatedClothingDislikesItem = {};
-
-    if (isAdded) {
-      updatedClothingDislikesItem = {itemName: true, "feedback": feedbackList};
-    } else if (!isAdded) {
-      updatedClothingDislikesItem = {itemName: false};
-    }
-
-    String jsonData = jsonEncode(updatedClothingDislikesItem);
-
-    final response = await http.post(
-      Uri.parse('$baseUrl/profile/updateclothingdislikes'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonData,
-    );
-
-    if (response.statusCode != 200) {
-      final responseJson = jsonDecode(response.body);
-      final message = responseJson["detail"];
-      print(responseJson["detail"]);
-      throw Exception(message);
-    }
-  }
+  /// Clothing preferences (likes & dislikes)
+  Map<String?, dynamic> clothingLikes = {};
+  Map<String?, dynamic> clothingDislikes = {};
 
   @override
   void initState() {
     super.initState();
-    // Debug the received product data.
-    debugPrint("[DEBUG] Product Data: ${jsonEncode(widget.product)}");
+    // 1) Fetch main product by ID
+    _fetchProductDoc();
+    // 2) Also fetch user’s existing likes/dislikes
     getClothingPreferences();
-    fetchSimilarProducts();
-    fetchRecommendedOutfits(); // Fetch outfits in parallel
-
   }
 
-  /// Fetch similar items
-  Future<void> fetchSimilarProducts() async {
+  /// Grab user’s saved clothing preferences.
+  Future<void> getClothingPreferences() async {
     final String baseUrl = authService.baseUrl;
     final token = await authService.getToken();
-    final productId = widget.product['id'];
 
-    final Uri uri = Uri.parse('$baseUrl/shop/similar_items?id=$productId&n=5');
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/profile/getclothingprefs'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonResponse = json.decode(response.body);
+        setState(() {
+          clothingLikes =
+              Map<String, dynamic>.from(jsonResponse['clothing_likes'] ?? {});
+          clothingDislikes = Map<String, dynamic>.from(
+              jsonResponse['clothing_dislikes'] ?? {});
+        });
+      }
+    } catch (error) {
+      debugPrint('Error fetching clothing preferences: $error');
+    }
+  }
+
+  /// Step 1: Fetch the main product by ID
+  Future<void> _fetchProductDoc() async {
+    final token = await authService.getToken();
+    final baseUrl = authService.baseUrl;
+    final uri = Uri.parse('$baseUrl/shop/item/${widget.productId}');
 
     try {
       final response = await http.get(
         uri,
         headers: {'Authorization': 'Bearer $token'},
       );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          productDoc = data;
+          isLoadingProduct = false;
+        });
+        // Then fetch similar & recommended
+        await fetchSimilarProducts();
+        await fetchRecommendedOutfits();
+      } else {
+        throw Exception('Failed to load product detail');
+      }
+    } catch (error) {
+      debugPrint('Error fetching product detail: $error');
+      setState(() => isLoadingProduct = false);
+    }
+  }
 
+  /// Step 2: fetch similar items
+  Future<void> fetchSimilarProducts() async {
+    if (productDoc == null) return;
+    setState(() => isLoadingSimilar = true);
+
+    final token = await authService.getToken();
+    final baseUrl = authService.baseUrl;
+    final String productId = productDoc!['id'] ?? '';
+    final uri = Uri.parse('$baseUrl/shop/similar_items?id=$productId&n=5');
+
+    try {
+      final response = await http.get(
+        uri,
+        headers: {'Authorization': 'Bearer $token'},
+      );
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-
         setState(() {
           similarProducts = data.map((item) {
             return {
               'id': item['id']?.toString() ?? '',
-              // Use image_url and name keys from backend
-              'url': item['image_url']?.toString() ?? '',
-              'label': item['name']?.toString() ?? '',
+              'url': item['image_url'] ?? '',
+              'label': item['name'] ?? '',
               'price': item['price']?.toString() ?? '',
-              'product_url': item['product_url']?.toString() ?? '',
-              'category': item['category']?.toString() ?? '',
-              'clothing_type': item['clothing_type']?.toString() ?? '',
-              'color': item['color']?.toString() ?? '',
-              'material': item['material']?.toString() ?? '',
-              'other_tags': item['other_tags']?.toString() ?? '',
             };
           }).toList();
-          isLoadingSimilar = false;
         });
       } else {
         throw Exception('Failed to load similar products');
       }
     } catch (error) {
       debugPrint('Error fetching similar products: $error');
-      setState(() {
-        isLoadingSimilar = false;
-      });
+    } finally {
+      setState(() => isLoadingSimilar = false);
     }
   }
 
-  /// Fetch recommended outfits from /shop/item-outfit-search
+  /// Step 3: fetch recommended outfits
   Future<void> fetchRecommendedOutfits() async {
-    setState(() {
-      isLoadingOutfits = true;
-    });
+    if (productDoc == null) return;
+    setState(() => isLoadingOutfits = true);
 
-    final String baseUrl = authService.baseUrl;
     final token = await authService.getToken();
-    final productId = widget.product['id'];
-
-    final Uri uri = Uri.parse('$baseUrl/shop/item-outfit-search?item_id=$productId');
+    final baseUrl = authService.baseUrl;
+    final String productId = productDoc!['id'] ?? '';
+    final uri =
+        Uri.parse('$baseUrl/shop/item-outfit-search?item_id=$productId');
 
     try {
       final response = await http.get(
         uri,
         headers: {'Authorization': 'Bearer $token'},
       );
-
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        final outfits = data['outfits'] ?? [];
-
+        final data = json.decode(response.body);
         setState(() {
-          recommendedOutfits = outfits;
-          isLoadingOutfits = false;
+          recommendedOutfits = data['outfits'] ?? [];
         });
       } else {
         throw Exception('Failed to load recommended outfits');
       }
     } catch (error) {
       debugPrint('Error fetching recommended outfits: $error');
-      setState(() {
-        isLoadingOutfits = false;
-      });
+    } finally {
+      setState(() => isLoadingOutfits = false);
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // Use fallback: if 'url' or 'label' are null, try using 'image_url' and 'name'
-    final product = widget.product;
-    final imageUrl = product['url'] ?? product['image_url'];
-    final name = product['label'] ?? product['name'];
-    final price = product['price'];
-    final brandName = product['brand'] ?? 'Brand Name';
-    final tags = product['tags'] ?? [];
 
+@override
+Widget build(BuildContext context) {
+  if (isLoadingProduct) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(name ?? "Product Detail"),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Product Image
-            Image.network(
-              imageUrl,
-              width: double.infinity,
-              height: 300,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Icon(Icons.error),
-            ),
-            // Product Info
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    name ?? "",
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    brandName,
-                    style: TextStyle(fontSize: 20, color: Colors.grey),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    '\$${price}',
-                    style: TextStyle(fontSize: 20, color: Colors.green),
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'Tags:',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  Wrap(
-                    spacing: 8.0,
-                    children: tags.map<Widget>((tag) {
-                      return Chip(label: Text(tag));
-                    }).toList(),
-                  ),
-                  SizedBox(height: 16),
-                  // Similar Items
-                  Text(
-                    'Similar Items',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  isLoadingSimilar
-                      ? Center(child: CircularProgressIndicator())
-                      : similarProducts.isNotEmpty
-                      ? Container(
-                    height: 250,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: similarProducts.length,
-                      itemBuilder: (context, index) {
-                        final similarProduct = similarProducts[index];
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ProductDetailPage(product: similarProduct),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            width: 150,
-                            margin: EdgeInsets.all(8.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Image.network(
-                                  similarProduct['url'] ?? similarProduct['image_url'],
-                                  width: 150,
-                                  height: 150,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) => Icon(Icons.error),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  similarProduct['label'] ?? similarProduct['name'] ?? "",
-                                  style: TextStyle(fontSize: 16),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                Text(
-                                  '\$${similarProduct['price']}',
-                                  style: TextStyle(fontSize: 16, color: Colors.green),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
+      appBar: AppBar(title: Text("Loading...")),
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
+
+  if (productDoc == null) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Error")),
+      body: Center(child: Text('Product not found.')),
+    );
+  }
+
+  final imageUrl = productDoc!['image_url'] ?? '';
+  final name = productDoc!['name'] ?? '';
+  final price = productDoc!['price'] ?? '';
+  final retailerName = productDoc!['retailer'] ?? 'Brand Name';
+  final tags = productDoc!['other_tags'] ?? [];
+
+  return Scaffold(
+    appBar: AppBar(title: Text(name)),
+    body: SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Main product image with overlaid Like/Dislike
+          Stack(
+            children: [
+              Image.network(
+                imageUrl,
+                width: double.infinity,
+                height: 400,
+                fit: BoxFit.contain,
+                errorBuilder: (ctx, e, st) => Icon(Icons.error),
+              ),
+              Positioned(
+                right: 8,
+                bottom: 8,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.favorite,
+                        color: clothingLikes.containsKey(name)
+                            ? Colors.pink
+                            : Colors.grey[700],
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          toggleLike(name);
+                        });
                       },
                     ),
-                  )
-                      : Text('No similar items found'),
-                  SizedBox(height: 24),
-                  // Recommended Outfits
-                  Text(
-                    'Recommended Outfits',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    IconButton(
+                      icon: Icon(
+                        Icons.thumb_down,
+                        color: clothingDislikes.containsKey(name)
+                            ? Colors.red
+                            : Colors.grey[700],
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          toggleDislike(
+                            name,
+                            productDoc!['category'],
+                            context,
+                            productDoc!['clothing_type'],
+                            productDoc!['other_tags']?.toString(),
+                            productDoc!['color']?.toString(),
+                          );
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          // Product info
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  name,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  retailerName,
+                  style: TextStyle(fontSize: 20, color: Colors.grey),
+                ),
+                Text(
+                  '\$${price.toString()}',
+                  style: TextStyle(fontSize: 18, color: Colors.green),
+                ),
+                SizedBox(height: 8),
+
+                Text(
+                  'Tags:',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 4),
+                Wrap(
+                  spacing: 4.0,
+                  runSpacing: 6.0,
+                  children: (tags is List)
+                      ? tags.map<Widget>((tag) {
+                          return Chip(
+                            label: Text(tag.toString()),
+                            padding: EdgeInsets.all(2),
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                          );
+                        }).toList()
+                      : [],
+                ),
+                SizedBox(height: 16),
+
+                // Similar Items
+                Text(
+                  'Similar Items',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                isLoadingSimilar
+                    ? Center(child: CircularProgressIndicator())
+                    : (similarProducts.isNotEmpty
+                        ? buildSimilarItems()
+                        : Text('No similar items found')),
+                SizedBox(height: 20),
+
+                // Recommended Outfits
+                Text(
+                  'Recommended Outfits',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                buildRecommendedOutfitsSection(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+  Widget buildSimilarItems() {
+    return Container(
+      height: 232,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: similarProducts.length,
+        itemBuilder: (context, index) {
+          final sp = similarProducts[index];
+          return GestureDetector(
+            onTap: () {
+              // Navigate to detail page
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ProductDetailPage(productId: sp['id']),
+                ),
+              );
+            },
+            child: Container(
+              width: 150,
+              margin: EdgeInsets.all(4.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Image.network(
+                    sp['url'] ?? '',
+                    width: 150,
+                    height: 150,
+                    fit: BoxFit.cover,
+                    errorBuilder: (ctx, e, st) => Icon(Icons.error),
                   ),
-                  buildRecommendedOutfitsSection(),
+                  SizedBox(height: 8),
+                  Text(sp['label'] ?? "",
+                      style: TextStyle(fontSize: 16),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis),
+                  Text('\$${sp['price']}',
+                      style: TextStyle(fontSize: 14, color: Colors.green)),
                 ],
               ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  /// UI for recommended outfits
   Widget buildRecommendedOutfitsSection() {
     if (isLoadingOutfits) {
       return Center(child: CircularProgressIndicator());
@@ -363,278 +370,283 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: recommendedOutfits.map((outfit) {
-        return buildOutfitCard(outfit);
-      }).toList(),
+      children:
+          recommendedOutfits.map((outfit) => buildOutfitCard(outfit)).toList(),
     );
   }
 
-  /// Individual outfit card
   Widget buildOutfitCard(dynamic outfit) {
     final styleName = outfit['style'] ?? '';
     final outfitName = outfit['name'] ?? '';
     final outfitItems = outfit['items'] as List<dynamic>? ?? [];
+
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 12.0),
+      margin: EdgeInsets.symmetric(vertical: 8.0),
       padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       color: Colors.grey[100],
-      width: double.infinity,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(styleName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          Text(outfitName, style: TextStyle(color: Colors.grey[700], fontSize: 14)),
+          Text(styleName,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          Text(outfitName,
+              style: TextStyle(color: Colors.grey[700], fontSize: 14)),
           SizedBox(height: 8),
-          buildOutfitStack(outfitItems),
+
+          // Show top/bottom/shoes layout
+          OutfitStackWidget(
+            originalDoc: productDoc!,
+            outfitItems: outfitItems,
+
+            // Hand off likes/dislikes from parent
+            clothingLikes: clothingLikes,
+            clothingDislikes: clothingDislikes,
+
+            // Hand off toggles from parent
+            onToggleLike: toggleLike,
+            onToggleDislike:
+                (itemName, itemCategory, clothingType, otherTags, color) {
+              toggleDislike(itemName, itemCategory, context, clothingType,
+                  otherTags, color);
+            },
+          ),
         ],
       ),
     );
   }
+}
 
-  Future<void> getClothingPreferences() async {
-    final String baseUrl = authService.baseUrl;
-    final token = await authService.getToken();
-    try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/profile/getclothingprefs'),
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-      );
+class OutfitStackWidget extends StatefulWidget {
+  final Map<String, dynamic> originalDoc;
+  final List<dynamic> outfitItems;
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonResponse = json.decode(response.body);
+  // From the parent
+  final Map<String?, dynamic> clothingLikes;
+  final Map<String?, dynamic> clothingDislikes;
 
-        setState(() {
-          clothingLikes = Map<String, dynamic>.from(jsonResponse['clothing_likes'] ?? {});
-          clothingDislikes = Map<String, dynamic>.from(jsonResponse['clothing_dislikes'] ?? {});
-        });
-      }
-    } catch (error) {
-      print('Error fetching clothing preferences: $error');
+  final Function(String? itemName) onToggleLike;
+  final Function(
+    String? itemName,
+    String? itemCategory,
+    String? clothingType,
+    String? otherTags,
+    String? color,
+  ) onToggleDislike;
+
+  const OutfitStackWidget({
+    Key? key,
+    required this.originalDoc,
+    required this.outfitItems,
+    required this.clothingLikes,
+    required this.clothingDislikes,
+    required this.onToggleLike,
+    required this.onToggleDislike,
+  }) : super(key: key);
+
+  @override
+  State<OutfitStackWidget> createState() => _OutfitStackWidgetState();
+}
+
+class _OutfitStackWidgetState extends State<OutfitStackWidget> {
+  final AuthService authService = AuthService();
+
+  Map<String, dynamic>? topsDoc;
+  Map<String, dynamic>? bottomsDoc;
+  Map<String, dynamic>? shoesDoc;
+
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _assignOriginalDoc();
+    _fetchMatchedItems();
+  }
+
+  void _assignOriginalDoc() {
+    final originalCat =
+        widget.originalDoc['category']?.toString().toLowerCase() ?? '';
+    if (originalCat == 'tops') {
+      topsDoc = widget.originalDoc;
+    } else if (originalCat == 'bottoms') {
+      bottomsDoc = widget.originalDoc;
+    } else if (originalCat == 'shoes') {
+      shoesDoc = widget.originalDoc;
     }
   }
 
-  Future<String?> _feedbackFormBuilder(BuildContext context) async {
-    String? feedbackData = "";
+  /// For each item in the outfit, fetch its doc by ID and assign to tops/bottoms/shoes
+  Future<void> _fetchMatchedItems() async {
+    final fetchFutures = <Future>[];
 
-    await showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('What did you dislike about this item?'),
-          content: StatefulBuilder(
-            builder: (context, setState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    title: Text("Type of item"),
-                    onTap: () {
-                      feedbackData = "Type of item";
-                      Navigator.pop(context);
-                    },
-                  ),
-                  ListTile(
-                    title: Text("Style"),
-                    onTap: () {
-                      feedbackData = "Style";
-                      Navigator.pop(context);
-                    },
-                  ),
-                  ListTile(
-                    title: Text("Colour"),
-                    onTap: () {
-                      feedbackData = "Colour";
-                      Navigator.pop(context);
-                    },
-                  ),
-                  SizedBox(height: 10),
-                ],
-              );
-            },
-          ),
-          // actions: <Widget>[
-          //   TextButton(
-          //     child: const Text('Submit'),
-          //     onPressed: () {
-          //       feedbackData = issueCause;
-          //       debugPrint("[DEBUG] Submitted Feedback: $feedbackData");
-          //       Navigator.of(context).pop();
-          //     },
-          //   ),
-          // ],
-        );
-      },
-    );
-    return feedbackData;
-  }
-
-  /// Creates a vertical stack of images (Tops, Bottoms, Shoes).
-  /// This uses the product's 'category' field (passed from shop/items)
-  /// to determine which slot should show the original product.
-  Widget buildOutfitStack(List<dynamic> outfitItems) {
-    final String originalCategoryRaw = widget.product['category']?.toString() ?? '';
-    final String originalCategory = originalCategoryRaw.trim().toLowerCase();
-    final String originalName = (widget.product['label'] ?? widget.product['name'] ?? '').toString();
-    debugPrint("[DEBUG] Normalized Original Category: '$originalCategory'");
-
-    String? topUrl;
-    String? bottomUrl;
-    String? shoesUrl;
-
-    Map<String, dynamic>? topProduct;
-    Map<String, dynamic>? bottomProduct;
-    Map<String, dynamic>? shoesProduct;
-
-    String? topName;
-    String? bottomName;
-    String? shoesName;
-
-    // Loop through each recommended outfit item.
-    for (var outfitItem in outfitItems) {
+    for (final outfitItem in widget.outfitItems) {
       final matchData = outfitItem['match'];
       if (matchData == null) continue;
-      final String itemCategory = (matchData['category'] ?? '').toString().toLowerCase();
-      final String? itemImageUrl = matchData['image_url'];
-      String? itemName = outfitItem['match']['name'];
-      debugPrint("[DEBUG] Found recommended item - Category: $itemCategory, Image: $itemImageUrl");
 
-      debugPrint("[DEBUG] itemName"+ itemName!);
-      if (itemCategory == 'tops') {
-        topName = itemName;
-      } else if (itemCategory == 'bottoms') {
-        bottomName = itemName;
-      } else if (itemCategory == 'shoes') {
-        shoesName = itemName;
-      }
+      final matchedId = matchData['id'];
+      if (matchedId == null || matchedId.isEmpty) continue;
 
-      if (itemImageUrl != null && itemImageUrl.isNotEmpty) {
-        if (itemCategory == 'tops') {
-          topUrl = itemImageUrl;
-          topProduct = matchData;
-        } else if (itemCategory == 'bottoms') {
-          bottomUrl = itemImageUrl;
-          bottomProduct = matchData;
-        } else if (itemCategory == 'shoes') {
-          shoesUrl = itemImageUrl;
-          shoesProduct = matchData;
+      fetchFutures.add(_fetchSingleDoc(matchedId));
+    }
+
+    try {
+      await Future.wait(fetchFutures);
+    } catch (e) {
+      debugPrint("Error in _fetchMatchedItems: $e");
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _fetchSingleDoc(String itemId) async {
+    final token = await authService.getToken();
+    final baseUrl = authService.baseUrl;
+    final uri = Uri.parse('$baseUrl/shop/item/$itemId');
+
+    try {
+      final response =
+          await http.get(uri, headers: {'Authorization': 'Bearer $token'});
+      if (response.statusCode == 200) {
+        final doc = json.decode(response.body);
+        final cat = doc['category']?.toString().toLowerCase() ?? '';
+        if (cat == 'tops') {
+          topsDoc = doc;
+        } else if (cat == 'bottoms') {
+          bottomsDoc = doc;
+        } else if (cat == 'shoes') {
+          shoesDoc = doc;
         }
+      } else {
+        debugPrint("Failed to fetch item doc $itemId: ${response.statusCode}");
       }
+    } catch (e) {
+      debugPrint("Error fetching item doc $itemId: $e");
     }
+  }
 
-    if (shoesName == null) {
-      shoesName = "No shoes";
-    }
-    if (topName == null) {
-      topName = "No top";
-    }
-    if (bottomName == null) {
-      bottomName = "No bottoms";
-    }
-
-    if (originalCategory == 'tops') {
-      topName = originalName;
-    } else if (originalCategory == 'bottoms') {
-      bottomName = originalName;
-    } else if (originalCategory == 'shoes') {
-      shoesName = originalName;
-    }
-
-    final String originalImageUrl = (widget.product['image_url'] ?? widget.product['url'] ?? '').toString();
-    debugPrint("[DEBUG] Original Product Image URL: $originalImageUrl");
-
-    // Overwrite the slot corresponding to the original product's category.
-    if (originalCategory == 'tops') {
-      topUrl = originalImageUrl;
-      topProduct = widget.product;
-      debugPrint("[DEBUG] Overwriting 'Tops' slot with original item.");
-    } else if (originalCategory == 'bottoms') {
-      bottomUrl = originalImageUrl;
-      bottomProduct = widget.product;
-      debugPrint("[DEBUG] Overwriting 'Bottoms' slot with original item.");
-    } else if (originalCategory == 'shoes') {
-      shoesUrl = originalImageUrl;
-      shoesProduct = widget.product;
-      debugPrint("[DEBUG] Overwriting 'Shoes' slot with original item.");
-    } else {
-      debugPrint("[DEBUG] Original category '$originalCategory' did not match tops/bottoms/shoes.");
-    }
-
-    // Helper widget to build each slot with navigation.
-    Widget buildSlot(String? slotUrl, Map<String, dynamic>? slotProduct, String placeholder, String? itemName, String? itemCategory, String? clothingType, String? otherTags, String? color) {
-      return Container(
-        width: double.infinity,
-        child: Stack(
-          children: [
-            if (slotUrl != null && slotUrl.isNotEmpty && slotProduct != null)
-              GestureDetector(
-                onTap: () {
-                  debugPrint("Tapped on $placeholder slot: ${slotProduct['name']}");
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ProductDetailPage(product: slotProduct),
-                    ),
-                  );
-                },
-                child: Image.network(
-                  slotUrl,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  errorBuilder: (context, error, stackTrace) => Icon(Icons.error),
-                ),
-              )
-            else
-              Container(
-                width: double.infinity,
-                height: 200,
-                color: Colors.grey[300],
-                child: Center(child: Text("No $placeholder")),
-              ),
-
-            Positioned(
-              bottom: 8,
-              right: 8,
-              child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.favorite, color: clothingLikes.containsKey(itemName) ? Colors.pink : Colors.grey),
-                    onPressed: () => {
-                      setState(() {
-                        toggleLike(itemName);
-                      })
-                  },
-                  ),
-
-                  IconButton(
-                    icon: Icon(Icons.thumb_down, color: clothingDislikes.containsKey(itemName) ? Colors.red : Colors.grey),
-                    onPressed: () => {
-                      setState(() {
-                      toggleDislike(itemName, itemCategory, context, clothingType, otherTags, color);
-                      })
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return Center(child: CircularProgressIndicator());
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(topName),
-        buildSlot(topUrl, topProduct, "Top", topName, "top", topProduct?['clothing_type'], topProduct?['other_tags'].toString(), topProduct?['color'].toString()),
+        _buildSlot(topsDoc, "tops"),
         SizedBox(height: 8),
-        Text(bottomName),
-        buildSlot(bottomUrl, bottomProduct, "Bottom", bottomName, "bottoms", bottomProduct?['clothing_type'], bottomProduct?['other_tags'].toString(), bottomProduct?['color'].toString()),
+        _buildSlot(bottomsDoc, "bottoms"),
         SizedBox(height: 8),
-        Text(shoesName),
-        buildSlot(shoesUrl, shoesProduct, "Shoes", shoesName, "shoes", shoesProduct?['clothing_type'], shoesProduct?['other_tags'].toString(), shoesProduct?['color'].toString()),
+        _buildSlot(shoesDoc, "shoes"),
       ],
+    );
+  }
+
+  Widget _buildSlot(Map<String, dynamic>? doc, String placeholder) {
+    if (doc == null) {
+      return Container(
+        margin: EdgeInsets.symmetric(
+            horizontal: MediaQuery.of(context).size.width * 0.08),
+        color: Colors.grey[300],
+        alignment: Alignment.center,
+        child: Text("No $placeholder"),
+      );
+    }
+
+    final cropped = doc['cropped_image_url'] ?? '';
+    final fallback = doc['image_url'] ?? '';
+    final imageUrl = (cropped.isNotEmpty) ? cropped : fallback;
+
+    // Determine width based on category
+    final category = doc['category']?.toString().toLowerCase() ?? '';
+    final double sidePadding;
+
+    if (category == 'bottoms') {
+      sidePadding = MediaQuery.of(context).size.width * 0.18;
+    } else if (category == 'shoes') {
+      sidePadding = MediaQuery.of(context).size.width * 0.25;
+    } else {
+      sidePadding = MediaQuery.of(context).size.width * 0.1;
+    }
+
+    final itemName = doc['name']?.toString();
+    final itemCategory = doc['category']?.toString();
+    final clothingType = doc['clothing_type']?.toString();
+    final otherTags = doc['other_tags']?.toString();
+    final color = doc['color']?.toString();
+
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: sidePadding),
+      child: Stack(
+        children: [
+          // The product image
+          GestureDetector(
+            onTap: () {
+              final itemId = doc['id'] ?? '';
+              if (itemId.isNotEmpty) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ProductDetailPage(productId: itemId),
+                  ),
+                );
+              }
+            },
+            child: Image.network(
+              imageUrl,
+              fit: BoxFit.contain,
+              errorBuilder: (ctx, e, st) => Container(
+                height: 220,
+                color: Colors.grey[300],
+                alignment: Alignment.center,
+                child: Text("Error loading image"),
+              ),
+            ),
+          ),
+
+          // Like/Dislike icons (overlaid at the bottom-right)
+          Positioned(
+            right: 8,
+            bottom: 8,
+            child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                IconButton(
+                  icon: Icon(
+                    Icons.favorite,
+                    color: widget.clothingLikes.containsKey(itemName)
+                        ? Colors.pink
+                        : Colors.grey[700],
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      widget.onToggleLike(itemName);
+                    });
+                  },
+                ),
+                IconButton(
+                  icon: Icon(
+                    Icons.thumb_down,
+                    color: widget.clothingDislikes.containsKey(itemName)
+                        ? Colors.red
+                        : Colors.grey[700],
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      widget.onToggleDislike(
+                        itemName,
+                        itemCategory,
+                        clothingType,
+                        otherTags,
+                        color,
+                      );
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

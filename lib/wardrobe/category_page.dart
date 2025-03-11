@@ -164,96 +164,114 @@ class _CategoryPageState extends State<CategoryPage> {
   @override
   Widget build(BuildContext context) {
     TextEditingController searchController = TextEditingController();
-    
+
     return Scaffold(
-      appBar: AppBar(title: Text('My Wardrobe (${widget.category})'), actions: [
-        IconButton(
-          icon: Icon(Icons.refresh),
-          onPressed: refreshImages, // Manual refresh button
-        ),
-      ]),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Logo and Search Bar
-            Row(
-              children: [
-                Image.asset(
-                  'lib/assets/KagaMe.png',
-                  width: 120.0,
-                  height: 60.0,
-                ),
-                SizedBox(width: 16.0),
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30.0),
-                      border: Border.all(color: Colors.grey, width: 1.0),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                    child: TextField(
-                    controller: searchController,
-                    textAlign: TextAlign.center,
-                    onSubmitted: (query) {
-                      if (query.isNotEmpty) {
-                        context.push('/wardrobe/search/$query');
-                      }
+      appBar: AppBar(title: Text('My Wardrobe (${widget.category})')),
+          body: SafeArea(
+            child: isLoading && cachedImages.isEmpty
+                ? Center(child: CircularProgressIndicator())
+                : NestedScrollView(
+                    headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+                      return [
+                        SliverAppBar(
+                          backgroundColor: Colors.white,
+                          pinned: false,
+                          floating: true,
+                          snap: true,
+                          expandedHeight: 80.0,
+                          automaticallyImplyLeading: false,
+                          flexibleSpace: FlexibleSpaceBar(
+                            background: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                children: [
+                                  GestureDetector(
+                                    onTap: () {
+                                      context.go('/home'); // Adjust navigation as needed
+                                    },
+                                    child: Image.asset(
+                                      'lib/assets/KagaMe.png',
+                                      width: 120.0,
+                                      height: 60.0,
+                                    ),
+                                  ),
+                                  SizedBox(width: 16.0), // Space between the image and the search bar
+                                  Expanded( 
+                                    child: Container( // search bar
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(30.0),
+                                        border: Border.all(color: Colors.grey, width: 1.0),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(horizontal: 12.0), // padding for elements in search bar 
+                                      child: TextField(
+                                        controller: searchController,
+                                        textAlign: TextAlign.center,
+                                        onSubmitted: (query) {
+                                          if (query.isNotEmpty) {
+                                            context.push('/wardrobe/search/$query');
+                                          }
+                                        },
+                                        decoration: InputDecoration(
+                                          hintText: 'Search Wardrobe',
+                                          hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
+                                          border: InputBorder.none,
+                                          prefixIcon: Icon(Icons.search, color: Colors.grey),
+                                          suffixIcon: IconButton(
+                                              icon: Icon(Icons.filter_list, color: Colors.grey),
+                                              onPressed: () {
+                                                print('Filter icon tapped');
+                                              },
+                                            ),
+                                          contentPadding: EdgeInsets.symmetric(vertical: 12.0), // padding for hint text of search bar
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ];
                     },
-                      decoration: InputDecoration(
-                        hintText: 'Search Wardrobe',
-                        hintStyle: TextStyle(color: Colors.grey),
-                        border: InputBorder.none,
-                        prefixIcon: Icon(Icons.search, color: Colors.grey),
+                    body: RefreshIndicator(
+                      onRefresh: refreshImages,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: GridView.builder(
+                          physics: AlwaysScrollableScrollPhysics(),
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            crossAxisSpacing: 8.0,
+                            mainAxisSpacing: 8.0,
+                          ),
+                          itemCount: cachedImages.length,
+                          itemBuilder: (context, index) {
+                            return GestureDetector(
+                              onTap: () => context.push('/wardrobe/item/${cachedImages[index]['id']!}'),
+                              child: Column(
+                                children: <Widget>[
+                                  Expanded(
+                                    child: AspectRatio(
+                                      aspectRatio: 1,
+                                      child: CachedNetworkImage(
+                                        cacheManager: cacheManager,
+                                        imageUrl: cachedImages[index]['url']!,
+                                        errorWidget: (context, url, error) => Icon(Icons.error),
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-
-            // Image Grid
-            Expanded(
-              child: isLoading && cachedImages.isEmpty
-                  ? Center(child: CircularProgressIndicator()) // Show loader if no cached images
-                  : Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: GridView.builder(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 8.0,
-                          mainAxisSpacing: 8.0,
-                        ),
-                        itemCount: cachedImages.length,
-                        itemBuilder: (context, index) {
-                          return GestureDetector(
-                            onTap: () => context.push('/wardrobe/item/${cachedImages[index]['id']!}'),
-                            child: Column(
-                              children: <Widget>[
-                                Expanded(
-                                  child: AspectRatio(
-                                    aspectRatio: 1,
-                                    child:  CachedNetworkImage(
-                                      cacheManager: cacheManager,
-                                      imageUrl: cachedImages[index]['url']!,
-                                      // placeholder: (context, url) =>
-                                      //     Center(child: CircularProgressIndicator()),
-                                      errorWidget: (context, url, error) =>
-                                          Icon(Icons.error),
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-            ),
-          ],
-        ),
-      ),
-    );
+          ),
+        );
   }
 }

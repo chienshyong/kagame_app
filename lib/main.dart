@@ -134,13 +134,13 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       routerConfig: router,
       theme: ThemeData(
-        primarySwatch: Colors.deepOrange, // Changes primary color
+        primarySwatch: Colors.blue, // Changes primary color
         scaffoldBackgroundColor: Colors.white, // Background color
         textTheme: TextTheme(
           bodyMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         appBarTheme: AppBarTheme(
-          backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+          backgroundColor: Colors.white,
           titleTextStyle: TextStyle(color: Colors.black, fontSize: 20),
         ),
         navigationBarTheme: NavigationBarThemeData(
