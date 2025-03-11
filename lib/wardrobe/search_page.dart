@@ -76,10 +76,6 @@ class _SearchPageState extends State<SearchPage> with RouteAware{
             Row(
               children: [
                 GestureDetector(
-                  onTap: () {
-                    // Navigate to the home page when the logo is tapped
-                    context.go('/home');
-                  },
                   child: Image.asset(
                     'lib/assets/KagaMe.png',
                     width: 120.0,
