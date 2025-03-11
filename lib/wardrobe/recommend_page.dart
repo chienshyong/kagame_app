@@ -86,6 +86,211 @@ class _RecommendPageState extends State<RecommendPage> {
     }
   }
 
+  // Helper method for showing a dialog where user can enter a new prompt to modify search
+  Future<String?> _showModifySearchDialog(BuildContext context) async {
+      TextEditingController _promptController = TextEditingController();
+
+      return showDialog<String>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Modify Search'),
+            content: TextField(
+              controller: _promptController,
+              decoration: InputDecoration(
+                hintText: 'Enter additional details...',
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, null), // Cancel action
+                child: Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context, _promptController.text); // Confirm action
+                },
+                child: Text('Search'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
+ /// Shows a dialog with checkboxes for disliked aspects.
+  Future<List<String>?> _showDislikeDialog(BuildContext context) async {
+    bool style = false;
+    bool item = false;
+    bool colours = false;
+    return showDialog<List<String>>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('What did you dislike?'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CheckboxListTile(
+                    title: Text('Style'),
+                    value: style,
+                    onChanged: (value) {
+                      setState(() {
+                        style = value ?? false;
+                      });
+                    },
+                  ),
+                  CheckboxListTile(
+                    title: Text('Item'),
+                    value: item,
+                    onChanged: (value) {
+                      setState(() {
+                        item = value ?? false;
+                      });
+                    },
+                  ),
+                  CheckboxListTile(
+                    title: Text('Colours'),
+                    value: colours,
+                    onChanged: (value) {
+                      setState(() {
+                        colours = value ?? false;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, null),
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    List<String> aspects = [];
+                    if (style) aspects.add('Style');
+                    if (item) aspects.add('Item');
+                    if (colours) aspects.add('Colours');
+                    Navigator.pop(context, aspects);
+                  },
+                  child: Text('Submit'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Groups recommendations by category and builds a list of widgets,
+  /// where each category section displays a title and a horizontal list of items.
+  List<Widget> _buildGroupedRecommendations() {
+    Map<String, List<Map<String, dynamic>>> grouped = {};
+
+    // Group recommendations by their 'category' field.
+    for (var item in recommended) {
+      String category = item['category'] ?? 'Others';
+      if (!grouped.containsKey(category)) {
+        grouped[category] = [];
+      }
+      grouped[category]!.add(item);
+    }
+
+    List<Widget> widgets = [];
+    grouped.forEach((category, items) {
+      widgets.add(Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+        child: Text(
+          category,
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+      ));
+      widgets.add(
+        Container(
+          height: 320,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final recommendedProduct = items[index];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ProductDetailPage(
+                        productId: recommendedProduct['_id'],
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 150,
+                  margin: EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Image.network(
+                        recommendedProduct['url'] ??
+                            recommendedProduct['image_url'],
+                        width: 150,
+                        height: 150,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            Icon(Icons.error),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        recommendedProduct['label'] ??
+                            recommendedProduct['name'] ??
+                            "",
+                        style: TextStyle(fontSize: 16),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        '\$${recommendedProduct['price']}',
+                        style: TextStyle(fontSize: 16, color: Colors.green),
+                      ),
+                      SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.favorite_border),
+                            onPressed: () {
+                              // Handle like action (e.g., update feedback state or send to API)
+                              print('Liked product: ${recommendedProduct['_id']}');
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.clear),
+                            onPressed: () async {
+                              // Show dislike dialog and capture the feedback
+                              List<String>? dislikedAspects = await _showDislikeDialog(context);
+                              if (dislikedAspects != null) {
+                                print('Disliked product: ${recommendedProduct['_id']}, Aspects: $dislikedAspects');
+                                // Optionally, send feedback to your API here.
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+    });
+    return widgets;
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -117,8 +322,15 @@ class _RecommendPageState extends State<RecommendPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton(
-                      onPressed: () {
-                        // Action for Modify Search
+                      onPressed: () async {
+                        String? newPrompt = await _showModifySearchDialog(context);
+                        if (newPrompt != null) {
+                          setState(() {
+                            prompt = newPrompt; // Update prompt with user input
+                            isLoading = true; // Show loading indicator while fetching
+                          });
+                          fetchRecommendationsFromApi();
+                        }
                       },
                       child: Text('Modify Search'),
                     ),
@@ -145,65 +357,17 @@ class _RecommendPageState extends State<RecommendPage> {
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Text(
-                          'Content from Your Wardrobe goes here',
+                          'Recommendations from Your Wardrobe Coming Soon',
                           style: TextStyle(fontSize: 18),
                         ),
                       ),
                     ),
                   ),
                   // Second tab: From Partner Brands (with recommendations)
-                  isLoading
+                      isLoading
                       ? Center(child: CircularProgressIndicator())
-                      : ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: recommended.length,
-                          itemBuilder: (context, index) {
-                            final recommendedProduct = recommended[index];
-                            return GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ProductDetailPage(
-                                      productId: recommendedProduct['_id'],
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: Container(
-                                width: 150,
-                                margin: EdgeInsets.all(8.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Image.network(
-                                      recommendedProduct['url'] ??
-                                          recommendedProduct['image_url'],
-                                      width: 150,
-                                      height: 150,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) =>
-                                          Icon(Icons.error),
-                                    ),
-                                    SizedBox(height: 8),
-                                    Text(
-                                      recommendedProduct['label'] ??
-                                          recommendedProduct['name'] ??
-                                          "",
-                                      style: TextStyle(fontSize: 16),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    Text(
-                                      '\$${recommendedProduct['price']}',
-                                      style: TextStyle(
-                                          fontSize: 16, color: Colors.green),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
+                      : ListView(
+                          children: _buildGroupedRecommendations(),
                         ),
                 ],
               ),
@@ -212,96 +376,5 @@ class _RecommendPageState extends State<RecommendPage> {
         ),
       ),
     );
-
-
-    // return Scaffold(
-    //   backgroundColor: Colors.white,
-    //   appBar: AppBar(
-    //     title: Text('Curated Recommendations'),
-    //   ),
-    //   body: Column(
-    //     children: [
-    //       // Top section with the shirt image and title
-    //       Padding(
-    //         padding: const EdgeInsets.all(16.0),
-    //         child: Row(
-    //           mainAxisAlignment: MainAxisAlignment.center, // Centers children horizontally
-    //           children: [
-    //             Image.network(
-    //               this_item_jsonResponse['image_url'],
-    //               width: 200,
-    //               height: 200,
-    //             ),
-    //           ],
-    //         ),
-    //       ),
-
-    //       // Buttons
-    //       Row(
-    //         mainAxisAlignment: MainAxisAlignment.center,
-    //         children: [
-    //           ElevatedButton(
-    //             onPressed: () {
-    //               // Action for Modify Search
-    //             },
-    //             child: Text('Modify Search'),
-    //           ),
-    //         ],
-    //       ),
-
-    //       // Recommendations
-
-    //       isLoading
-    //         ? Center(child: CircularProgressIndicator())
-    //         : Container(
-    //           height: 250,
-    //           child: ListView.builder(
-    //             scrollDirection: Axis.horizontal,
-    //             itemCount: recommended.length,
-    //             itemBuilder: (context, index) {
-    //               final recommendedProduct = recommended[index];
-    //               return GestureDetector(
-    //                 onTap: () {
-    //                   Navigator.push(
-    //                     context,
-    //                     MaterialPageRoute(
-    //                       builder: (context) => ProductDetailPage(productId: recommendedProduct['_id']),
-    //                     ),
-    //                   );
-    //                 },
-    //                 child: Container(
-    //                   width: 150,
-    //                   margin: EdgeInsets.all(8.0),
-    //                   child: Column(
-    //                     crossAxisAlignment: CrossAxisAlignment.start,
-    //                     children: [
-    //                       Image.network(
-    //                         recommendedProduct['url'] ?? recommendedProduct['image_url'],
-    //                         width: 150,
-    //                         height: 150,
-    //                         fit: BoxFit.cover,
-    //                         errorBuilder: (context, error, stackTrace) => Icon(Icons.error),
-    //                       ),
-    //                       SizedBox(height: 8),
-    //                       Text(
-    //                         recommendedProduct['label'] ?? recommendedProduct['name'] ?? "",
-    //                         style: TextStyle(fontSize: 16),
-    //                         maxLines: 2,
-    //                         overflow: TextOverflow.ellipsis,
-    //                       ),
-    //                       Text(
-    //                         '\$${recommendedProduct['price']}',
-    //                         style: TextStyle(fontSize: 16, color: Colors.green),
-    //                       ),
-    //                     ],
-    //                   )
-    //                 )
-    //               );
-    //             }
-    //           )
-    //         )
-    //     ],
-    //   )
-    // );
   }
 }
