@@ -136,9 +136,7 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
           _weightController.text = jsonResponse["weight"] ?? "";
           _raceController.text = jsonResponse["ethnicity"] ?? "";
           _skinToneController.text = jsonResponse["skin_tone"] ?? "";
-          _happinessLevel = double.parse(jsonResponse["happiness_current_wardrobe"]) ?? null;
-          _clothingPrefsController.text = jsonResponse["clothing_preferences"] ?? "";
-          _clothingDislikesController.text = jsonResponse["clothing_dislikes"] ?? "";
+          _happinessLevel = double.parse(jsonResponse["happiness_current_wardrobe"] ?? 8);
         });
       }
     } catch (error) {
@@ -161,12 +159,6 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
       "skin_tone": _skinToneController.text,
       "style": _styleResult,
       "happiness_current_wardrobe": _happinessLevel?.toInt().toString(),
-      // "clothing_likes": {
-      //   for (var item in _clothingPrefsController.text.split(",").map((e) => e.trim())) if (item.isNotEmpty) item: true
-      // },
-      // "clothing_dislikes": {
-      //   for (var item in _clothingDislikesController.text.split(",").map((e) => e.trim())) if (item.isNotEmpty) item: false
-      // }
     };
 
     String jsonData = jsonEncode(updatedProfile);
