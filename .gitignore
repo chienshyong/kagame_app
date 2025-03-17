@@ -62,3 +62,7 @@ ios/Flutter/.Generated*
 
 #Keystore
 upload-keystore.jks
+
+# FVM Version Cache
+.fvm/
+android/app/.cxx/*

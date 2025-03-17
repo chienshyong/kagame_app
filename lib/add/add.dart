@@ -51,6 +51,7 @@ class _MultiImagePickerPageState extends State<MultiImagePickerPage> {
           _uploadProgress = (i + 1) / _images.length;
         });
       }
+      _checkStyleAnalysis();
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Images uploaded successfully!')),
@@ -80,7 +81,34 @@ class _MultiImagePickerPageState extends State<MultiImagePickerPage> {
     await request.send();
   }
 
-    @override
+// This function handles any errors internally
+  Future<void> _checkStyleAnalysis() async {
+    try {
+      final String baseUrl = authService.baseUrl;
+      final token = await authService.getToken();
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/wardrobe/check-style-analysis'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        // If you want to display something or log success:
+        debugPrint('Style analysis triggered successfully.');
+        // Optionally parse `response.body` if needed
+      } else {
+        debugPrint(
+            'Failed to check style analysis: ${response.statusCode} - ${response.body}');
+      }
+    } catch (err) {
+      debugPrint('Error in _checkStyleAnalysis(): $err');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
