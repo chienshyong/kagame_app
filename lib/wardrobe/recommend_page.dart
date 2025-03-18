@@ -86,37 +86,37 @@ class _RecommendPageState extends State<RecommendPage> {
     }
   }
 
-  // Helper method for showing a dialog where user can enter a new prompt to modify search
-  Future<String?> _showModifySearchDialog(BuildContext context) async {
-      TextEditingController _promptController = TextEditingController();
+  // // Helper method for showing a dialog where user can enter a new prompt to modify search
+  // Future<String?> _showModifySearchDialog(BuildContext context) async {
+  //     TextEditingController _promptController = TextEditingController();
 
-      return showDialog<String>(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text('Modify Search'),
-            content: TextField(
-              controller: _promptController,
-              decoration: InputDecoration(
-                hintText: 'Enter additional details...',
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, null), // Cancel action
-                child: Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context, _promptController.text); // Confirm action
-                },
-                child: Text('Search'),
-              ),
-            ],
-          );
-        },
-      );
-    }
+  //     return showDialog<String>(
+  //       context: context,
+  //       builder: (context) {
+  //         return AlertDialog(
+  //           title: Text('Modify Search'),
+  //           content: TextField(
+  //             controller: _promptController,
+  //             decoration: InputDecoration(
+  //               hintText: 'Enter additional details...',
+  //             ),
+  //           ),
+  //           actions: [
+  //             TextButton(
+  //               onPressed: () => Navigator.pop(context, null), // Cancel action
+  //               child: Text('Cancel'),
+  //             ),
+  //             TextButton(
+  //               onPressed: () {
+  //                 Navigator.pop(context, _promptController.text); // Confirm action
+  //               },
+  //               child: Text('Search'),
+  //             ),
+  //           ],
+  //         );
+  //       },
+  //     );
+  //   }
 
  /// Shows a dialog with checkboxes for disliked aspects.
   Future<List<String>?> _showDislikeDialog(BuildContext context) async {
@@ -185,22 +185,33 @@ class _RecommendPageState extends State<RecommendPage> {
     );
   }
 
-  /// Groups recommendations by category and builds a list of widgets,
-  /// where each category section displays a title and a horizontal list of items.
-  List<Widget> _buildGroupedRecommendations() {
-    Map<String, List<Map<String, dynamic>>> grouped = {};
+List<Widget> _buildGroupedRecommendations() {
+  Map<String, List<Map<String, dynamic>>> grouped = {
+    "Tops": [],
+    "Bottoms": [],
+    "Shoes": [],
+  };
 
-    // Group recommendations by their 'category' field.
-    for (var item in recommended) {
-      String category = item['category'] ?? 'Others';
-      if (!grouped.containsKey(category)) {
-        grouped[category] = [];
-      }
+  // Group recommendations by their 'category' field.
+  for (var item in recommended) {
+    String category = item['category'] ?? 'Others';
+    if (grouped.containsKey(category)) {
       grouped[category]!.add(item);
+    } else {
+      if (!grouped.containsKey("Others")) {
+        grouped["Others"] = [];
+      }
+      grouped["Others"]!.add(item);
     }
+  }
 
-    List<Widget> widgets = [];
-    grouped.forEach((category, items) {
+  List<Widget> widgets = [];
+
+  // Define the category display order
+  List<String> displayOrder = ["Tops", "Bottoms", "Shoes", "Others"];
+
+  for (String category in displayOrder) {
+    if (grouped.containsKey(category) && grouped[category]!.isNotEmpty) {
       widgets.add(Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
         child: Text(
@@ -210,12 +221,12 @@ class _RecommendPageState extends State<RecommendPage> {
       ));
       widgets.add(
         Container(
-          height: 320,
+          height: 220,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: items.length,
+            itemCount: grouped[category]!.length,
             itemBuilder: (context, index) {
-              final recommendedProduct = items[index];
+              final recommendedProduct = grouped[category]![index];
               return GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -242,20 +253,21 @@ class _RecommendPageState extends State<RecommendPage> {
                         errorBuilder: (context, error, stackTrace) =>
                             Icon(Icons.error),
                       ),
-                      SizedBox(height: 8),
-                      Text(
-                        recommendedProduct['label'] ??
-                            recommendedProduct['name'] ??
-                            "",
-                        style: TextStyle(fontSize: 16),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        '\$${recommendedProduct['price']}',
-                        style: TextStyle(fontSize: 16, color: Colors.green),
-                      ),
-                      SizedBox(height: 8),
+                      // Text for labels and prices of recommended items
+                      // SizedBox(height: 8),
+                      // Text(
+                      //   recommendedProduct['label'] ??
+                      //       recommendedProduct['name'] ??
+                      //       "",
+                      //   style: TextStyle(fontSize: 16),
+                      //   maxLines: 2,
+                      //   overflow: TextOverflow.ellipsis,
+                      // ),
+                      // Text(
+                      //   '\$${recommendedProduct['price']}',
+                      //   style: TextStyle(fontSize: 16, color: Colors.green),
+                      // ),
+                      // SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -287,9 +299,10 @@ class _RecommendPageState extends State<RecommendPage> {
           ),
         ),
       );
-    });
-    return widgets;
+    }
   }
+  return widgets;
+}
 
   @override
   Widget build(BuildContext context) {
@@ -302,7 +315,7 @@ class _RecommendPageState extends State<RecommendPage> {
         ),
         body: Column(
           children: [
-            // Header section: Top section with the shirt image and title, plus the Modify Search button
+            // Header section: Top section with the shirt image and title, plus the Recommend Again button
             Column(
               children: [
                 Padding(
@@ -313,7 +326,7 @@ class _RecommendPageState extends State<RecommendPage> {
                       Image.network(
                         this_item_jsonResponse['image_url'],
                         width: 200,
-                        height: 200,
+                        height: 150,
                       ),
                     ],
                   ),
@@ -322,17 +335,13 @@ class _RecommendPageState extends State<RecommendPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton(
-                      onPressed: () async {
-                        String? newPrompt = await _showModifySearchDialog(context);
-                        if (newPrompt != null) {
-                          setState(() {
-                            prompt = newPrompt; // Update prompt with user input
-                            isLoading = true; // Show loading indicator while fetching
-                          });
-                          fetchRecommendationsFromApi();
-                        }
+                      onPressed: () {
+                        setState(() {
+                          isLoading = true; // Show loading indicator while fetching
+                        });
+                        fetchRecommendationsFromApi();
                       },
-                      child: Text('Modify Search'),
+                      child: Text('Recommend Again'),
                     ),
                   ],
                 ),
