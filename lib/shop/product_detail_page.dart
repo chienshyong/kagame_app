@@ -131,37 +131,34 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     }
   }
 
-  /// Step 3: fetch recommended outfits
-  Future<void> fetchRecommendedOutfits() async {
-    if (productDoc == null) return;
-    setState(() => isLoadingOutfits = true);
+Future<void> fetchRecommendedOutfits() async {
+  if (productDoc == null) return;
+  setState(() => isLoadingOutfits = true);
 
-    final token = await authService.getToken();
-    final baseUrl = authService.baseUrl;
-    final String productId = productDoc!['id'] ?? '';
-    final uri =
-        Uri.parse('$baseUrl/shop/item-outfit-search?item_id=$productId');
+  final token = await authService.getToken();
+  final baseUrl = authService.baseUrl;
+  final String productId = productDoc!['id'] ?? '';
+  final uri = Uri.parse('$baseUrl/fast-item-outfit-search-with-style?item_id=$productId');
 
-    try {
-      final response = await http.get(
-        uri,
-        headers: {'Authorization': 'Bearer $token'},
-      );
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        setState(() {
-          recommendedOutfits = data['outfits'] ?? [];
-        });
-      } else {
-        throw Exception('Failed to load recommended outfits');
-      }
-    } catch (error) {
-      debugPrint('Error fetching recommended outfits: $error');
-    } finally {
-      setState(() => isLoadingOutfits = false);
+  try {
+    final response = await http.get(
+      uri,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      setState(() {
+        recommendedOutfits = data['styles'] ?? [];
+      });
+    } else {
+      throw Exception('Failed to load recommended outfits');
     }
+  } catch (error) {
+    debugPrint('Error fetching recommended outfits: $error');
+  } finally {
+    setState(() => isLoadingOutfits = false);
   }
-
+}
   /// -- Likes/Dislikes toggling & updates --
   void toggleLike(String? itemName) {
     bool isAdded = false;
@@ -512,21 +509,197 @@ Widget build(BuildContext context) {
       ),
     );
   }
-
-  Widget buildRecommendedOutfitsSection() {
-    if (isLoadingOutfits) {
-      return Center(child: CircularProgressIndicator());
-    }
-    if (recommendedOutfits.isEmpty) {
-      return Text('No recommended outfits found');
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children:
-          recommendedOutfits.map((outfit) => buildOutfitCard(outfit)).toList(),
-    );
+Widget _buildCategoryCarousel(String category, List<dynamic> items, String currentItemId) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Text(
+          category.toUpperCase(),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+      ),
+      SizedBox(
+        height: 200,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          controller: PageController(viewportFraction: 0.8),
+          physics: const PageScrollPhysics(),
+          itemCount: items.length,
+          itemBuilder: (context, index) {
+            final item = items[index];
+            final isMainItem = item['id'] == currentItemId;
+            
+            return Container(
+              width: 160,
+              margin: EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                border: isMainItem 
+                  ? Border.all(color: Colors.blue, width: 2)
+                  : null,
+              ),
+              child: GestureDetector(
+                onTap: () {
+                  if (!isMainItem) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ProductDetailPage(productId: item['id']),
+                      ),
+                    );
+                  }
+                },
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: Stack(
+                        children: [
+                          Image.network(
+                            item['image_url'],
+                            fit: BoxFit.cover,
+                            errorBuilder: (ctx, e, st) => Icon(Icons.error),
+                          ),
+                          Positioned(
+                            right: 8,
+                            bottom: 8,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.favorite,
+                                    color: clothingLikes.containsKey(item['name'])
+                                        ? Colors.pink
+                                        : Colors.grey[700],
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      toggleLike(item['name']);
+                                    });
+                                  },
+                                ),
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.thumb_down,
+                                    color: clothingDislikes.containsKey(item['name'])
+                                        ? Colors.red
+                                        : Colors.grey[700],
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      toggleDislike(
+                                        item['name'],
+                                        item['category'],
+                                        context,
+                                        item['clothing_type']?.toString(),
+                                        item['other_tags']?.toString(),
+                                        item['color']?.toString(),
+                                      );
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: Text(
+                        item['name'],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    ],
+  );
+}
+Widget buildRecommendedOutfitsSection() {
+  if (isLoadingOutfits) {
+    return Center(child: CircularProgressIndicator());
+  }
+  if (recommendedOutfits.isEmpty) {
+    return Text('No recommended outfits found');
   }
 
+  final mainCategory = productDoc?['category']?.toLowerCase() ?? '';
+  final mainItemId = productDoc?['id'] ?? '';
+
+  return Column(
+    children: recommendedOutfits.map<Widget>((style) {
+      final styleName = style['style_name'] ?? 'Unknown Style';
+      final styleOutfits = style['style_outfits'] as List<dynamic>? ?? [];
+
+      // Collect all items across all base recommendations
+      List<dynamic> allItems = [];
+      for (final outfit in styleOutfits) {
+        allItems.addAll((outfit['top_items'] as List<dynamic>? ?? [])
+            .map((item) => item));
+      }
+
+      // Categorize items
+      List<dynamic> tops = [];
+      List<dynamic> bottoms = [];
+      List<dynamic> shoes = [];
+
+      for (final item in allItems) {
+        final category = item['category']?.toLowerCase() ?? '';
+        switch (category) {
+          case 'tops':
+            tops.add(item);
+            break;
+          case 'bottoms':
+            bottoms.add(item);
+            break;
+          case 'shoes':
+            shoes.add(item);
+            break;
+        }
+      }
+
+      // Add main item to its category if needed
+      switch (mainCategory) {
+        case 'tops':
+          tops.insert(0, productDoc!);
+          break;
+        case 'bottoms':
+          bottoms.insert(0, productDoc!);
+          break;
+        case 'shoes':
+          shoes.insert(0, productDoc!);
+          break;
+      }
+
+      return Container(
+        margin: EdgeInsets.only(bottom: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Text(
+                styleName,
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+            if (mainCategory != 'tops') _buildCategoryCarousel('Tops', tops, mainItemId),
+            if (mainCategory != 'bottoms') _buildCategoryCarousel('Bottoms', bottoms, mainItemId),
+            if (mainCategory != 'shoes') _buildCategoryCarousel('Shoes', shoes, mainItemId),
+          ],
+        ),
+      );
+    }).toList(),
+  );
+}
   Widget buildOutfitCard(dynamic outfit) {
     final styleName = outfit['style'] ?? '';
     final outfitName = outfit['name'] ?? '';
