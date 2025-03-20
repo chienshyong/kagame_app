@@ -80,7 +80,7 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
 
     final String baseUrl = authService.baseUrl;
     final token = await authService.getToken();
-    final Uri uri = Uri.parse('$baseUrl/shop/recommendations');
+    final Uri uri = Uri.parse('$baseUrl/shop/recommendations-fast');
 
     try {
       final response = await http.get(
@@ -91,8 +91,8 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        final List<dynamic> data = responseData['recommendations'];
         setState(() {
           recommendedProducts = data.map((item) {
             return {

@@ -47,7 +47,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     super.initState();
     // 1) Fetch main product by ID
     _fetchProductDoc();
-    // 2) Also fetch user’s existing likes/dislikes
+    // 2) Also fetch user's existing likes/dislikes
     getClothingPreferences();
   }
   // Add this function to your class to better understand the structure
@@ -114,7 +114,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 // Add this call to your SSE event handler, right after parsing the event data:
 // _debugSSEDataStructure(eventData);
 
-  /// Grab user’s saved clothing preferences.
+  /// Grab user's saved clothing preferences.
   Future<void> getClothingPreferences() async {
     final String baseUrl = authService.baseUrl;
     final token = await authService.getToken();
@@ -884,30 +884,19 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   Widget buildRecommendedOutfitsSection() {
-    // If we have any complete outfit style data, we should stop showing skeletons
-    final bool hasCompleteData = recommendedOutfits.any((style) {
-      final styleOutfits = style['style_outfits'] as List<dynamic>? ?? [];
-      return styleOutfits.isNotEmpty;
-    });
-
     final mainCategory = productDoc?['category']?.toLowerCase() ?? '';
     final mainItemId = productDoc?['id'] ?? '';
 
     try {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ...recommendedOutfits.where((style) {
-        final styleOutfits = style['style_outfits'] as List<dynamic>? ?? [];
-        return styleOutfits.isNotEmpty; // Only include styles with outfits
-      })
-      .map<Widget>((style) {
-        final styleName = style['style_name'] ?? '';
-        final styleOutfits = style['style_outfits'] as List<dynamic>? ?? [];
-            // Show skeleton loader only if we don't have any complete outfit data yet
-            if (styleOutfits.isEmpty && !hasCompleteData) {
-              return _buildStyleSkeleton(styleName);
-            }
+      // First, build widgets for styles that have loaded outfits
+      List<Widget> loadedOutfitWidgets = recommendedOutfits
+          .where((style) {
+            final styleOutfits = style['style_outfits'] as List<dynamic>? ?? [];
+            return styleOutfits.isNotEmpty; // Only include styles with outfits
+          })
+          .map<Widget>((style) {
+            final styleName = style['style_name'] ?? '';
+            final styleOutfits = style['style_outfits'] as List<dynamic>? ?? [];
 
             // Collect all items across all base recommendations
             List<dynamic> allItems = [];
@@ -919,8 +908,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               }
 
               // Check for bottom_items if they exist
-              final bottomItems =
-                  outfit['bottom_items'] as List<dynamic>? ?? [];
+              final bottomItems = outfit['bottom_items'] as List<dynamic>? ?? [];
               if (bottomItems.isNotEmpty) {
                 allItems.addAll(bottomItems);
               }
@@ -932,15 +920,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               }
 
               // Check for jacket_items if they exist
-              final jacketItems =
-                  outfit['jacket_items'] as List<dynamic>? ?? [];
+              final jacketItems = outfit['jacket_items'] as List<dynamic>? ?? [];
               if (jacketItems.isNotEmpty) {
                 allItems.addAll(jacketItems);
               }
 
               // Check for accessories_items if they exist
-              final accessoryItems =
-                  outfit['accessory_items'] as List<dynamic>? ?? [];
+              final accessoryItems = outfit['accessory_items'] as List<dynamic>? ?? [];
               if (accessoryItems.isNotEmpty) {
                 allItems.addAll(accessoryItems);
               }
@@ -1023,8 +1009,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   {'category': 'Shoes', 'items': shoes},
                   {'category': 'Accessories', 'items': accessories},
                 ];
-                carouselConfigs
-                    .removeWhere((config) => config['category'] == 'Dresses');
+                carouselConfigs.removeWhere((config) => config['category'] == 'Dresses');
                 break;
               case 'shoes':
                 carouselConfigs = [
@@ -1034,8 +1019,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   {'category': 'Jackets', 'items': jackets},
                   {'category': 'Accessories', 'items': accessories},
                 ];
-                carouselConfigs
-                    .removeWhere((config) => config['category'] == 'Shoes');
+                carouselConfigs.removeWhere((config) => config['category'] == 'Shoes');
                 break;
               case 'accessories':
                 carouselConfigs = [
@@ -1055,8 +1039,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   {'category': 'Shoes', 'items': shoes},
                   {'category': 'Accessories', 'items': accessories},
                 ];
-                carouselConfigs
-                    .removeWhere((config) => config['category'] == 'Jackets');
+                carouselConfigs.removeWhere((config) => config['category'] == 'Jackets');
                 break;
               case 'bottoms':
                 carouselConfigs = [
@@ -1065,8 +1048,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   {'category': 'Jackets', 'items': jackets},
                   {'category': 'Accessories', 'items': accessories},
                 ];
-                carouselConfigs
-                    .removeWhere((config) => config['category'] == 'Bottoms');
+                carouselConfigs.removeWhere((config) => config['category'] == 'Bottoms');
                 break;
               default:
                 // For other categories, display all except main category
@@ -1078,14 +1060,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   {'category': 'Jackets', 'items': jackets},
                   {'category': 'Accessories', 'items': accessories},
                 ];
-                carouselConfigs.removeWhere((config) =>
-                    config['category'].toLowerCase() == mainCategory);
+                carouselConfigs.removeWhere((config) => config['category'].toLowerCase() == mainCategory);
                 break;
             }
 
             // Filter out carousels with empty items
-            carouselConfigs
-                .retainWhere((config) => (config['items'] as List).isNotEmpty);
+            carouselConfigs.retainWhere((config) => (config['items'] as List).isNotEmpty);
 
             // Return compact column layout with minimal padding/margins
             return Column(
@@ -1093,7 +1073,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               children: [
                 // Style name with minimal top margin
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 0),
+                  padding: const EdgeInsets.only(bottom: 0, top: 16),
                   child: Text(
                     styleName,
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -1101,9 +1081,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 ),
                 // Compact spacing
                 ...carouselConfigs.map((config) {
-                  if ((config['items'] as List).isEmpty) {
-                    return _buildCategorySkeleton(config['category']);
-                  }
                   return _buildCategoryCarousel(
                     config['category'],
                     config['items'] as List<dynamic>,
@@ -1112,7 +1089,31 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 }).toList(),
               ],
             );
-          }).toList(),
+          }).toList();
+
+      // Add skeleton loaders if still loading (ONLY after all loaded outfits)
+      List<Widget> skeletonWidgets = [];
+      if (isLoadingOutfits) {
+        // Show a fixed number of skeleton loaders (3 feels natural)
+        // You can adjust this number based on how many styles you expect
+        int skeletonCount = 3;
+        
+        // Optional: reduce the number of skeletons as real content loads
+        // skeletonCount = skeletonCount - loadedOutfitWidgets.length;
+        // skeletonCount = skeletonCount > 0 ? skeletonCount : 0;
+        
+        for (int i = 0; i < skeletonCount; i++) {
+          skeletonWidgets.add(_buildStyleSkeleton("Loading Style..."));
+        }
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // First show all loaded outfit styles
+          ...loadedOutfitWidgets,
+          // Then show skeletons below (if any)
+          ...skeletonWidgets,
         ],
       );
     } catch (e) {
