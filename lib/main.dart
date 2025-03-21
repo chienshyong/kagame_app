@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 // Page imports
 import 'login.dart';
-import 'wardrobe/wardrobe_page.dart';
+import 'wardrobe/wardrobe_page.dart'; 
 import 'wardrobe/category_page.dart';
 import 'wardrobe/item_page.dart';
 import 'wardrobe/recommend_page.dart';
@@ -12,7 +13,11 @@ import 'add/add.dart';
 import 'profile/profile.dart';
 import 'shop/shop_page.dart'; 
 
-void main() {
+void main() async {
+  //Init firebase for google authentication
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  
   // Private navigators
   final _rootNavigatorKey =
       GlobalKey<NavigatorState>(); // Index of current tab in bottom navigator

@@ -13,7 +13,6 @@ dependencies:
     sdk: flutter
 
   provider: ^6.0.0
-  # camera: ^0.11.0+2
   camera: ^0.10.5+4
   path_provider: ^2.0.11
   image_picker: ^1.1.2
@@ -29,7 +28,10 @@ dependencies:
   sse_client: ^0.1.0
   shimmer: ^3.0.0
   flutter_client_sse: ^2.0.0
-
+  firebase_core: ^3.12.1
+  firebase_auth: ^5.5.1
+  google_sign_in: ^5.4.4
+  
 flutter_icons:
   android: true
   ios: true
