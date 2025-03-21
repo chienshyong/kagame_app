@@ -274,46 +274,108 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       throw Exception(responseJson["detail"]);
     }
   }
-
   Future<String?> _feedbackFormBuilder(BuildContext context) async {
-    String? feedbackData;
+    String? selectedOption;
 
-    await showDialog<void>(
+    return showDialog<String>(
       context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('What did you dislike about this item?'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                title: Text("Type of item"),
-                onTap: () {
-                  feedbackData = "Type of item";
-                  Navigator.pop(dialogContext);
-                },
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('What did you dislike about this item?'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RadioListTile<String>(
+                    title: Text("Type of item"),
+                    value: "Type of item",
+                    groupValue: selectedOption,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedOption = value;
+                      });
+                    },
+                  ),
+                  RadioListTile<String>(
+                    title: Text("Style"),
+                    value: "Style",
+                    groupValue: selectedOption,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedOption = value;
+                      });
+                    },
+                  ),
+                  RadioListTile<String>(
+                    title: Text("Colour"),
+                    value: "Colour",
+                    groupValue: selectedOption,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedOption = value;
+                      });
+                    },
+                  ),
+                ],
               ),
-              ListTile(
-                title: Text("Style"),
-                onTap: () {
-                  feedbackData = "Style";
-                  Navigator.pop(dialogContext);
-                },
-              ),
-              ListTile(
-                title: Text("Colour"),
-                onTap: () {
-                  feedbackData = "Colour";
-                  Navigator.pop(dialogContext);
-                },
-              ),
-            ],
-          ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, null),
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context, selectedOption);
+                  },
+                  child: Text('Submit'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
-    return feedbackData;
   }
+  // Future<String?> _feedbackFormBuilder(BuildContext context) async {
+  //   String? feedbackData;
+
+  //   await showDialog<void>(
+  //     context: context,
+  //     builder: (BuildContext dialogContext) {
+  //       return AlertDialog(
+  //         title: const Text('What did you dislike about this item?'),
+  //         content: Column(
+  //           mainAxisSize: MainAxisSize.min,
+  //           children: [
+  //             ListTile(
+  //               title: Text("Type of item"),
+  //               onTap: () {
+  //                 feedbackData = "Type of item";
+  //                 Navigator.pop(dialogContext);
+  //               },
+  //             ),
+  //             ListTile(
+  //               title: Text("Style"),
+  //               onTap: () {
+  //                 feedbackData = "Style";
+  //                 Navigator.pop(dialogContext);
+  //               },
+  //             ),
+  //             ListTile(
+  //               title: Text("Colour"),
+  //               onTap: () {
+  //                 feedbackData = "Colour";
+  //                 Navigator.pop(dialogContext);
+  //               },
+  //             ),
+  //           ],
+  //         ),
+  //       );
+  //     },
+  //   );
+  //   return feedbackData;
+  // }
 
 @override
 Widget build(BuildContext context) {

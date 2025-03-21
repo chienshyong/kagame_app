@@ -187,7 +187,7 @@ class _CategoryPageState extends State<CategoryPage> {
                                 children: [
                                   GestureDetector(
                                     onTap: () {
-                                      context.go('/home'); // Adjust navigation as needed
+                                      context.go('/home'); 
                                     },
                                     child: Image.asset(
                                       'lib/assets/KagaMe.png',
@@ -206,23 +206,23 @@ class _CategoryPageState extends State<CategoryPage> {
                                       padding: const EdgeInsets.symmetric(horizontal: 12.0), // padding for elements in search bar 
                                       child: TextField(
                                         controller: searchController,
-                                        textAlign: TextAlign.center,
+                                        textAlign: TextAlign.left,
                                         onSubmitted: (query) {
                                           if (query.isNotEmpty) {
                                             context.push('/wardrobe/search/$query');
                                           }
                                         },
                                         decoration: InputDecoration(
-                                          hintText: 'Search Wardrobe',
+                                          hintText: 'Search My Wardrobe',
                                           hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
                                           border: InputBorder.none,
                                           prefixIcon: Icon(Icons.search, color: Colors.grey),
-                                          suffixIcon: IconButton(
-                                              icon: Icon(Icons.filter_list, color: Colors.grey),
-                                              onPressed: () {
-                                                print('Filter icon tapped');
-                                              },
-                                            ),
+                                          // suffixIcon: IconButton(
+                                          //     icon: Icon(Icons.filter_list, color: Colors.grey),
+                                          //     onPressed: () {
+                                          //       print('Filter icon tapped');
+                                          //     },
+                                          //   ),
                                           contentPadding: EdgeInsets.symmetric(vertical: 12.0), // padding for hint text of search bar
                                         ),
                                       ),
@@ -239,39 +239,57 @@ class _CategoryPageState extends State<CategoryPage> {
                       onRefresh: refreshImages,
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: GridView.builder(
-                          physics: AlwaysScrollableScrollPhysics(),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            crossAxisSpacing: 8.0,
-                            mainAxisSpacing: 8.0,
-                          ),
-                          itemCount: cachedImages.length,
-                          itemBuilder: (context, index) {
-                            return GestureDetector(
-                              onTap: () => context.push('/wardrobe/item/${cachedImages[index]['id']!}'),
-                              child: Column(
-                                children: <Widget>[
-                                  Expanded(
-                                    child: AspectRatio(
-                                      aspectRatio: 1,
-                                      child: CachedNetworkImage(
-                                        cacheManager: cacheManager,
-                                        imageUrl: cachedImages[index]['url']!,
-                                        errorWidget: (context, url, error) => Icon(Icons.error),
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // Header Text
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: Text(
+                                "Select the item you want to style your outfit around",
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                textAlign: TextAlign.center,
                               ),
-                            );
-                          },
-                        ),
+                            ),
+                        
+                          Expanded(
+                            child: GridView.builder(
+                              physics: AlwaysScrollableScrollPhysics(),
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                crossAxisSpacing: 8.0,
+                                mainAxisSpacing: 8.0,
+                              ),
+                              itemCount: cachedImages.length,
+                              itemBuilder: (context, index) {
+                                return GestureDetector(
+                                  onTap: () => context.push('/wardrobe/item/${cachedImages[index]['id']!}'),
+                                  child: Column(
+                                    children: <Widget>[
+                                      Expanded(
+                                        child: AspectRatio(
+                                          aspectRatio: 1,
+                                          child: CachedNetworkImage(
+                                            cacheManager: cacheManager,
+                                            imageUrl: cachedImages[index]['url']!,
+                                            errorWidget: (context, url, error) => Icon(Icons.error),
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ]
                       ),
                     ),
                   ),
-          ),
-        );
+                ),
+          )
+    );
   }
 }

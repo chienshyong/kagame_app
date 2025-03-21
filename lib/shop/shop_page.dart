@@ -185,6 +185,8 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
+    TextEditingController searchController = TextEditingController();
+
     return Scaffold(
       body: SafeArea(
         child: (isLoading && isLoadingRecommendations)
@@ -226,17 +228,24 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
                                     ),
                                     padding: const EdgeInsets.symmetric(horizontal: 12.0),
                                     child: TextField(
+                                      controller: searchController,
+                                      textAlign: TextAlign.left,
+                                      onSubmitted: (query) {
+                                        if (query.isNotEmpty) {
+                                          context.push('/wardrobe/search/$query');
+                                        }
+                                      },
                                       decoration: InputDecoration(
-                                        hintText: 'Search Products',
+                                        hintText: 'Search My Wardrobe',
                                         hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
                                         border: InputBorder.none,
                                         prefixIcon: Icon(Icons.search, color: Colors.grey),
-                                        suffixIcon: IconButton(
-                                          icon: Icon(Icons.filter_list, color: Colors.grey),
-                                          onPressed: () {
-                                            print('Filter icon tapped');
-                                          },
-                                        ),
+                                        // suffixIcon: IconButton(
+                                        //   icon: Icon(Icons.filter_list, color: Colors.grey),
+                                        //   onPressed: () {
+                                        //     print('Filter icon tapped');
+                                        //   },
+                                        // ),
                                         contentPadding: EdgeInsets.symmetric(vertical: 12.0),
                                       ),
                                     ),
