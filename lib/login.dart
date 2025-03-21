@@ -100,6 +100,19 @@ class _LoginPageState extends State<LoginPage> {
               },
               child: Text('Register'),
             ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  if(await authService.signInWithGoogle()){
+                    context.go('/wardrobe');
+                  }
+                } catch (e) {
+                  print("Error signing in with Google: $e");
+                }
+              },
+              child: Text('Login with Google'),
+            ),
+
           ],
         ),
       ),

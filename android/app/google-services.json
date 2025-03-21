@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "593204508901",
+    "project_id": "kagame-432309",
+    "storage_bucket": "kagame-432309.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:593204508901:android:dfcb7d632602006a637c0c",
+        "android_client_info": {
+          "package_name": "com.kagameteam.kagame"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "593204508901-li9o8cioopbqfhkmn8bh2bs35mobc6vn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kagameteam.kagame",
+            "certificate_hash": "1d856622f03d178784cef5d66f10d50cb959decb"
+          }
+        },
+        {
+          "client_id": "593204508901-oiedsuuh0f9rgljp988h4eigdulh804u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kagameteam.kagame",
+            "certificate_hash": "05f61770776c3e5ef34a55dc28cf79d8cfc3283a"
+          }
+        },
+        {
+          "client_id": "593204508901-ct5qbnl5bg70cdsr7t37i8pe7qm987up.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB0pUVqjo3mOASx08oHwMucDYKM3oD8CbI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "593204508901-ct5qbnl5bg70cdsr7t37i8pe7qm987up.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
