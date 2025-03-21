@@ -546,6 +546,8 @@ Future<void> fetchRecommendedProducts() async {
 
   @override
   Widget build(BuildContext context) {
+    TextEditingController searchController = TextEditingController();
+
     return Scaffold(
       body: SafeArea(
         child: (isLoading && isLoadingRecommendations)

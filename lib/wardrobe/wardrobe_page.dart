@@ -192,7 +192,11 @@ Widget build(BuildContext context) {
                               height: 60.0,
                             ),
                           ),
-                          SizedBox(width: 16.0), // Space between the image and the search bar
+                          
+                          // Space between logo and the search bar
+                          SizedBox(width: 16.0), 
+                          
+                          // Search bar
                           Expanded(
                             child: Container(
                               decoration: BoxDecoration(
@@ -207,14 +211,14 @@ Widget build(BuildContext context) {
                                   const EdgeInsets.symmetric(horizontal: 12.0),
                               child: TextField(
                                 controller: searchController,
-                                textAlign: TextAlign.center,
+                                textAlign: TextAlign.left,
                                 onSubmitted: (query) {
                                   if (query.isNotEmpty) {
                                     context.push('/wardrobe/search/$query');
                                   }
                                 },
                                 decoration: InputDecoration(
-                                  hintText: 'Search Wardrobe',
+                                  hintText: 'Search My Wardrobe',
                                   hintStyle: TextStyle(
                                     fontSize: 14,
                                     color: Colors.grey,
@@ -222,13 +226,13 @@ Widget build(BuildContext context) {
                                   border: InputBorder.none,
                                   prefixIcon:
                                       Icon(Icons.search, color: Colors.grey),
-                                  suffixIcon: IconButton(
-                                    icon: Icon(Icons.filter_list,
-                                        color: Colors.grey),
-                                    onPressed: () {
-                                      print('Filter icon tapped');
-                                    },
-                                  ),
+                                  // suffixIcon: IconButton(
+                                  //   icon: Icon(Icons.filter_list,
+                                  //       color: Colors.grey),
+                                  //   onPressed: () {
+                                  //     print('Filter icon tapped');
+                                  //   },
+                                  // ),
                                   contentPadding:
                                       EdgeInsets.symmetric(vertical: 12.0),
                                 ),
@@ -244,9 +248,19 @@ Widget build(BuildContext context) {
             },
             body: RefreshIndicator(
               onRefresh: refreshImages,
-              child: Padding( // Images
+              child: cachedImages.isEmpty
+                ? Center(
+                    child: Text(
+                      "Your wardrobe is empty :( \n Add clothes to your wardrobe to get outfit recommendations!",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                  ) 
+              
+              : Padding( // Images
                 padding: const EdgeInsets.all(8.0),
-                child: GridView.builder(
+                child: 
+                GridView.builder(
                   physics: AlwaysScrollableScrollPhysics(),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2, // 2 columns

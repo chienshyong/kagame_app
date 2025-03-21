@@ -119,44 +119,45 @@ class _RecommendPageState extends State<RecommendPage> {
   //   }
 
  /// Shows a dialog with checkboxes for disliked aspects.
-  Future<List<String>?> _showDislikeDialog(BuildContext context) async {
-    bool style = false;
-    bool item = false;
-    bool colours = false;
-    return showDialog<List<String>>(
+  Future<String?> _showDislikeDialog(BuildContext context) async {
+    String? selectedOption;
+    return showDialog<String>(
       context: context,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('What did you dislike?'),
+              title: Text('What did you dislike about this item?'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CheckboxListTile(
-                    title: Text('Style'),
-                    value: style,
+                  RadioListTile<String>(
+                    title: Text("Type of item"),
+                    value: "Type of item",
+                    groupValue: selectedOption,
                     onChanged: (value) {
                       setState(() {
-                        style = value ?? false;
+                        selectedOption = value;
                       });
                     },
                   ),
-                  CheckboxListTile(
-                    title: Text('Item'),
-                    value: item,
+                  RadioListTile<String>(
+                    title: Text("Style"),
+                    value: "Style",
+                    groupValue: selectedOption,
                     onChanged: (value) {
                       setState(() {
-                        item = value ?? false;
+                        selectedOption = value;
                       });
                     },
                   ),
-                  CheckboxListTile(
-                    title: Text('Colours'),
-                    value: colours,
+                  RadioListTile<String>(
+                    title: Text("Colour"),
+                    value: "Colour",
+                    groupValue: selectedOption,
                     onChanged: (value) {
                       setState(() {
-                        colours = value ?? false;
+                        selectedOption = value;
                       });
                     },
                   ),
@@ -169,11 +170,7 @@ class _RecommendPageState extends State<RecommendPage> {
                 ),
                 TextButton(
                   onPressed: () {
-                    List<String> aspects = [];
-                    if (style) aspects.add('Style');
-                    if (item) aspects.add('Item');
-                    if (colours) aspects.add('Colours');
-                    Navigator.pop(context, aspects);
+                    Navigator.pop(context, selectedOption);
                   },
                   child: Text('Submit'),
                 ),
@@ -184,6 +181,7 @@ class _RecommendPageState extends State<RecommendPage> {
       },
     );
   }
+
 
 List<Widget> _buildGroupedRecommendations() {
   Map<String, List<Map<String, dynamic>>> grouped = {
@@ -241,55 +239,51 @@ List<Widget> _buildGroupedRecommendations() {
                 child: Container(
                   width: 150,
                   margin: EdgeInsets.all(8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Stack(
                     children: [
+                      // Product image
                       Image.network(
-                        recommendedProduct['url'] ??
-                            recommendedProduct['image_url'],
+                        recommendedProduct['url'] ?? recommendedProduct['image_url'],
                         width: 150,
                         height: 150,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            Icon(Icons.error),
+                        errorBuilder: (context, error, stackTrace) => Icon(Icons.error),
                       ),
-                      // Text for labels and prices of recommended items
-                      // SizedBox(height: 8),
-                      // Text(
-                      //   recommendedProduct['label'] ??
-                      //       recommendedProduct['name'] ??
-                      //       "",
-                      //   style: TextStyle(fontSize: 16),
-                      //   maxLines: 2,
-                      //   overflow: TextOverflow.ellipsis,
-                      // ),
-                      // Text(
-                      //   '\$${recommendedProduct['price']}',
-                      //   style: TextStyle(fontSize: 16, color: Colors.green),
-                      // ),
-                      // SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          IconButton(
-                            icon: Icon(Icons.favorite_border),
-                            onPressed: () {
-                              // Handle like action (e.g., update feedback state or send to API)
-                              print('Liked product: ${recommendedProduct['_id']}');
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.clear),
-                            onPressed: () async {
-                              // Show dislike dialog and capture the feedback
-                              List<String>? dislikedAspects = await _showDislikeDialog(context);
-                              if (dislikedAspects != null) {
-                                print('Disliked product: ${recommendedProduct['_id']}, Aspects: $dislikedAspects');
-                                // Optionally, send feedback to your API here.
-                              }
-                            },
-                          ),
-                        ],
+                      // Overlay Like/Dislike buttons
+                      Positioned(
+                        right: 8,
+                        bottom: 8,
+                        child: Row(
+                          children: [
+                            
+                            IconButton(
+                              icon: Icon(
+                                Icons.favorite_border,
+                                // Optionally change color if you add state management
+                              ),
+                              onPressed: () {
+                                // Insert toggle functionality or API call here
+                                print('Liked product: ${recommendedProduct['_id']}');
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                Icons.thumb_down,
+                                // Optionally change color if you add state management
+                              ),
+                              onPressed: () async {
+                                String? dislikedAspect = await _showDislikeDialog(context);
+
+                                if (dislikedAspect != null) {
+                                  print(
+                                    'Disliked product: ${recommendedProduct['_id']}, Aspects: $dislikedAspect'
+                                  );
+                                  // Handle dislike functionality here (e.g., update state or API call)
+                                }
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -307,6 +301,7 @@ List<Widget> _buildGroupedRecommendations() {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
+      initialIndex: 1, // Automatically select the second tab ("From Partner Brands")
       length: 2,
       child: Scaffold(
         backgroundColor: Colors.white,

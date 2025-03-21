@@ -63,105 +63,136 @@ class _SearchPageState extends State<SearchPage> with RouteAware{
     }
   }
 
-  @override
   Widget build(BuildContext context) {
     TextEditingController searchController = TextEditingController();
-
+    
     return Scaffold(
-      appBar: AppBar(title: Text('Search: ${widget.query}')),
+      appBar: AppBar(title: Text('Search results for "${widget.query}"')),
       body: SafeArea(
-        child: Column(
-          children: [
-            // Logo and Search bar
-            Row(
-              children: [
-                GestureDetector(
-                  child: Image.asset(
-                    'lib/assets/KagaMe.png',
-                    width: 120.0,
-                    height: 60.0,
-                  ),
-                ),
-                SizedBox(
-                    width: 16.0), // Space between the image and the search bar
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30.0),
-                      border: Border.all(
-                        color: Colors.grey,
-                        width: 1.0,
+        child: isLoading
+            ? Center(child: CircularProgressIndicator())
+            : NestedScrollView(
+                headerSliverBuilder:
+                    (BuildContext context, bool innerBoxIsScrolled) {
+                  return [
+                    SliverAppBar(
+                      backgroundColor: Colors.white,
+                      pinned: false,
+                      floating: true,
+                      snap: true,
+                      expandedHeight: 80.0,
+                      automaticallyImplyLeading:
+                          false,
+                      flexibleSpace: FlexibleSpaceBar(
+                        background: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            children: [
+                              GestureDetector(
+                                child: Image.asset(
+                                  'lib/assets/KagaMe.png',
+                                  width: 120.0,
+                                  height: 60.0,
+                                ),
+                              ),
+                              
+                              // Space between logo and the search bar
+                              SizedBox(width: 16.0),
+                              
+                              // Search bar
+                              Expanded(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(30.0),
+                                    border: Border.all(
+                                      color: Colors.grey,
+                                      width: 1.0,
+                                    ),
+                                  ),
+                                  padding: 
+                                      const EdgeInsets.symmetric(horizontal: 12.0),
+                                  child: TextField(
+                                    controller: searchController,
+                                    textAlign: TextAlign.left,
+                                    onSubmitted: (query) {
+                                      if (query.isNotEmpty) {
+                                        context.push('/wardrobe/search/$query');
+                                      }
+                                    },
+                                    decoration: InputDecoration(
+                                      hintText: 'Search My Wardrobe',
+                                      hintStyle: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey,
+                                      ),
+                                      border: InputBorder.none,
+                                      prefixIcon: 
+                                        Icon(Icons.search, color: Colors.grey),
+                                      // suffixIcon: IconButton(
+                                      //   icon: Icon(Icons.filter_list,
+                                      //       color: Colors.grey),
+                                      //   onPressed: () {
+                                      //     print('Filter icon tapped');
+                                      //   },
+                                      // ),
+                                      contentPadding:
+                                          EdgeInsets.symmetric(vertical: 12.0),
+                                        ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                    child: TextField(
-                    controller: searchController,
-                    textAlign: TextAlign.center,
-                    onSubmitted: (query) {
-                      if (query.isNotEmpty) {
-                        context.push('/wardrobe/search/$query');
-                      }
-                    },
-                      decoration: InputDecoration(
-                        hintText: 'Search Wardrobe',
-                        hintStyle: TextStyle(color: Colors.grey),
-                        border: InputBorder.none,
-                        prefixIcon: Icon(Icons.search, color: Colors.grey),
-                      ),
+                  ];
+                },
+                body: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: GridView.builder(
+                    physics: AlwaysScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2, // Two columns
+                      crossAxisSpacing: 8.0,
+                      mainAxisSpacing: 8.0,
                     ),
-                  ),
-                ),
-              ],
-            ),
-        
-            //Images
-            Expanded(
-              child: isLoading
-                  ? Center(child: CircularProgressIndicator())
-                  : Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2, // 2 columns
-                    crossAxisSpacing: 8.0,
-                    mainAxisSpacing: 8.0,
-                  ),
-                  itemCount: images.length, // Dynamic item count
-                  itemBuilder: (context, index) {
-                    return GestureDetector(
+                    itemCount: images.length,
+                    itemBuilder: (context, index) {
+                      return GestureDetector(
                         onTap: () {
-                          // Navigate to Navigator page on tap
-                          context.push(
-                              '/wardrobe/item/${images[index]['id']!}');
+                          context.push('/wardrobe/item/${images[index]['id']!}');
                         },
                         child: Column(
-                          children: <Widget>[
+                          children: [
                             Expanded(
                               child: AspectRatio(
-                                aspectRatio: 1, // Forces the image to be square
-                                child: 
-                                    Image.network(
-                                      images[index]['url']!,
-                                      fit: BoxFit.cover, // Adjusts the image fit
-                                    ),
+                                aspectRatio: 1, // Keeps the images square
+                                child: Image.network(
+                                  images[index]['url']!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Icon(Icons.error),
+                                ),
                               ),
                             ),
-                            SizedBox(
-                                height: 8.0), // Space between image and text
+                            SizedBox(height: 8.0),
                             Text(
+                              textAlign: TextAlign.center,
                               images[index]['name']!,
                               style: TextStyle(
-                                  fontSize: 16.0, fontWeight: FontWeight.bold),
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
-                        ));
-                  },
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
       ),
     );
   }

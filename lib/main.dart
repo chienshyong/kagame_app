@@ -135,6 +135,10 @@ void main() async {
         ],
       ),
     ],
+    errorBuilder: (context, state) => Scaffold(
+      appBar: AppBar(title: Text('Page Not Found')),
+      body: Center(child: Text('The page you are looking for does not exist.')),
+    ),
   );
 
   runApp(MyApp(router: goRouter));
