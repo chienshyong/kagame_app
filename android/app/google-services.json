@@ -45,6 +45,13 @@
             {
               "client_id": "593204508901-ct5qbnl5bg70cdsr7t37i8pe7qm987up.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "593204508901-de20rbheavjuhe131cosg9k5s01s1dnl.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.kagameteam.kagame"
+              }
             }
           ]
         }

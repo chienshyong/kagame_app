@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart'; // for DefaultFirebaseOptions
 
 // Page imports
 import 'login.dart';
@@ -16,7 +19,14 @@ import 'shop/shop_page.dart';
 void main() async {
   //Init firebase for google authentication
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  // Platform-specific Firebase initialization
+  if (Platform.isIOS || Platform.isMacOS) {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  } else {
+    await Firebase.initializeApp();
+  }
   
   // Private navigators
   final _rootNavigatorKey =
