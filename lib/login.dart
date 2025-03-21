@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'services/auth_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -104,8 +103,9 @@ class _LoginPageState extends State<LoginPage> {
             ElevatedButton(
               onPressed: () async {
                 try {
-                  UserCredential userCredential = await authService.signInWithGoogle();
-                  print("Signed in as ${userCredential.user?.displayName}");
+                  if(await authService.signInWithGoogle()){
+                    context.go('/wardrobe');
+                  }
                 } catch (e) {
                   print("Error signing in with Google: $e");
                 }

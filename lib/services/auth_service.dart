@@ -92,7 +92,7 @@ Future<void> login(String username, String password) async {
   }
 
   //Google sign in
-  Future<UserCredential> signInWithGoogle() async {
+  Future<bool> signInWithGoogle() async {
     // Trigger the authentication flow
     final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
@@ -106,6 +106,25 @@ Future<void> login(String username, String password) async {
     );
 
     // Once signed in, return the UserCredential
-    return await FirebaseAuth.instance.signInWithCredential(credential);
-}
+    UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+    print("Signed in as ${userCredential.user?.displayName}");
+
+    //Get Firebase ID Token
+    User? user = FirebaseAuth.instance.currentUser;
+    String? idToken = await user?.getIdToken(); // This is the Firebase-issued ID token
+
+    //Get session token from our backend and save it
+    final response = await http.post(
+      Uri.parse('$baseUrl/googlelogin'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'id_token': idToken}),
+    );
+
+    if (response.statusCode == 200) {
+      final responseJson = jsonDecode(response.body);
+      await storage.write(key: 'token', value: responseJson['access_token']);
+      return true;
+    }
+    return false;
+  }
 }
