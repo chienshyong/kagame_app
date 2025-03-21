@@ -41,6 +41,8 @@ class _ShopPageState extends State<ShopPage>
     // Fetch products and recommendations
     fetchRecommendedProducts();
     fetchProducts();
+      // Load user profile first to get gender for default filter
+  _loadUserGenderAndInitialize();
 
     // Load recent searches
     _loadRecentSearches();
@@ -51,7 +53,41 @@ class _ShopPageState extends State<ShopPage>
     _debounce?.cancel();
     super.dispose();
   }
+// New method to fetch user gender and set default gender filter
+Future<void> _loadUserGenderAndInitialize() async {
+  try {
+    // Get auth token from existing service
+    final String baseUrl = authService.baseUrl;
+    final token = await authService.getToken();
+    
+    // Fetch user gender directly
+    final response = await http.get(
+      Uri.parse('$baseUrl/user/gender'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
 
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final String? genderCode = data['gender_code']; // Will be 'M', 'F', or null
+      
+      // Set gender filter based on response
+      setState(() {
+        selectedGender = genderCode;
+      });
+    }
+    
+    // Now fetch products and recommendations with the gender filter
+    fetchRecommendedProducts();
+    fetchProducts();
+  } catch (error) {
+    print('Error loading user gender: $error');
+    // If there's an error, still load products without gender filter
+    fetchRecommendedProducts();
+    fetchProducts();
+  }
+}
   // Load recent searches from storage
   Future<void> _loadRecentSearches() async {
     final searches = await SearchHistoryService.getRecentSearches();
