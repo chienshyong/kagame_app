@@ -9,6 +9,8 @@ import 'product_detail_page.dart';
 
 // Import the AdvancedSearchBar from wherever you placed it
 import '../widgets/advanced_search_bar.dart';
+// Import the StyleMeTab
+import '../widgets/style_me_tab.dart';
 
 class ShopPage extends StatefulWidget {
   ShopPage({Key? key}) : super(key: key);
@@ -38,11 +40,8 @@ class _ShopPageState extends State<ShopPage>
   @override
   void initState() {
     super.initState();
-    // Fetch products and recommendations
-    fetchRecommendedProducts();
-    fetchProducts();
-      // Load user profile first to get gender for default filter
-  _loadUserGenderAndInitialize();
+    // Load user profile first to get gender for default filter
+    _loadUserGenderAndInitialize();
 
     // Load recent searches
     _loadRecentSearches();
@@ -53,41 +52,43 @@ class _ShopPageState extends State<ShopPage>
     _debounce?.cancel();
     super.dispose();
   }
-// New method to fetch user gender and set default gender filter
-Future<void> _loadUserGenderAndInitialize() async {
-  try {
-    // Get auth token from existing service
-    final String baseUrl = authService.baseUrl;
-    final token = await authService.getToken();
-    
-    // Fetch user gender directly
-    final response = await http.get(
-      Uri.parse('$baseUrl/user/gender'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
-    );
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      final String? genderCode = data['gender_code']; // Will be 'M', 'F', or null
+  // New method to fetch user gender and set default gender filter
+  Future<void> _loadUserGenderAndInitialize() async {
+    try {
+      // Get auth token from existing service
+      final String baseUrl = authService.baseUrl;
+      final token = await authService.getToken();
       
-      // Set gender filter based on response
-      setState(() {
-        selectedGender = genderCode;
-      });
+      // Fetch user gender directly
+      final response = await http.get(
+        Uri.parse('$baseUrl/user/gender'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final String? genderCode = data['gender_code']; // Will be 'M', 'F', or null
+        
+        // Set gender filter based on response
+        setState(() {
+          selectedGender = genderCode;
+        });
+      }
+      
+      // Now fetch products and recommendations with the gender filter
+      fetchRecommendedProducts();
+      fetchProducts();
+    } catch (error) {
+      print('Error loading user gender: $error');
+      // If there's an error, still load products without gender filter
+      fetchRecommendedProducts();
+      fetchProducts();
     }
-    
-    // Now fetch products and recommendations with the gender filter
-    fetchRecommendedProducts();
-    fetchProducts();
-  } catch (error) {
-    print('Error loading user gender: $error');
-    // If there's an error, still load products without gender filter
-    fetchRecommendedProducts();
-    fetchProducts();
   }
-}
+
   // Load recent searches from storage
   Future<void> _loadRecentSearches() async {
     final searches = await SearchHistoryService.getRecentSearches();
@@ -236,7 +237,8 @@ Future<void> _loadUserGenderAndInitialize() async {
       print('Error fetching products: $error');
     }
   }
-Future<void> fetchRecommendedProducts() async {
+
+  Future<void> fetchRecommendedProducts() async {
     setState(() {
       isLoadingRecommendations = true;
     });
@@ -553,7 +555,7 @@ Future<void> fetchRecommendedProducts() async {
         child: (isLoading && isLoadingRecommendations)
             ? Center(child: CircularProgressIndicator())
             : DefaultTabController(
-                length: 2,
+                length: 3, // Updated from 2 to 3 for the new tab
                 child: NestedScrollView(
                   headerSliverBuilder:
                       (BuildContext context, bool innerBoxIsScrolled) {
@@ -607,6 +609,7 @@ Future<void> fetchRecommendedProducts() async {
                             tabs: [
                               Tab(text: "Recommended For You"),
                               Tab(text: "All Products"),
+                              Tab(text: "Style Me"), // New tab
                             ],
                           ),
                         ),
@@ -689,6 +692,8 @@ Future<void> fetchRecommendedProducts() async {
                                 ],
                               ),
                             ),
+                      // Style Me tab content (new)
+                      StyleMeTab(authService: authService),
                     ],
                   ),
                 ),
