@@ -200,15 +200,21 @@ class _ShopPageState extends State<ShopPage>
       print('Error fetching products: $error');
     }
   }
-
-  Future<void> fetchRecommendedProducts() async {
+Future<void> fetchRecommendedProducts() async {
     setState(() {
       isLoadingRecommendations = true;
     });
 
     final String baseUrl = authService.baseUrl;
     final token = await authService.getToken();
-    final Uri uri = Uri.parse('$baseUrl/shop/recommendations-fast');
+    
+    // Build URI with optional gender filter, similar to fetchProducts
+    Uri uri;
+    if (selectedGender != null) {
+      uri = Uri.parse('$baseUrl/shop/recommendations-fast?gender=$selectedGender');
+    } else {
+      uri = Uri.parse('$baseUrl/shop/recommendations-fast');
+    }
 
     try {
       final response = await http.get(
@@ -249,6 +255,15 @@ class _ShopPageState extends State<ShopPage>
       });
       print('Error fetching recommended products: $error');
     }
+  }
+
+  // Function to handle gender filter selection
+  void _handleGenderFilterChange(String? gender) {
+    setState(() {
+      selectedGender = gender;
+    });
+    fetchProducts(); // Refresh products with the new filter
+    fetchRecommendedProducts(); // Also refresh recommended products with the new filter
   }
 
   Widget buildProductGrid(List<Map<String, dynamic>> productList) {
@@ -373,14 +388,6 @@ class _ShopPageState extends State<ShopPage>
 
   Future<void> _refreshRecommendedProducts() async {
     await fetchRecommendedProducts();
-  }
-
-  // Function to handle gender filter selection
-  void _handleGenderFilterChange(String? gender) {
-    setState(() {
-      selectedGender = gender;
-    });
-    fetchProducts(); // Refresh products with the new filter
   }
 
   // Show filter dialog when filter icon is tapped
@@ -580,7 +587,7 @@ class _ShopPageState extends State<ShopPage>
                                   // Show result count or searching indicator
                                   SliverToBoxAdapter(
                                     child: Padding(
-                                      padding: const EdgeInsets.all(12.0),
+                                      padding: const EdgeInsets.only(left:20.0),
                                       child: searchQuery.isNotEmpty
                                           ? Row(
                                               mainAxisAlignment:
@@ -590,19 +597,11 @@ class _ShopPageState extends State<ShopPage>
                                                 Text(
                                                   "Found ${filteredRecommendedProducts.length} results",
                                                   style: TextStyle(
-                                                    fontSize: 14.0,
+                                                    fontSize: 12.0,
                                                     color: Colors.grey.shade600,
                                                     fontWeight: FontWeight.w500,
                                                   ),
-                                                ),
-                                                if (isSearching)
-                                                  SizedBox(
-                                                      height: 16,
-                                                      width: 16,
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                              strokeWidth: 2)),
-                                              ],
+                                                ),                                              ],
                                             )
                                           : SizedBox.shrink(),
                                     ),
@@ -621,7 +620,7 @@ class _ShopPageState extends State<ShopPage>
                                   // Show product count or empty state
                                   SliverToBoxAdapter(
                                     child: Padding(
-                                      padding: const EdgeInsets.all(12.0),
+                                      padding: const EdgeInsets.only(left: 20.0),
                                       child: searchQuery.isNotEmpty
                                           ? Row(
                                               mainAxisAlignment:
