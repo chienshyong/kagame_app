@@ -7,6 +7,7 @@ import 'firebase_options.dart'; // for DefaultFirebaseOptions
 
 // Page imports
 import 'login.dart';
+import 'register.dart';
 import 'wardrobe/wardrobe_page.dart'; 
 import 'wardrobe/category_page.dart';
 import 'wardrobe/item_page.dart';
@@ -47,6 +48,12 @@ void main() async {
           child: LoginPage(),
         ),
       ),
+
+      GoRoute(
+      path: '/register',
+      builder: (context, state) => RegisterPage(),
+    ),
+
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           // the UI shell

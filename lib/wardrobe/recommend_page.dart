@@ -23,6 +23,10 @@ class _RecommendPageState extends State<RecommendPage> {
 
   String prompt = "";
 
+  /// Clothing preferences (likes & dislikes)
+  Map<String?, dynamic> clothingLikes = {};
+  Map<String?, dynamic> clothingDislikes = {};
+
   @override
   void initState() {
     super.initState();
@@ -181,6 +185,98 @@ class _RecommendPageState extends State<RecommendPage> {
       },
     );
   }
+  // Toggle like state for an item
+  void toggleLike(String? itemName) {
+    bool isAdded = false;
+    if (clothingDislikes.containsKey(itemName)) {
+      clothingDislikes.remove(itemName);
+      updateClothingDislikes(itemName!, false, []);
+    }
+    if (clothingLikes.containsKey(itemName)) {
+      clothingLikes.remove(itemName);
+    } else {
+      clothingLikes[itemName] = true;
+      isAdded = true;
+    }
+    updateClothingLikes(itemName!, isAdded);
+  }
+
+  // Toggle dislike state for an item with feedback
+  void toggleDislike(
+    String? itemName,
+    String? itemCategory,
+    BuildContext context,
+    String? clothingType,
+    String? otherTags,
+    String? color,
+  ) async {
+    if (clothingLikes.containsKey(itemName)) {
+      clothingLikes.remove(itemName);
+      updateClothingLikes(itemName!, false);
+    }
+    List<dynamic> feedbackList = [itemCategory, itemName];
+    bool isAdded = false;
+    if (clothingDislikes.containsKey(itemName)) {
+      clothingDislikes.remove(itemName);
+    } else {
+      clothingDislikes[itemName] = true;
+      isAdded = true;
+      String? feedbackData = await _showDislikeDialog(context);
+      if (feedbackData == "Type of item") {
+        feedbackList.add("Type of item");
+        feedbackList.add(clothingType);
+      } else if (feedbackData == "Style") {
+        feedbackList.add("Style");
+        feedbackList.add(otherTags);
+      } else if (feedbackData == "Colour") {
+        feedbackList.add("Colour");
+        feedbackList.add(color);
+      }
+    }
+    updateClothingDislikes(itemName!, isAdded, feedbackList);
+  }
+
+  Future<void> updateClothingLikes(String itemName, bool isAdded) async {
+    final String baseUrl = authService.baseUrl;
+    final token = await authService.getToken();
+    Map<String, bool> updatedClothingLikesItem = {itemName: isAdded};
+    String jsonData = jsonEncode(updatedClothingLikesItem);
+    final response = await http.post(
+      Uri.parse('$baseUrl/profile/updateclothinglikes'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonData,
+    );
+    if (response.statusCode != 200) {
+      final responseJson = jsonDecode(response.body);
+      debugPrint(responseJson["detail"]);
+      throw Exception(responseJson["detail"]);
+    }
+  }
+
+  Future<void> updateClothingDislikes(String itemName, bool isAdded, List<Object?> feedbackList) async {
+    final String baseUrl = authService.baseUrl;
+    final token = await authService.getToken();
+    Map<String, dynamic> updatedClothingDislikesItem = isAdded
+        ? {itemName: true, "feedback": feedbackList}
+        : {itemName: false};
+    String jsonData = jsonEncode(updatedClothingDislikesItem);
+    final response = await http.post(
+      Uri.parse('$baseUrl/profile/updateclothingdislikes'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonData,
+    );
+    if (response.statusCode != 200) {
+      final responseJson = jsonDecode(response.body);
+      debugPrint(responseJson["detail"]);
+      throw Exception(responseJson["detail"]);
+    }
+  }
 
 
 List<Widget> _buildGroupedRecommendations() {
@@ -258,28 +354,35 @@ List<Widget> _buildGroupedRecommendations() {
                             
                             IconButton(
                               icon: Icon(
-                                Icons.favorite_border,
-                                // Optionally change color if you add state management
+                                Icons.favorite,
+                                color: clothingLikes.containsKey(recommendedProduct['name'])
+                                    ? Colors.pink
+                                    : Colors.grey[700],
                               ),
                               onPressed: () {
-                                // Insert toggle functionality or API call here
-                                print('Liked product: ${recommendedProduct['_id']}');
+                                setState(() {
+                                  toggleLike(recommendedProduct['name']);
+                                });
                               },
                             ),
                             IconButton(
                               icon: Icon(
                                 Icons.thumb_down,
-                                // Optionally change color if you add state management
+                                color: clothingDislikes.containsKey(recommendedProduct['name'])
+                                    ? Colors.red
+                                    : Colors.grey[700],
                               ),
                               onPressed: () async {
-                                String? dislikedAspect = await _showDislikeDialog(context);
-
-                                if (dislikedAspect != null) {
-                                  print(
-                                    'Disliked product: ${recommendedProduct['_id']}, Aspects: $dislikedAspect'
+                                setState(() {
+                                  toggleDislike(
+                                    recommendedProduct['name'],
+                                    recommendedProduct['category'],
+                                    context,
+                                    recommendedProduct['clothing_type']?.toString(),
+                                    recommendedProduct['other_tags']?.toString(),
+                                    recommendedProduct['color']?.toString(),
                                   );
-                                  // Handle dislike functionality here (e.g., update state or API call)
-                                }
+                                });
                               },
                             ),
                           ],
@@ -326,20 +429,6 @@ List<Widget> _buildGroupedRecommendations() {
                     ],
                   ),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          isLoading = true; // Show loading indicator while fetching
-                        });
-                        fetchRecommendationsFromApi();
-                      },
-                      child: Text('Recommend Again'),
-                    ),
-                  ],
-                ),
               ],
             ),
             // Tab bar: Displays two tabs, separate from the header section
@@ -368,10 +457,14 @@ List<Widget> _buildGroupedRecommendations() {
                     ),
                   ),
                   // Second tab: From Partner Brands (with recommendations)
+
                       isLoading
                       ? Center(child: CircularProgressIndicator())
-                      : ListView(
-                          children: _buildGroupedRecommendations(),
+                      : RefreshIndicator(
+                          onRefresh: fetchRecommendationsFromApi,
+                          child: ListView(
+                            children: _buildGroupedRecommendations(),
+                          ),
                         ),
                 ],
               ),

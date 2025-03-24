@@ -285,8 +285,8 @@ class _ItemPageState extends State<ItemPage> {
                   
                   style:
                     ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue[100],       // Button background color
-                      foregroundColor: Colors.black,      // Text color
+                      backgroundColor: Colors.blue[100], // Button background color
+                      foregroundColor: Colors.black, // Text color
                       elevation: 5,
                       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     ),

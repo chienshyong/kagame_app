@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'services/auth_service.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
-
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({Key? key}) : super(key: key);
+  
   @override
-  _LoginPageState createState() => _LoginPageState();
+  _RegisterPageState createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterPageState extends State<RegisterPage> {
   final AuthService authService = AuthService();
-  final TextEditingController _usernameController = TextEditingController(text: 'JWardrobe');  // Prefilled username
-  final TextEditingController _passwordController = TextEditingController(text: 'JWardrobe');  // Prefilled password
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   void dispose() {
@@ -21,12 +21,21 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  Future<void> _login() async {
+  Future<void> _register() async {
     final username = _usernameController.text;
     final password = _passwordController.text;
     if (username.isNotEmpty && password.isNotEmpty) {
       try {
-        await authService.login(username, password);
+        await authService.register(username, password).timeout(Duration(seconds: 3), onTimeout: () {
+          throw Exception('Register request timed out');
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Registration successful')),
+        );
+        // Auto login after registration
+        await authService.login(username, password).timeout(Duration(seconds: 3), onTimeout: () {
+          throw Exception('Login request timed out');
+        });
         context.go('/wardrobe');
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -55,6 +64,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               SizedBox(width: 10),
               Text('Welcome to KagaMe'),
+              
             ],
           ),
         ),
@@ -63,10 +73,13 @@ class _LoginPageState extends State<LoginPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            // Username field
             TextField(
               controller: _usernameController,
               decoration: InputDecoration(labelText: 'Username'),
             ),
+
+            // Password field
             TextField(
               controller: _passwordController,
               decoration: InputDecoration(labelText: 'Password'),
@@ -74,15 +87,13 @@ class _LoginPageState extends State<LoginPage> {
             ),
             SizedBox(height: 20),
 
-            // Login Button
+            // Register button
             ElevatedButton(
-              onPressed: _login,
-              child: Text('Login'),
+              onPressed: _register,
+              child: Text('Register'),
             ),
-            
-            SizedBox(height: 8),
 
-            // Divider
+            SizedBox(height: 8),
             Row(
               children: <Widget>[
                 Expanded(
@@ -109,7 +120,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ],
             ),
-
             SizedBox(height: 8),
 
             // Login with Google button
@@ -152,18 +162,17 @@ class _LoginPageState extends State<LoginPage> {
                 ),
             ),
 
-            // Clickable text for new user registration
+            // Clickable text for back to login
             TextButton(
               onPressed: () {
-                // Navigate to RegisterPage
-                context.push('/register');
+                // Navigate to Login Page
+                context.push('/login');
               },
               child: Text(
-                'New user? Register here!',
+                'Back to login page',
                 style: TextStyle(decoration: TextDecoration.underline),
               ),
             ),
-
           ],
         ),
       ),

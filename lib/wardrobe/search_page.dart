@@ -48,7 +48,6 @@ class _SearchPageState extends State<SearchPage> with RouteAware{
               'url': item['url'] as String
             }).toList();
 
-
         setState(() {
           images = fetchedImages;
           isLoading = false;
@@ -151,7 +150,21 @@ class _SearchPageState extends State<SearchPage> with RouteAware{
                 },
                 body: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: GridView.builder(
+                  child: images.isEmpty
+                    ? Container(
+                      // Ensure the container expands to fill available space
+                      width: double.infinity,
+                      height: double.infinity,
+                      child: Center(
+                        child: Text(
+                          "No search results found",
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    )
+
+                  : GridView.builder(
                     physics: AlwaysScrollableScrollPhysics(),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2, // Two columns
