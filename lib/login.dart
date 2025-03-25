@@ -45,127 +45,152 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false, // Remove built-in back button
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          // title: Row(
+          //   mainAxisAlignment: MainAxisAlignment.center,
+          //   children: [
+          //     Image.asset(
+          //       'lib/assets/app_icon.png',
+          //       width: 40,
+          //       height: 40,
+          //     ),
+          //     SizedBox(width: 10),
+          //     Text('Welcome to KagaMe'),
+          //   ],
+          // ),
+        ),
+
+      body: 
+          Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
             children: [
               Image.asset(
                 'lib/assets/app_icon.png',
-                width: 40,
-                height: 40,
+                width: 96,
+                height: 96,
               ),
-              SizedBox(width: 10),
-              Text('Welcome to KagaMe'),
-            ],
-          ),
-        ),
 
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _usernameController,
-              decoration: InputDecoration(labelText: 'Username'),
-            ),
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(labelText: 'Password'),
-              obscureText: true,
-            ),
-            SizedBox(height: 20),
+              Text(
+                'KagaMe',
+                style: TextStyle(
+                  fontSize: 24.0,
+                  fontWeight: FontWeight.bold,
+                  )
+              ),
 
-            // Login Button
-            ElevatedButton(
-              onPressed: _login,
-              child: Text('Login'),
-            ),
-            
-            SizedBox(height: 8),
+              Text(
+                'Your Personal AI Stylist',
+                style: TextStyle(
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.bold,
+                  )
+              ),
 
-            // Divider
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: Divider(
-                    thickness: 1,
-                    color: Colors.grey,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: Text(
-                    "or",
-                    style: TextStyle(
-                      fontSize: 12,
+              SizedBox(height: 64),
+
+              TextField(
+                controller: _usernameController,
+                decoration: InputDecoration(labelText: 'Username'),
+              ),
+              TextField(
+                controller: _passwordController,
+                decoration: InputDecoration(labelText: 'Password'),
+                obscureText: true,
+              ),
+              SizedBox(height: 20),
+
+              // Login Button
+              ElevatedButton(
+                onPressed: _login,
+                child: Text('Login'),
+              ),
+              
+              SizedBox(height: 8),
+
+              // Divider
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Divider(
+                      thickness: 1,
                       color: Colors.grey,
                     ),
                   ),
-                ),
-                Expanded(
-                  child: Divider(
-                    thickness: 1,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
-            ),
-
-            SizedBox(height: 8),
-
-            // Login with Google button
-            Container(
-              alignment: Alignment.center,
-              child: 
-                ElevatedButton(
-                  onPressed: () async {
-                    try {
-                      if(await authService.signInWithGoogle()){
-                        context.go('/wardrobe');
-                      }
-                    } catch (e) {
-                      print("Error signing in with Google: $e");
-                    }
-                  },
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset(
-                        'lib/assets/Google_logo.png',
-                        width: 16,
-                        height: 16,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                    child: Text(
+                      "or",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
                       ),
-                      SizedBox(width: 8),
-                      Text('Login with Google'),
-                    ],
-                  ),
-                  
-                  style:
-                    ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white, // Button background color
-                      foregroundColor: Colors.black, // Text color
-                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(50),
-                        side: BorderSide(color: Colors.grey)
-                      )
                     ),
-                ),
-            ),
-
-            // Clickable text for new user registration
-            TextButton(
-              onPressed: () {
-                // Navigate to RegisterPage
-                context.push('/register');
-              },
-              child: Text(
-                'New user? Register here!',
-                style: TextStyle(decoration: TextDecoration.underline),
+                  ),
+                  Expanded(
+                    child: Divider(
+                      thickness: 1,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
               ),
-            ),
 
-          ],
-        ),
+              SizedBox(height: 8),
+
+              // Login with Google button
+              Container(
+                alignment: Alignment.center,
+                child: 
+                  ElevatedButton(
+                    onPressed: () async {
+                      try {
+                        if(await authService.signInWithGoogle()){
+                          context.go('/wardrobe');
+                        }
+                      } catch (e) {
+                        print("Error signing in with Google: $e");
+                      }
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'lib/assets/Google_logo.png',
+                          width: 16,
+                          height: 16,
+                        ),
+                        SizedBox(width: 8),
+                        Text('Login with Google'),
+                      ],
+                    ),
+                    
+                    style:
+                      ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white, // Button background color
+                        foregroundColor: Colors.black, // Text color
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50),
+                          side: BorderSide(color: Colors.grey)
+                        )
+                      ),
+                  ),
+              ),
+
+              // Clickable text for new user registration
+              TextButton(
+                onPressed: () {
+                  // Navigate to RegisterPage
+                  context.push('/register');
+                },
+                child: Text(
+                  'New user? Register here!',
+                  style: TextStyle(decoration: TextDecoration.underline),
+                ),
+              ),
+
+            ],
+          ),
       ),
     );
   }

@@ -54,25 +54,48 @@ class _RegisterPageState extends State<RegisterPage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false, // Remove built-in back button
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'lib/assets/app_icon.png',
-                width: 40,
-                height: 40,
-              ),
-              SizedBox(width: 10),
-              Text('Welcome to KagaMe'),
-              
-            ],
-          ),
+          // title: Row(
+          //   mainAxisAlignment: MainAxisAlignment.center,
+          //   children: [
+          //     Image.asset(
+          //       'lib/assets/app_icon.png',
+          //       width: 40,
+          //       height: 40,
+          //     ),
+          //     SizedBox(width: 10),
+          //     Text('Welcome to KagaMe'),
+          //   ],
+          // ),
         ),
 
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            Image.asset(
+                'lib/assets/app_icon.png',
+                width: 96,
+                height: 96,
+              ),
+
+            Text(
+              'KagaMe',
+              style: TextStyle(
+                fontSize: 24.0,
+                fontWeight: FontWeight.bold,
+                )
+            ),
+
+            Text(
+              'Your Personal AI Stylist',
+              style: TextStyle(
+                fontSize: 16.0,
+                fontWeight: FontWeight.bold,
+                )
+            ),
+
+            SizedBox(height: 64),
+            
             // Username field
             TextField(
               controller: _usernameController,
@@ -90,7 +113,7 @@ class _RegisterPageState extends State<RegisterPage> {
             // Register button
             ElevatedButton(
               onPressed: _register,
-              child: Text('Register'),
+              child: Text('Register Account'),
             ),
 
             SizedBox(height: 8),

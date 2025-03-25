@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart'; // for DefaultFirebaseOptions
+import 'assets/my_flutter_app_icons.dart';  // Import your generated icon class
 
 // Page imports
 import 'login.dart';
@@ -221,8 +222,10 @@ class ScaffoldWithNestedNavigation extends StatelessWidget {
           destinations: const [
             NavigationDestination(
                 label: 'My Wardrobe',
-                icon: Icon(Icons.chrome_reader_mode_outlined)),
+                icon: Icon(MyFlutterApp.tshirt_with_wand, size: 24),
+                // icon: Icon(Icons.chrome_reader_mode_outlined)),
                 // icon: Icon(Icons.all_inbox)), // alternative icon
+            ),
             NavigationDestination(
                 label: 'Add Clothes', 
                 icon: Icon(Icons.library_add)),

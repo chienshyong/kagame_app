@@ -231,19 +231,19 @@ class _ItemPageState extends State<ItemPage> {
             
             // Prompt TextInput
             Container(
-              margin: EdgeInsets.all(16.0),
-              child: Row(
+              margin: EdgeInsets.only(top:8.0, bottom: 12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Label Text "Prompt:"
                   Text(
                     "Prompt (optional):",
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(width: 10), // Space between label and input field
+                  SizedBox(height: 10), // Space between label and input field
 
                   // TextField for user input
-                  Expanded( // Allows input field to take available space
-                    child: TextField(
+                  TextField(
                       controller: _promptController, // TextEditingController to store input
                       onChanged: _onPromptChanged, // Call function when text changes
                       decoration: InputDecoration(
@@ -256,7 +256,6 @@ class _ItemPageState extends State<ItemPage> {
                         fillColor: Colors.white,
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -293,9 +292,9 @@ class _ItemPageState extends State<ItemPage> {
                 ),
             ),
 
-            SizedBox(height: 16),
+            SizedBox(height: 12),
             _infoRow("Category:", jsonResponse["category"] ?? "No Category"),
-            SizedBox(height: 10),
+            SizedBox(height: 8),
             Text("Tags:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             Wrap(
               spacing: 6.0,
@@ -328,7 +327,7 @@ class _ItemPageState extends State<ItemPage> {
     );
   }
 
-  // Widget for Edit Mode Layout
+  // Edit Mode Layout
   Widget _buildEditModeLayout() {
     return SingleChildScrollView(
         child: Padding(
