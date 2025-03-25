@@ -6,6 +6,7 @@ import '../services/auth_service.dart';
 import 'package:flutter_client_sse/flutter_client_sse.dart'; // Use the correct import for flutter_client_sse
 import 'dart:async';
 import 'package:shimmer/shimmer.dart';
+import 'dart:ui';
 
 class ProductDetailPage extends StatefulWidget {
   final String productId;
@@ -34,6 +35,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   /// Clothing preferences (likes & dislikes)
   Map<String?, dynamic> clothingLikes = {};
   Map<String?, dynamic> clothingDislikes = {};
+
+  /// Disliked items waiting for new recommendation
+  Set<String> _loadingReplacementIds = {};
 
   @override
   void dispose() {
@@ -279,16 +283,49 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               if (mounted) {
                 setState(() {
                   final index = recommendedOutfits.indexWhere(
-                    (s) => s['style_index'] == eventData['style_index'],
+                        (s) => s['style_index'] == eventData['style_index'],
                   );
 
                   if (index >= 0) {
-                    recommendedOutfits[index] = eventData;
-                    debugPrint('Updated existing style at index $index');
+                    final existingStyle = recommendedOutfits[index];
+                    final newStyle = eventData;
+
+                    for (int i = 0; i < existingStyle['style_outfits'].length; i++) {
+                      final existingOutfit = existingStyle['style_outfits'][i];
+                      final newOutfit = newStyle['style_outfits'][i];
+
+                      List<String> keys = [
+                        'top_items',
+                        'bottom_items',
+                        'shoe_items',
+                        'jacket_items',
+                        'accessory_items',
+                        'dress_items'
+                      ];
+
+                      for (var key in keys) {
+                        if (existingOutfit.containsKey(key)) {
+                          List<dynamic> existingItems = existingOutfit[key];
+                          List<dynamic> newItems = newOutfit[key];
+                          for (int j = 0; j < existingItems.length; j++) {
+                            final existingItem = existingItems[j];
+                            if (existingItem != null &&
+                                existingItem.containsKey('locked') &&
+                                existingItem['locked'] == true) {
+                              continue;
+                            }
+                            if (j < newItems.length) {
+                              existingItems[j] = newItems[j];
+                            }
+                          }
+                        }
+                      }
+                    }
+                    recommendedOutfits[index] = existingStyle;
+                    debugPrint('Merged new eventData into existing style at index "$index", locked items untouched.');
                   } else {
                     recommendedOutfits.add(eventData);
-                    debugPrint(
-                        'Added new style, now have ${recommendedOutfits.length} styles');
+                    debugPrint('Added new style, now have ${recommendedOutfits.length} styles');
                   }
 
                   // Still loading but trigger UI update to show the items we have
@@ -363,6 +400,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     String? clothingType,
     String? otherTags,
     String? color,
+    String? id,
   ) async {
     // If user had liked it, remove the like
     if (clothingLikes.containsKey(itemName)) {
@@ -391,7 +429,24 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         feedbackList.add(color);
       }
     }
-    updateClothingDislikes(itemName!, isAdded, feedbackList);
+    await updateClothingDislikes(itemName!, isAdded, feedbackList);
+
+    if (clothingDislikes.containsKey(itemName)) {
+      setState(() {
+        _loadingReplacementIds.add(id!);
+      });
+
+      await _fetchReplacementItem(
+        startingId: productDoc!['id'],
+        previousRecId: id!,
+        dislikeReason: feedbackList.toString(),
+        itemName: itemName,
+      );
+
+      setState(() {
+        _loadingReplacementIds.remove(id);
+      });
+    }
   }
 
   Future<void> updateClothingLikes(String itemName, bool isAdded) async {
@@ -449,6 +504,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       throw Exception(responseJson["detail"]);
     }
   }
+
   Future<String?> _feedbackFormBuilder(BuildContext context) async {
     String? selectedOption;
 
@@ -495,10 +551,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 ],
               ),
               actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, null),
-                  child: Text('Cancel'),
-                ),
+                // TextButton(
+                //   onPressed: () => Navigator.pop(context, null),
+                //   child: Text('Cancel'),
+                // ),
                 TextButton(
                   onPressed: () {
                     Navigator.pop(context, selectedOption);
@@ -512,45 +568,77 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       },
     );
   }
-  // Future<String?> _feedbackFormBuilder(BuildContext context) async {
-  //   String? feedbackData;
 
-  //   await showDialog<void>(
-  //     context: context,
-  //     builder: (BuildContext dialogContext) {
-  //       return AlertDialog(
-  //         title: const Text('What did you dislike about this item?'),
-  //         content: Column(
-  //           mainAxisSize: MainAxisSize.min,
-  //           children: [
-  //             ListTile(
-  //               title: Text("Type of item"),
-  //               onTap: () {
-  //                 feedbackData = "Type of item";
-  //                 Navigator.pop(dialogContext);
-  //               },
-  //             ),
-  //             ListTile(
-  //               title: Text("Style"),
-  //               onTap: () {
-  //                 feedbackData = "Style";
-  //                 Navigator.pop(dialogContext);
-  //               },
-  //             ),
-  //             ListTile(
-  //               title: Text("Colour"),
-  //               onTap: () {
-  //                 feedbackData = "Colour";
-  //                 Navigator.pop(dialogContext);
-  //               },
-  //             ),
-  //           ],
-  //         ),
-  //       );
-  //     },
-  //   );
-  //   return feedbackData;
-  // }
+  Future<void> _fetchReplacementItem({
+    required String startingId,
+    required String previousRecId,
+    required String dislikeReason,
+    required String itemName,
+  }) async {
+    final token = await authService.getToken();
+    final baseUrl = authService.baseUrl;
+    final uri = Uri.parse(
+        '$baseUrl/catalogue/feedback_recommendation?starting_id=$startingId&previous_rec_id=$previousRecId&dislike_reason=$dislikeReason'
+    );
+
+    try {
+      final response = await http.get(
+        uri,
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final rec = json.decode(response.body);
+        final formattedRec = {
+          'id': rec['_id'] ?? '',
+          'image_url': rec['image_url'] ?? '',
+          'cropped_image_url': rec['image_url'] ?? '',
+          'name': rec['name'] ?? '',
+          'label': rec['name'] ?? '',
+          'price': rec['price']?.toString() ?? '0.0',
+          'category': rec['category'] ?? '',
+        };
+        debugPrint("newRec"+formattedRec.toString());
+        setState(() {
+          bool replaced = false;
+          for (var style in recommendedOutfits) {
+            if (style is Map && style.containsKey('style_outfits')) {
+              for (var outfit in style['style_outfits']) {
+                List<String> keys = [
+                  'top_items',
+                  'bottom_items',
+                  'shoe_items',
+                  'jacket_items',
+                  'accessory_items',
+                  'dress_items'
+                ];
+                for (var key in keys) {
+                  if (outfit.containsKey(key)) {
+                    List<dynamic> items = outfit[key];
+                    for (int i = 0; i < items.length; i++) {
+                      if (items[i]['id'] == previousRecId) {
+                        formattedRec['locked'] = true;
+                        outfit[key][i] = formattedRec;
+                        replaced = true;
+                        break;
+                      }
+                    }
+                  }
+                  if (replaced) break;
+                }
+                if (replaced) break;
+              }
+            }
+            if (replaced) break;
+          }
+        });
+      } else {
+        throw Exception('Failed to fetch replacement recommendation');
+      }
+    } catch (e) {
+      debugPrint("Error fetching replacement recommendation: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -601,7 +689,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           Icons.favorite,
                           color: clothingLikes.containsKey(name)
                               ? Colors.pink
-                              : Colors.grey[700],
+                              : Colors.grey,
+                          shadows: [
+                            Shadow(
+                              color: Colors.white.withOpacity(0.5),
+                              blurRadius: 20,
+                            ),
+                          ],
                         ),
                         onPressed: () {
                           setState(() {
@@ -614,7 +708,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           Icons.thumb_down,
                           color: clothingDislikes.containsKey(name)
                               ? Colors.red
-                              : Colors.grey[700],
+                              : Colors.grey,
+                          shadows: [
+                            Shadow(
+                              color: Colors.white.withOpacity(0.5),
+                              blurRadius: 20,
+                            ),
+                          ],
                         ),
                         onPressed: () {
                           setState(() {
@@ -625,6 +725,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               productDoc!['clothing_type'],
                               productDoc!['other_tags']?.toString(),
                               productDoc!['color']?.toString(),
+                              productDoc!['id']?.toString(),
                             );
                           });
                         },
@@ -814,7 +915,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                       color: clothingLikes
                                               .containsKey(item['name'])
                                           ? Colors.pink
-                                          : Colors.grey[700],
+                                          : Colors.grey,
+                                      shadows: [
+                                        Shadow(
+                                          color: Colors.white.withOpacity(0.5),
+                                          blurRadius: 20,
+                                        ),
+                                      ],
                                     ),
                                     onPressed: () {
                                       setState(() {
@@ -828,7 +935,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                       color: clothingDislikes
                                               .containsKey(item['name'])
                                           ? Colors.red
-                                          : Colors.grey[700],
+                                          : Colors.grey,
+                                      shadows: [
+                                        Shadow(
+                                          color: Colors.white.withOpacity(0.5),
+                                          blurRadius: 20,
+                                        ),
+                                      ],
                                     ),
                                     onPressed: () {
                                       setState(() {
@@ -839,6 +952,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                           item['clothing_type']?.toString(),
                                           item['other_tags']?.toString(),
                                           item['color']?.toString(),
+                                          item['id']?.toString(),
                                         );
                                       });
                                     },
@@ -846,6 +960,20 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 ],
                               ),
                             ),
+                            if (_loadingReplacementIds.contains(item['id']))
+                              Positioned.fill(
+                                child: ClipRect(
+                                  child: BackdropFilter(
+                                    filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                                    child: Container(
+                                      color: Colors.black.withOpacity(0.3),
+                                      child: Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
                       ),
@@ -1225,9 +1353,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             // Hand off toggles from parent
             onToggleLike: toggleLike,
             onToggleDislike:
-                (itemName, itemCategory, clothingType, otherTags, color) {
+                (itemName, itemCategory, clothingType, otherTags, color, id) {
               toggleDislike(itemName, itemCategory, context, clothingType,
-                  otherTags, color);
+                  otherTags, color, id);
             },
           ),
         ],
@@ -1251,6 +1379,7 @@ class OutfitStackWidget extends StatefulWidget {
     String? clothingType,
     String? otherTags,
     String? color,
+    String? id,
   ) onToggleDislike;
 
   const OutfitStackWidget({
@@ -1394,6 +1523,7 @@ class _OutfitStackWidgetState extends State<OutfitStackWidget> {
     final clothingType = doc['clothing_type']?.toString();
     final otherTags = doc['other_tags']?.toString();
     final color = doc['color']?.toString();
+    final id = doc['id']?.toString();
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: sidePadding),
@@ -1459,6 +1589,7 @@ class _OutfitStackWidgetState extends State<OutfitStackWidget> {
                         clothingType,
                         otherTags,
                         color,
+                        id,
                       );
                     });
                   },
