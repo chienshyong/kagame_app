@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart'; // for DefaultFirebaseOptions
+
+import '../../services/auth_service.dart';
 import 'assets/my_flutter_app_icons.dart';  // Import your generated icon class
 
 // Page imports
@@ -42,6 +44,15 @@ void main() async {
   final goRouter = GoRouter(
     initialLocation: '/login',
     navigatorKey: _rootNavigatorKey,
+    redirect: (BuildContext context, GoRouterState state) async {
+    final token = await AuthService().getToken();
+    final isLoggedIn = token != null;
+    final isLoginRoute = state.uri.toString() == '/login';
+
+    if (!isLoggedIn && !isLoginRoute) return '/login';
+    if (isLoggedIn && (isLoginRoute || state.uri.toString() == '/')) return '/wardrobe';
+    return null;
+  },
     routes: [
       GoRoute(
         path: '/login',
