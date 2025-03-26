@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:syncfusion_flutter_sliders/sliders.dart';
 import 'package:http/http.dart' as http;
+import 'package:dropdown_search/dropdown_search.dart';
 
 import '../services/auth_service.dart';
 import 'stylequiz.dart';
@@ -22,13 +22,8 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
   // Controllers for text fields
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _genderController = TextEditingController();
-  final TextEditingController _raceController = TextEditingController();
   final TextEditingController _birthdayController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
-  final TextEditingController _heightController = TextEditingController();
-  final TextEditingController _weightController = TextEditingController();
-  final TextEditingController _skinToneController = TextEditingController();
-  final TextEditingController _bioController = TextEditingController();
   final TextEditingController _clothingPrefsController = TextEditingController();
   final TextEditingController _clothingDislikesController = TextEditingController();
 
@@ -38,50 +33,25 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
   final FocusNode _raceFocusNode = FocusNode();
   final FocusNode _birthdayFocusNode = FocusNode();
   final FocusNode _locationFocusNode = FocusNode();
-  final FocusNode _heightFocusNode = FocusNode();
-  final FocusNode _weightFocusNode = FocusNode();
-  final FocusNode _skinToneFocusNode = FocusNode();
-  final FocusNode _bioFocusNode = FocusNode();
   final FocusNode _clothingPrefsFocusNode = FocusNode();
   final FocusNode _clothingDislikesFocusNode = FocusNode();
 
-  // Other state
-  String _styleResult = "Not determined yet";
-  double? _happinessLevel = 1;
+  // List to store countries
+  List<String> countries = [];
 
-  // Example dropdown list
+  // Other state variables
+  String _styleResult = "Not determined yet";
+  bool _isEditing = false;
+
+  // Gender dropdown vars
   List<String> _genderDropdownList = <String>["Prefer not to say", "Female", "Male"];
   String _genderSelected = "Prefer not to say";
-
-  List<Color> _skinToneColors = [
-    const Color(0xFFf6ede4),
-    const Color(0xFFf3e7db),
-    const Color(0xFFf7ead0),
-    const Color(0xFFeadaba),
-    const Color(0xFFd7bd96),
-    const Color(0xFFa07e56),
-    const Color(0xFF825c43),
-    const Color(0xFF604134),
-    const Color(0xFF3a312a),
-    const Color(0xFF292420),
-  ];
-  Map<Color, String> _skinToneDescription = {
-    Color(0xFFf6ede4):"Very fair skin with cool, pink undertones",
-    Color(0xFFf3e7db):"Fair skin with neutral to cool undertones",
-    Color(0xFFf7ead0):"Light skin with neutral undertones",
-    Color(0xFFeadaba):"Light to medium skin with warm or golden undertones",
-    Color(0xFFd7bd96):"Medium skin with neutral to warm undertones",
-    Color(0xFFa07e56):"Medium to olive skin with warm or golden undertones",
-    Color(0xFF825c43):"Olive to light brown skin with golden or neutral undertones",
-    Color(0xFF604134):"Medium brown skin with neutral to warm undertones",
-    Color(0xFF3a312a):"Dark brown skin with rich, warm undertones",
-    Color(0xFF292420):"Deep skin with cool or neutral undertones"
-  };
 
   @override
   void initState() {
     super.initState();
     getProfileData();
+    loadCountriesFile();
   }
 
   @override
@@ -89,13 +59,8 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
     // Dispose controllers & focus nodes
     _ageController.dispose();
     _genderController.dispose();
-    _raceController.dispose();
     _birthdayController.dispose();
     _locationController.dispose();
-    _heightController.dispose();
-    _weightController.dispose();
-    _skinToneController.dispose();
-    _bioController.dispose();
     _clothingPrefsController.dispose();
     _clothingDislikesController.dispose();
 
@@ -104,17 +69,13 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
     _raceFocusNode.dispose();
     _birthdayFocusNode.dispose();
     _locationFocusNode.dispose();
-    _heightFocusNode.dispose();
-    _weightFocusNode.dispose();
-    _skinToneFocusNode.dispose();
-    _bioFocusNode.dispose();
     _clothingPrefsFocusNode.dispose();
     _clothingDislikesFocusNode.dispose();
 
     super.dispose();
   }
 
-  // Retrieve from backend
+  // Retrieve profile data from backend
   Future<void> getProfileData() async {
     final String baseUrl = authService.baseUrl;
     final token = await authService.getToken();
@@ -127,16 +88,11 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
       );
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonResponse = json.decode(response.body);
-
         setState(() {
           _genderSelected = jsonResponse["gender"] ?? "Prefer not to say";
           _birthdayController.text = jsonResponse["birthday"] ?? "";
           _locationController.text = jsonResponse["location"] ?? "";
-          _heightController.text = jsonResponse["height"] ?? "";
-          _weightController.text = jsonResponse["weight"] ?? "";
-          _raceController.text = jsonResponse["ethnicity"] ?? "";
-          _skinToneController.text = jsonResponse["skin_tone"] ?? "";
-          _happinessLevel = double.parse(jsonResponse["happiness_current_wardrobe"] ?? 8);
+          _styleResult = jsonResponse["style"];
         });
       }
     } catch (error) {
@@ -144,21 +100,15 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
     }
   }
 
-  // Update to backend
+  // Post updates for profile data
   Future<void> updateProfileData() async {
     final String baseUrl = authService.baseUrl;
     final token = await authService.getToken();
-    // Convert all fields to string before sending
+
     Map<String, dynamic> updatedProfile = {
       "gender": _genderSelected,
       "birthday": _birthdayController.text,
       "location": _locationController.text,
-      "height": _heightController.text,
-      "weight": _weightController.text,
-      "ethnicity": _raceController.text,
-      "skin_tone": _skinToneController.text,
-      "style": _styleResult,
-      "happiness_current_wardrobe": _happinessLevel?.toInt().toString(),
     };
 
     String jsonData = jsonEncode(updatedProfile);
@@ -180,15 +130,27 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
     }
   }
 
+  // Load countries into searchable dropdown
+  Future<void> loadCountriesFile() async {
+    try {
+      String fileContent = await rootBundle.loadString('lib/assets/countries.txt');
+      List<String> countriesList = fileContent.split('\n');
+      setState(() {
+        countries = countriesList;
+      });
+    } catch (e) {
+      debugPrint("Error loading file: $e");
+    }
+  }
+
+  // Birthdate formatting
   final birthdayFormatter = TextInputFormatter.withFunction(
         (oldValue, newValue) {
       String text = newValue.text;
       int selectionIndex = newValue.selection.end;
 
-      // Remove all '/' to prevent double slashes
       text = text.replaceAll('/', '');
 
-      // Automatically insert slashes at the appropriate places
       if (text.length > 2) {
         text = text.substring(0, 2) + '/' + text.substring(2);
         if (selectionIndex >= 2) selectionIndex++;
@@ -198,12 +160,10 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
         if (selectionIndex >= 5) selectionIndex++;
       }
 
-      // Limit to 10 characters (DD/MM/YYYY)
       if (text.length > 10) {
         text = text.substring(0, 10);
       }
 
-      // Always return a TextEditingValue
       return TextEditingValue(
         text: text,
         selection: TextSelection.collapsed(offset: selectionIndex),
@@ -211,13 +171,51 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
     },
   );
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Profile'),
         actions: [
+          if (!_isEditing)
+            IconButton(
+              icon: Icon(Icons.edit),
+              onPressed: () {
+                setState(() {
+                  _isEditing = true;
+                });
+              },
+            ),
+          if (_isEditing)
+            IconButton(
+              icon: Icon(Icons.cancel),
+              onPressed: () {
+                getProfileData();
+                setState(() {
+                  _isEditing = false;
+                });
+              },
+            ),
+          if (_isEditing)
+            IconButton(
+              icon: Icon(Icons.save),
+              onPressed: () {
+                if (_validateBirthday(_birthdayController.text)) {
+                  updateProfileData().then((_) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Profile Updated.")),
+                    );
+                    setState(() {
+                      _isEditing = false;
+                    });
+                  });
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Invalid birthday date.")),
+                  );
+                }
+              },
+            ),
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: () async {
@@ -254,7 +252,6 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
               ),
               SizedBox(height: 24),
 
-              // Gender (Dropdown)
               DropdownButtonFormField<String>(
                 value: _genderSelected,
                 decoration: InputDecoration(
@@ -263,11 +260,13 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
                 ),
                 icon: const Icon(Icons.arrow_downward),
                 style: const TextStyle(color: Colors.black),
-                onChanged: (String? value) {
+                onChanged: _isEditing
+                    ? (String? value) {
                   setState(() {
                     _genderSelected = value!;
                   });
-                },
+                }
+                    : null,
                 items: _genderDropdownList.map<DropdownMenuItem<String>>((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
@@ -277,7 +276,6 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
               ),
               SizedBox(height: 16),
 
-              // Birthday field
               _buildTextField(
                 label: 'Birthday (DD/MM/YYYY)',
                 controller: _birthdayController,
@@ -288,88 +286,18 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
                   birthdayFormatter,
                 ],
                 keyboardType: TextInputType.number,
+                readOnly: !_isEditing,
               ),
               SizedBox(height: 16),
 
-              // Location
-              _buildTextField(
+              _buildLocationDropdown(
                 label: 'Location',
                 controller: _locationController,
                 focusNode: _locationFocusNode,
-                nextFocusNode: _heightFocusNode,
+                enabled: _isEditing,
               ),
               SizedBox(height: 16),
 
-              // Height
-              _buildTextField(
-                label: 'Height (cm)',
-                controller: _heightController,
-                focusNode: _heightFocusNode,
-                nextFocusNode: _weightFocusNode,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              ),
-              SizedBox(height: 16),
-
-              // Weight
-              _buildTextField(
-                label: 'Weight (kg)',
-                controller: _weightController,
-                focusNode: _weightFocusNode,
-                nextFocusNode: _raceFocusNode,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              ),
-              SizedBox(height: 16),
-
-              // Ethnicity
-              _buildTextField(
-                label: 'Ethnicity',
-                controller: _raceController,
-                focusNode: _raceFocusNode,
-                nextFocusNode: _skinToneFocusNode,
-              ),
-              SizedBox(height: 16),
-
-              // Skin Tone
-              Text("Pick the closest skin tone to yours:"),
-              SizedBox(height: 8),
-              Wrap(
-                spacing: 8.0,
-                children: _skinToneColors.map((color) {
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _skinToneController.text = '${_skinToneDescription[color]}';
-                      });
-                    },
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(8.0),
-                        border: Border.all(
-                          color: _skinToneController.text == '#${color.value.toRadixString(16).substring(2).toUpperCase()}'
-                              ? Colors.black
-                              : Colors.transparent,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-              SizedBox(height: 16),
-              _buildTextField(
-                label: 'Skin Tone',
-                controller: _skinToneController,
-                focusNode: _skinToneFocusNode,
-                nextFocusNode: _bioFocusNode,
-              ),
-              SizedBox(height: 16),
-
-              // Style Quiz
               Text(
                 "My style is: $_styleResult",
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
@@ -378,15 +306,13 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
               Center(
                 child: ElevatedButton(
                   onPressed: () async {
-                    String? result = await Navigator.push(
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => QuizPage()),
                     );
-                    if (result != null && result.isNotEmpty) {
-                      setState(() {
-                        _styleResult = result;
-                      });
-                    }
+                    setState(() {
+                      getProfileData();
+                    });
                   },
                   child: Text('Find my style'),
                   style: ElevatedButton.styleFrom(
@@ -395,78 +321,7 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
                   ),
                 ),
               ),
-              SizedBox(height: 16),
-
-              // Happiness Slider
-              Text(
-                "How happy are you with your current wardrobe?",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              ),
-              SizedBox(height: 8),
-              Center(
-                child: SfSlider(
-                  min: 1,
-                  max: 10,
-                  value: _happinessLevel,
-                  interval: 1,
-                  showTicks: true,
-                  showLabels: true,
-                  enableTooltip: true,
-                  minorTicksPerInterval: 0,
-                  stepSize: 1,
-                  onChanged: (dynamic value) {
-                    setState(() {
-                      _happinessLevel = value;
-                    });
-                  },
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                "Your rating: ${_happinessLevel?.toInt()}",
-                style: TextStyle(fontSize: 16),
-              ),
               SizedBox(height: 24),
-
-              // Clothing Preferences
-              // _buildTextField(
-              //   label: 'Clothing Likes (Optional)',
-              //   controller: _clothingPrefsController,
-              //   focusNode: _clothingPrefsFocusNode,
-              //   nextFocusNode: _clothingDislikesFocusNode,
-              // ),
-              // SizedBox(height: 16),
-
-              // Clothing Dislikes
-              // _buildTextField(
-              //   label: 'Clothing Dislikes (Optional)',
-              //   controller: _clothingDislikesController,
-              //   focusNode: _clothingDislikesFocusNode,
-              // ),
-              // SizedBox(height: 24),
-
-              // Submit Button
-              Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Validate birthday date
-                    if (_validateBirthday(_birthdayController.text)) {
-                      updateProfileData();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Profile Updated.")),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Invalid birthday date.")),
-                      );
-                    }
-                  },
-                  child: Text('Update Profile'),
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                  ),
-                ),
-              ),
             ],
           ),
         ),
@@ -474,6 +329,7 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
     );
   }
 
+  // Read only
   Widget _buildTextField({
     required String label,
     required TextEditingController controller,
@@ -520,7 +376,6 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
 
     try {
       DateTime parsedDate = DateTime(year, month, day);
-      // ensure exact match
       if (parsedDate.day != day || parsedDate.month != month || parsedDate.year != year) {
         return false;
       }
@@ -528,5 +383,43 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
     } catch (e) {
       return false;
     }
+  }
+
+  // Location dropdown UI
+  Widget _buildLocationDropdown({
+    required String label,
+    required TextEditingController controller,
+    required FocusNode focusNode,
+    required bool enabled,
+  }) {
+    return DropdownSearch<String>(
+      items: countries,
+      selectedItem: controller.text.isNotEmpty ? controller.text : null,
+      onChanged: enabled
+          ? (value) {
+        controller.text = value ?? '';
+      }
+          : null,
+      popupProps: PopupProps.menu(
+        showSearchBox: true,
+        searchFieldProps: TextFieldProps(
+          decoration: InputDecoration(
+            labelText: "Search Country",
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      dropdownDecoratorProps: DropDownDecoratorProps(
+        dropdownSearchDecoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(),
+        ),
+      ),
+      dropdownBuilder: (context, selectedItem) => Text(
+        selectedItem ?? '',
+        style: TextStyle(fontWeight: FontWeight.normal),
+      ),
+      enabled: enabled,
+    );
   }
 }

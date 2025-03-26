@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart'; // for DefaultFirebaseOptions
+
+import '../../services/auth_service.dart';
 import 'assets/my_flutter_app_icons.dart';  // Import your generated icon class
 
 // Page imports
@@ -16,7 +18,8 @@ import 'wardrobe/recommend_page.dart';
 import 'wardrobe/search_page.dart';
 import 'add/add.dart';
 import 'profile/profile.dart';
-import 'shop/shop_page.dart'; 
+import 'shop/shop_page.dart';
+import 'profile/stylequiz.dart';
 
 void main() async {
   //Init firebase for google authentication
@@ -42,6 +45,15 @@ void main() async {
   final goRouter = GoRouter(
     initialLocation: '/login',
     navigatorKey: _rootNavigatorKey,
+    redirect: (BuildContext context, GoRouterState state) async {
+    final token = await AuthService().getToken();
+    final isLoggedIn = token != null;
+    final isLoginRoute = state.uri.toString() == '/login';
+
+    if (!isLoggedIn && !isLoginRoute) return '/login';
+    if (isLoggedIn && (isLoginRoute || state.uri.toString() == '/')) return '/wardrobe';
+    return null;
+  },
     routes: [
       GoRoute(
         path: '/login',
@@ -137,6 +149,14 @@ void main() async {
                 pageBuilder: (context, state) => NoTransitionPage(
                   child: ProfilePage(),
                 ),
+                routes: [
+                  GoRoute(
+                    path: 'quiz',
+                    builder: (context, state) {
+                      return QuizPage();
+                    },
+                  ),
+                ],
               ),
             ],
           ),

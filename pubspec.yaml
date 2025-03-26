@@ -32,6 +32,7 @@ dependencies:
   firebase_auth: ^5.5.1
   google_sign_in: ^5.4.4
   universal_io: ^2.2.2
+  dropdown_search: ^5.0.6
 
 flutter_icons:
   android: true
@@ -49,6 +50,7 @@ flutter:
   assets:
     - lib/assets/
     - lib/assets/stylequiz/
+    - lib/assets/countries.txt
 
   fonts:
     - family:  MyFlutterApp

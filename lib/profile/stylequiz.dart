@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import '../services/auth_service.dart';
+import 'dart:convert';
 
 class QuizPage extends StatefulWidget {
   @override
@@ -6,6 +9,8 @@ class QuizPage extends StatefulWidget {
 }
 
 class _QuizPageState extends State<QuizPage> {
+  final AuthService authService = AuthService();
+
   int _currentQuestionIndex = 0;
   Map<String, int> _styleCount = {}; //track freq of styles
 
@@ -68,9 +73,34 @@ class _QuizPageState extends State<QuizPage> {
     });
   }
 
-  void _showResults() {
+  Future<void> postResult(String resultStyle) async {
+    final String baseUrl = authService.baseUrl;
+    final token = await authService.getToken();
+    try {
+      Map<String, String> styleQuizResult = {"style_result": resultStyle};
+      String jsonData = jsonEncode(styleQuizResult);
+      final response = await http.post(
+        Uri.parse('$baseUrl/profile/stylequizresult'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonData,
+      );
+      if (response.statusCode == 200) {
+        print('Result posted successfully!');
+      } else {
+        print('Failed to post result. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error posting result: $e');
+    }
+  }
+
+  void _showResults() async {
     String resultStyle = _calculateStyle();
-    Navigator.pop(context, resultStyle);
+    await postResult(resultStyle);
+    Navigator.pop(context);
   }
 
   String _calculateStyle() {
