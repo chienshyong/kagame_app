@@ -40,6 +40,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   /// Disliked items waiting for new recommendation
   Set<String> _loadingReplacementIds = {};
 
+  /// User's gender code (M, F, or null)
+  String? userGenderCode;
+  bool isLoadingGender = true;
+
   @override
   void dispose() {
     // Cancel subscription when widget is disposed
@@ -54,6 +58,38 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     _fetchProductDoc();
     // 2) Also fetch user's existing likes/dislikes
     getClothingPreferences();
+    // 3) Fetch user's gender
+    _fetchUserGender();
+  }
+
+  /// Fetch the user's gender from the API
+  Future<void> _fetchUserGender() async {
+    setState(() => isLoadingGender = true);
+
+    final token = await authService.getToken();
+    final baseUrl = authService.baseUrl;
+    final uri = Uri.parse('$baseUrl/user/gender');
+
+    try {
+      final response = await http.get(
+        uri,
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          userGenderCode = data['gender_code'];
+          isLoadingGender = false;
+        });
+        debugPrint('User gender fetched: $userGenderCode');
+      } else {
+        throw Exception('Failed to load user gender');
+      }
+    } catch (error) {
+      debugPrint('Error fetching user gender: $error');
+      setState(() => isLoadingGender = false);
+    }
   }
   // Add this function to your class to better understand the structure
 // of the data coming from the SSE events
@@ -215,6 +251,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     }
   }
 
+  
+  // ... [other methods remain unchanged]
+
   Future<void> fetchRecommendedOutfits() async {
     if (productDoc == null) return;
 
@@ -233,14 +272,25 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     final token = await authService.getToken();
     final baseUrl = authService.baseUrl;
     final String productId = productDoc!['id'] ?? '';
+    
+    // Wait for gender to be loaded if it's still loading
+    if (isLoadingGender) {
+      await Future.delayed(Duration(milliseconds: 300));
+    }
+    
+    // Build URL with gender parameter if available
+    String url = '$baseUrl/fast-item-outfit-search-with-style-stream?item_id=$productId';
+    if (userGenderCode != null) {
+      url += '&gender=$userGenderCode';
+      debugPrint('Adding gender filter: $userGenderCode');
+    }
 
-    debugPrint('Starting SSE connection for product: $productId');
+    debugPrint('Starting SSE connection for product: $productId with URL: $url');
 
     try {
       final stream = SSEClient.subscribeToSSE(
         method: SSERequestType.GET,
-        url:
-            '$baseUrl/fast-item-outfit-search-with-style-stream?item_id=$productId',
+        url: url,
         header: {
           'Accept': 'text/event-stream',
           'Authorization': 'Bearer $token',
@@ -1087,30 +1137,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
-  Widget _buildCategorySkeleton(String category) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Shimmer.fromColors(
-          baseColor: Colors.grey[300]!,
-          highlightColor: Colors.grey[100]!,
-          child: Container(
-            width: 150,
-            height: 20,
-            color: Colors.white,
-          ),
-        ),
-        SizedBox(height: 8),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: List.generate(3, (index) => _buildItemSkeleton()),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildItemSkeleton() {
     return Container(
       width: 160,
@@ -1204,22 +1230,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           switch (category) {
             case 'tops':
               tops.add(item);
-              break;
             case 'bottoms':
               bottoms.add(item);
-              break;
             case 'dresses':
               dresses.add(item);
-              break;
             case 'shoes':
               shoes.add(item);
-              break;
             case 'jackets':
               jackets.add(item);
-              break;
             case 'accessories':
               accessories.add(item);
-              break;
           }
         }
 
@@ -1227,22 +1247,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         switch (mainCategory) {
           case 'tops':
             tops.insert(0, productDoc!);
-            break;
           case 'bottoms':
             bottoms.insert(0, productDoc!);
-            break;
           case 'dresses':
             dresses.insert(0, productDoc!);
-            break;
           case 'shoes':
             shoes.insert(0, productDoc!);
-            break;
           case 'jackets':
             jackets.insert(0, productDoc!);
-            break;
           case 'accessories':
             accessories.insert(0, productDoc!);
-            break;
         }
 
         // Determine carousel configurations based on main category
@@ -1254,7 +1268,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               {'category': 'Shoes', 'items': shoes},
               {'category': 'Accessories', 'items': accessories},
             ];
-            break;
           case 'tops':
             carouselConfigs = [
               {'category': 'Jackets', 'items': jackets},
@@ -1264,7 +1277,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ];
             carouselConfigs
                 .removeWhere((config) => config['category'] == 'Dresses');
-            break;
           case 'shoes':
             carouselConfigs = [
               {'category': 'Tops', 'items': tops},
@@ -1275,7 +1287,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ];
             carouselConfigs
                 .removeWhere((config) => config['category'] == 'Shoes');
-            break;
           case 'accessories':
             carouselConfigs = [
               {'category': 'Tops', 'items': tops},
@@ -1285,7 +1296,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               {'category': 'Jackets', 'items': jackets},
               {'category': 'Accessories', 'items': accessories},
             ];
-            break;
           case 'jackets':
             carouselConfigs = [
               {'category': 'Tops', 'items': tops},
@@ -1296,7 +1306,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ];
             carouselConfigs
                 .removeWhere((config) => config['category'] == 'Jackets');
-            break;
           case 'bottoms':
             carouselConfigs = [
               {'category': 'Tops', 'items': tops},
@@ -1306,7 +1315,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ];
             carouselConfigs
                 .removeWhere((config) => config['category'] == 'Bottoms');
-            break;
           default:
             // For other categories, display all except main category
             carouselConfigs = [
