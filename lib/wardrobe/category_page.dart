@@ -243,15 +243,6 @@ class _CategoryPageState extends State<CategoryPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            // Header Text
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8.0),
-                              child: Text(
-                                "Select the item you want to style your outfit around",
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
                         
                           Expanded(
                             child: GridView.builder(

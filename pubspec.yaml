@@ -49,3 +49,8 @@ flutter:
   assets:
     - lib/assets/
     - lib/assets/stylequiz/
+
+  fonts:
+    - family:  MyFlutterApp
+      fonts:
+       - asset: fonts/tshirt_with_wand.ttf

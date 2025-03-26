@@ -4,10 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart'; // for DefaultFirebaseOptions
+
 import '../../services/auth_service.dart';
+import 'assets/my_flutter_app_icons.dart';  // Import your generated icon class
 
 // Page imports
 import 'login.dart';
+import 'register.dart';
 import 'wardrobe/wardrobe_page.dart'; 
 import 'wardrobe/category_page.dart';
 import 'wardrobe/item_page.dart';
@@ -57,6 +60,12 @@ void main() async {
           child: LoginPage(),
         ),
       ),
+
+      GoRoute(
+      path: '/register',
+      builder: (context, state) => RegisterPage(),
+    ),
+
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           // the UI shell
@@ -224,8 +233,10 @@ class ScaffoldWithNestedNavigation extends StatelessWidget {
           destinations: const [
             NavigationDestination(
                 label: 'My Wardrobe',
-                icon: Icon(Icons.chrome_reader_mode_outlined)),
+                icon: Icon(MyFlutterApp.tshirt_with_wand, size: 24),
+                // icon: Icon(Icons.chrome_reader_mode_outlined)),
                 // icon: Icon(Icons.all_inbox)), // alternative icon
+            ),
             NavigationDestination(
                 label: 'Add Clothes', 
                 icon: Icon(Icons.library_add)),
