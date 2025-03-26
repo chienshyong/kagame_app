@@ -262,7 +262,7 @@ class _ItemPageState extends State<ItemPage> {
             ),
 
 
-            // Recommend Outfit button
+            // Recommend "StyleMe" Outfit button
             Container(
               alignment: Alignment.center,
               child: 
@@ -302,12 +302,6 @@ class _ItemPageState extends State<ItemPage> {
               children: _tagvalues.map((tag) => Chip(label: Text(tag))).toList(),
             ),
             SizedBox(height: 20),
-            Center(
-              child: ElevatedButton(
-                onPressed: _toggleEditMode,
-                child: Text("Edit Item"),
-              ),
-            ),
           ],
         ),
       ),

@@ -683,14 +683,18 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   Widget build(BuildContext context) {
     if (isLoadingProduct) {
       return Scaffold(
-        appBar: AppBar(title: Text("Loading...")),
+        appBar: AppBar(
+          scrolledUnderElevation: 0, // fix bug of appbar changing colour when scrolling down the page
+          title: Text("Loading...")),
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
     if (productDoc == null) {
       return Scaffold(
-        appBar: AppBar(title: Text("Error")),
+        appBar: AppBar(
+          scrolledUnderElevation: 0, // fix bug of appbar changing colour when scrolling down the page
+          title: Text("Error")),
         body: Center(child: Text('Product not found.')),
       );
     }
@@ -702,7 +706,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     final tags = productDoc!['other_tags'] ?? [];
 
     return Scaffold(
-      appBar: AppBar(title: Text(name)),
+      appBar: AppBar(
+        scrolledUnderElevation: 0, // fix bug of appbar changing colour when scrolling down the page
+        title: Text(name)),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
