@@ -54,6 +54,8 @@ class _RegisterPageState extends State<RegisterPage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false, // Remove built-in back button
+        scrolledUnderElevation: 0,
+
           // title: Row(
           //   mainAxisAlignment: MainAxisAlignment.center,
           //   children: [
@@ -68,10 +70,11 @@ class _RegisterPageState extends State<RegisterPage> {
           // ),
         ),
 
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            SizedBox(height:100),
             Image.asset(
                 'lib/assets/app_icon.png',
                 width: 96,
@@ -153,7 +156,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   onPressed: () async {
                     try {
                       if(await authService.signInWithGoogle()){
-                        context.go('/wardrobe');
+                        context.go('/profile/quiz');
                       }
                     } catch (e) {
                       print("Error signing in with Google: $e");

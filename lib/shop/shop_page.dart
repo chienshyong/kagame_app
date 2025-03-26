@@ -573,8 +573,8 @@ Future<void> fetchRecommendedProducts() async {
                                 GestureDetector(
                                   child: Image.asset(
                                     'lib/assets/KagaMe.png',
-                                    width: 100.0,
-                                    height: 50.0,
+                                    width: 120.0,
+                                    height: 60.0,
                                   ),
                                 ),
                                 SizedBox(width: 12.0),

@@ -166,121 +166,147 @@ class _CategoryPageState extends State<CategoryPage> {
     TextEditingController searchController = TextEditingController();
 
     return Scaffold(
-      appBar: AppBar(title: Text('My Wardrobe (${widget.category})')),
-          body: SafeArea(
-            child: isLoading && cachedImages.isEmpty
-                ? Center(child: CircularProgressIndicator())
-                : NestedScrollView(
-                    headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-                      return [
-                        SliverAppBar(
-                          backgroundColor: Colors.white,
-                          pinned: false,
-                          floating: true,
-                          snap: true,
-                          expandedHeight: 80.0,
-                          automaticallyImplyLeading: false,
-                          flexibleSpace: FlexibleSpaceBar(
-                            background: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      context.go('/home'); 
+      // appBar: AppBar(
+      //   automaticallyImplyLeading: true,
+      //   title: Text('My Wardrobe (${widget.category})')
+      // ),
+
+      body: SafeArea(
+        child: isLoading && cachedImages.isEmpty
+            ? Center(child: CircularProgressIndicator())
+            : NestedScrollView(
+                headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+                  return [
+                    SliverAppBar(
+                      backgroundColor: Colors.white,
+                      pinned: false,
+                      floating: true,
+                      snap: true,
+                      expandedHeight: 80.0,
+                      automaticallyImplyLeading: false,
+                      flexibleSpace: FlexibleSpaceBar(
+                        background: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Row(
+                            children: [
+                              Image.asset(
+                                  'lib/assets/KagaMe.png',
+                                  width: 120.0,
+                                  height: 60.0,
+                                ),
+                              
+                              SizedBox(width: 16.0), // Space between the image and the search bar
+                              Expanded( 
+                                child: Container( // search bar
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(30.0),
+                                    border: Border.all(color: Colors.grey, width: 1.0),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12.0), // padding for elements in search bar 
+                                  child: TextField(
+                                    controller: searchController,
+                                    textAlign: TextAlign.left,
+                                    onSubmitted: (query) {
+                                      if (query.isNotEmpty) {
+                                        context.push('/wardrobe/search/$query');
+                                      }
                                     },
-                                    child: Image.asset(
-                                      'lib/assets/KagaMe.png',
-                                      width: 120.0,
-                                      height: 60.0,
+                                    decoration: InputDecoration(
+                                      hintText: 'Search My Wardrobe',
+                                      hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
+                                      border: InputBorder.none,
+                                      prefixIcon: Icon(Icons.search, color: Colors.grey),
+                                      // suffixIcon: IconButton(
+                                      //     icon: Icon(Icons.filter_list, color: Colors.grey),
+                                      //     onPressed: () {
+                                      //       print('Filter icon tapped');
+                                      //     },
+                                      //   ),
+                                      contentPadding: EdgeInsets.symmetric(vertical: 12.0), // padding for hint text of search bar
                                     ),
                                   ),
-                                  SizedBox(width: 16.0), // Space between the image and the search bar
-                                  Expanded( 
-                                    child: Container( // search bar
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(30.0),
-                                        border: Border.all(color: Colors.grey, width: 1.0),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(horizontal: 12.0), // padding for elements in search bar 
-                                      child: TextField(
-                                        controller: searchController,
-                                        textAlign: TextAlign.left,
-                                        onSubmitted: (query) {
-                                          if (query.isNotEmpty) {
-                                            context.push('/wardrobe/search/$query');
-                                          }
-                                        },
-                                        decoration: InputDecoration(
-                                          hintText: 'Search My Wardrobe',
-                                          hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
-                                          border: InputBorder.none,
-                                          prefixIcon: Icon(Icons.search, color: Colors.grey),
-                                          // suffixIcon: IconButton(
-                                          //     icon: Icon(Icons.filter_list, color: Colors.grey),
-                                          //     onPressed: () {
-                                          //       print('Filter icon tapped');
-                                          //     },
-                                          //   ),
-                                          contentPadding: EdgeInsets.symmetric(vertical: 12.0), // padding for hint text of search bar
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ];
+                },
+                body: RefreshIndicator(
+                  onRefresh: refreshImages,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                      
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              context.go('/wardrobe');
+                            },
+                            child: Icon(Icons.arrow_back),
+                          ),
+
+                          Text(
+                          '${widget.category}',
+                          style: TextStyle(
+                            fontSize: 18,
+                          )
+                          ),
+
+                          SizedBox(width: 12), // padding to make category name centered
+                        ],
+                      ),
+                      
+                      SizedBox(height: 16),
+                    
+                      Expanded(
+                        child: GridView.builder(
+                          physics: AlwaysScrollableScrollPhysics(),
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            crossAxisSpacing: 8.0,
+                            mainAxisSpacing: 8.0,
+                          ),
+                          itemCount: cachedImages.length,
+                          itemBuilder: (context, index) {
+                            return GestureDetector(
+                              onTap: () => context.push('/wardrobe/item/${cachedImages[index]['id']!}'),
+                              child: Column(
+                                children: <Widget>[
+                                  Expanded(
+                                    child: AspectRatio(
+                                      aspectRatio: 1,
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(12.0),
+                                        child: CachedNetworkImage(
+                                          cacheManager: cacheManager,
+                                          imageUrl: cachedImages[index]['url']!,
+                                          errorWidget: (context, url, error) => Icon(Icons.error),
+                                          fit: BoxFit.cover,
                                         ),
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         ),
-                      ];
-                    },
-                    body: RefreshIndicator(
-                      onRefresh: refreshImages,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                        
-                          Expanded(
-                            child: GridView.builder(
-                              physics: AlwaysScrollableScrollPhysics(),
-                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 3,
-                                crossAxisSpacing: 8.0,
-                                mainAxisSpacing: 8.0,
-                              ),
-                              itemCount: cachedImages.length,
-                              itemBuilder: (context, index) {
-                                return GestureDetector(
-                                  onTap: () => context.push('/wardrobe/item/${cachedImages[index]['id']!}'),
-                                  child: Column(
-                                    children: <Widget>[
-                                      Expanded(
-                                        child: AspectRatio(
-                                          aspectRatio: 1,
-                                          child: CachedNetworkImage(
-                                            cacheManager: cacheManager,
-                                            imageUrl: cachedImages[index]['url']!,
-                                            errorWidget: (context, url, error) => Icon(Icons.error),
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ]
                       ),
-                    ),
+                    ]
                   ),
                 ),
-          )
+              ),
+            ),
+      )
     );
   }
 }

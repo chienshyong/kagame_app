@@ -182,7 +182,7 @@ Widget build(BuildContext context) {
                   expandedHeight: 80.0,
                   flexibleSpace: FlexibleSpaceBar(
                     background: Padding(
-                      padding: const EdgeInsets.all(8.0),
+                      padding: const EdgeInsets.all(12.0),
                       child: Row(
                         children: [
                           GestureDetector(
@@ -297,12 +297,16 @@ Widget build(BuildContext context) {
                                       Expanded(
                                         child: AspectRatio(
                                           aspectRatio: 1, // Forces images to be square
-                                          child: CachedNetworkImage(
-                                            cacheManager: cacheManager,
-                                            imageUrl: cachedImages[index]['url']!,
-                                            errorWidget: (context, url, error) =>
-                                                Icon(Icons.error),
-                                            fit: BoxFit.cover,
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(12.0),
+                                            child:
+                                              CachedNetworkImage(
+                                                cacheManager: cacheManager,
+                                                imageUrl: cachedImages[index]['url']!,
+                                                errorWidget: (context, url, error) =>
+                                                    Icon(Icons.error),
+                                                fit: BoxFit.cover,
+                                              ),
                                           ),
                                         ),
                                       ),

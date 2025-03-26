@@ -195,6 +195,7 @@ class _ItemPageState extends State<ItemPage> {
   Widget build(BuildContext context) {   
     return Scaffold(
       appBar: AppBar(
+        scrolledUnderElevation: 0, // to fix changing colour when scrolling
         title: Text(
           isEditMode 
             ? 'Edit: ${_nameFieldController.text}' 

@@ -66,7 +66,9 @@ class _SearchPageState extends State<SearchPage> with RouteAware{
     TextEditingController searchController = TextEditingController();
     
     return Scaffold(
-      appBar: AppBar(title: Text('Search results for "${widget.query}"')),
+      appBar: AppBar(
+        scrolledUnderElevation: 0, // to fix changing colour when scrolling
+        title: Text('Search results for "${widget.query}"')),
       body: SafeArea(
         child: isLoading
             ? Center(child: CircularProgressIndicator())

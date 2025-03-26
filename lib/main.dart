@@ -145,7 +145,20 @@ void main() async {
     ],
     errorBuilder: (context, state) => Scaffold(
       appBar: AppBar(title: Text('Page Not Found')),
-      body: Center(child: Text('The page you are looking for does not exist.')),
+      body: Center(child: 
+        Column(
+          children: [
+            Text('The page you are looking for does not exist.'),
+
+            SizedBox(height: 8),
+
+            TextButton(
+              onPressed: () => context.go('/wardrobe'),
+              child: Text('Back to Wardrobe'),
+            ),
+          ]
+        ),
+      ),
     ),
   );
 
