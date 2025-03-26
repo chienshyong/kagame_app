@@ -259,52 +259,73 @@ Widget build(BuildContext context) {
               
               : Padding( // Images
                 padding: const EdgeInsets.all(8.0),
-                child: 
-                GridView.builder(
-                  physics: AlwaysScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2, // 2 columns
-                    crossAxisSpacing: 8.0,
-                    mainAxisSpacing: 8.0,
-                  ),
-                  itemCount: cachedImages.length, // Dynamic item count
-                  itemBuilder: (context, index) {
-                    return GestureDetector(
-                      onTap: () {
-                        // Navigate to the corresponding category page on tap
-                        context.push(
-                            '/wardrobe/category/${cachedImages[index]['label']!}');
-                      },
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: AspectRatio(
-                              aspectRatio: 1, // Forces images to be square
-                              child: CachedNetworkImage(
-                                cacheManager: cacheManager,
-                                imageUrl: cachedImages[index]['url']!,
-                                errorWidget: (context, url, error) =>
-                                    Icon(Icons.error),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 8.0), // Space between image and text
-                          Text(
-                            cachedImages[index]['label']!,
-                            style: TextStyle(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                child: Column(
+                  children: [
+                    // Header text
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Text(
+                        "Select the item you want to style your outfit around",
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
                       ),
-                    );
-                  },
+                    ),
+
+                    Expanded(
+                      child:
+                        GridView.builder(
+                          physics: AlwaysScrollableScrollPhysics(),
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2, // 2 columns
+                            crossAxisSpacing: 8.0,
+                            mainAxisSpacing: 8.0,
+                          ),
+                          itemCount: cachedImages.length, // Dynamic item count
+                          itemBuilder: (context, index) {
+                            return GestureDetector(
+                              onTap: () {
+                                // Navigate to the corresponding category page on tap
+                                context.push(
+                                    '/wardrobe/category/${cachedImages[index]['label']!}');
+                              },
+
+                              child: 
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 8.0),
+                                    child: Column(
+                                      children: [
+                                      Expanded(
+                                        child: AspectRatio(
+                                          aspectRatio: 1, // Forces images to be square
+                                          child: CachedNetworkImage(
+                                            cacheManager: cacheManager,
+                                            imageUrl: cachedImages[index]['url']!,
+                                            errorWidget: (context, url, error) =>
+                                                Icon(Icons.error),
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(height: 8.0), // Space between image and text
+                                      Text(
+                                        cachedImages[index]['label']!,
+                                        style: TextStyle(
+                                          fontSize: 16.0,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-              ),
             ),
           ),
+        ),
       ),
     );
   }
