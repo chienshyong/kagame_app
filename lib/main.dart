@@ -18,7 +18,8 @@ import 'wardrobe/recommend_page.dart';
 import 'wardrobe/search_page.dart';
 import 'add/add.dart';
 import 'profile/profile.dart';
-import 'shop/shop_page.dart'; 
+import 'shop/shop_page.dart';
+import 'profile/stylequiz.dart';
 
 void main() async {
   //Init firebase for google authentication
@@ -148,6 +149,14 @@ void main() async {
                 pageBuilder: (context, state) => NoTransitionPage(
                   child: ProfilePage(),
                 ),
+                routes: [
+                  GoRoute(
+                    path: 'quiz',
+                    builder: (context, state) {
+                      return QuizPage();
+                    },
+                  ),
+                ],
               ),
             ],
           ),
