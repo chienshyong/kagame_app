@@ -48,7 +48,7 @@ class _LoginPageState extends State<LoginPage> {
                 if (username.isNotEmpty && password.isNotEmpty) {
                   try {
                     await authService.login(username, password);
-                    context.go('/wardrobe');
+                    context.go('/profile');
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(e.toString())),
@@ -91,7 +91,7 @@ class _LoginPageState extends State<LoginPage> {
 
                   await Future.delayed(
                       Duration(milliseconds: 500)); // Optional delay for async
-                  context.go('/wardrobe');
+                  context.go('/profile/quiz');
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text(e.toString())),
@@ -104,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
               onPressed: () async {
                 try {
                   if(await authService.signInWithGoogle()){
-                    context.go('/wardrobe');
+                    context.go('/profile');
                   }
                 } catch (e) {
                   print("Error signing in with Google: $e");
