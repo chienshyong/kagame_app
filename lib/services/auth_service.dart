@@ -53,6 +53,7 @@ Future<void> login(String username, String password) async {
   if (response.statusCode == 200) {
     final responseJson = jsonDecode(response.body);
     await storage.write(key: 'token', value: responseJson['access_token']);
+    await storage.write(key: 'username', value: username);
   } else {
     final responseJson = jsonDecode(response.body);
     final message = responseJson["detail"];
@@ -61,37 +62,19 @@ Future<void> login(String username, String password) async {
   }
 }
 
-
   Future<String?> getToken() async {
     return await storage.read(key: 'token');
   }
 
+  Future<String?> getUsername() async {
+    return await storage.read(key: 'username');
+  }
+
   Future<void> logout() async {
     await storage.delete(key: 'token');
+    await storage.delete(key: 'username');
   }
-
-  Future<String?> getUsername() async {
-    final token = await getToken();
-    if (token == null) {
-      throw Exception('Token not found');
-    }
-
-    final response = await http.get(
-      Uri.parse('$baseUrl/username'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final responseJson = jsonDecode(response.body);
-      String truncated =responseJson['username'].split('@')[0]; 
-      return truncated;
-    } else {
-      throw Exception('Failed to fetch username');
-    }
-  }
-
+  
   //Google sign in
   Future<bool> signInWithGoogle() async {
     // Trigger the authentication flow
@@ -109,6 +92,7 @@ Future<void> login(String username, String password) async {
     // Once signed in, return the UserCredential
     UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
     print("Signed in as ${userCredential.user?.displayName}");
+    await storage.write(key: 'username', value: userCredential.user?.displayName);
 
     //Get Firebase ID Token
     User? user = FirebaseAuth.instance.currentUser;

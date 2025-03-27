@@ -52,7 +52,7 @@ void main() async {
       final isRegisterRoute = state.uri.toString() == '/register';
       
       if (!isLoggedIn && !isLoginRoute && !isRegisterRoute) return '/login';
-      if (isLoggedIn && (isLoginRoute || state.uri.toString() == '/')) return '/wardrobe';
+      return '/wardrobe';
     },
     routes: [
       GoRoute(

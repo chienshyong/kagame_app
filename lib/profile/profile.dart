@@ -20,26 +20,18 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
   final AuthService authService = AuthService();
 
   // Controllers for text fields
-  final TextEditingController _ageController = TextEditingController();
-  final TextEditingController _genderController = TextEditingController();
   final TextEditingController _birthdayController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
-  final TextEditingController _clothingPrefsController = TextEditingController();
-  final TextEditingController _clothingDislikesController = TextEditingController();
 
   // FocusNodes
-  final FocusNode _ageFocusNode = FocusNode();
-  final FocusNode _genderFocusNode = FocusNode();
-  final FocusNode _raceFocusNode = FocusNode();
   final FocusNode _birthdayFocusNode = FocusNode();
   final FocusNode _locationFocusNode = FocusNode();
-  final FocusNode _clothingPrefsFocusNode = FocusNode();
-  final FocusNode _clothingDislikesFocusNode = FocusNode();
 
   // List to store countries
   List<String> countries = [];
 
   // Other state variables
+  String username = "";
   String _styleResult = "Not determined yet";
   bool _isEditing = false;
 
@@ -54,29 +46,15 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
     loadCountriesFile();
   }
 
-  @override
-  void dispose() {
-    // Dispose controllers & focus nodes
-    _ageController.dispose();
-    _genderController.dispose();
-    _birthdayController.dispose();
-    _locationController.dispose();
-    _clothingPrefsController.dispose();
-    _clothingDislikesController.dispose();
-
-    _ageFocusNode.dispose();
-    _genderFocusNode.dispose();
-    _raceFocusNode.dispose();
-    _birthdayFocusNode.dispose();
-    _locationFocusNode.dispose();
-    _clothingPrefsFocusNode.dispose();
-    _clothingDislikesFocusNode.dispose();
-
-    super.dispose();
-  }
-
   // Retrieve profile data from backend
   Future<void> getProfileData() async {
+    final gotten_username = await authService.getUsername();
+    if (gotten_username != Null) {
+      setState(() {
+          username = gotten_username!;
+      });
+    }
+    
     final String baseUrl = authService.baseUrl;
     final token = await authService.getToken();
     try {
@@ -231,20 +209,9 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              FutureBuilder<String?>(
-                future: authService.getUsername(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator();
-                  } else if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
-                    return Text('No user found.');
-                  } else {
-                    return Text(
-                      'Hello, ${snapshot.data}!',
-                      style: TextStyle(fontSize: 30.0, color: Colors.black),
-                    );
-                  }
-                },
+              Text(
+                'Hello, ${username}!',
+                style: TextStyle(fontSize: 30.0, color: Colors.black),
               ),
               Text(
                 "You can tell us as much as you want, but the more we know about you, the better recommendations we can make :)",
@@ -306,6 +273,24 @@ class _ProfilePageState extends State<ProfilePage> with RouteAware {
               Center(
                 child: ElevatedButton(
                   onPressed: () async {
+                    if (_isEditing) {
+                      if (_validateBirthday(_birthdayController.text)) {
+                        await updateProfileData().then((_) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Profile Updated.")),
+                          );
+                          setState(() {
+                            _isEditing = false;
+                          });
+                        });
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Invalid birthday date.")),
+                        );
+                        return;
+                      }
+                    }
+
                     await Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => QuizPage()),
