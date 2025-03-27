@@ -85,7 +85,8 @@ Future<void> login(String username, String password) async {
 
     if (response.statusCode == 200) {
       final responseJson = jsonDecode(response.body);
-      return responseJson['username'];
+      String truncated =responseJson['username'].split('@')[0]; 
+      return truncated;
     } else {
       throw Exception('Failed to fetch username');
     }
