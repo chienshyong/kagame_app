@@ -22,7 +22,7 @@ import 'shop/shop_page.dart';
 import 'profile/stylequiz.dart';
 
 void main() async {
-  //Init firebase for google authentication
+  // Init firebase for google authentication
   WidgetsFlutterBinding.ensureInitialized();
   // Platform-specific Firebase initialization
   if (Platform.isIOS || Platform.isMacOS) {
@@ -46,14 +46,14 @@ void main() async {
     initialLocation: '/login',
     navigatorKey: _rootNavigatorKey,
     redirect: (BuildContext context, GoRouterState state) async {
-    final token = await AuthService().getToken();
-    final isLoggedIn = token != null;
-    final isLoginRoute = state.uri.toString() == '/login';
-
-    if (!isLoggedIn && !isLoginRoute) return '/login';
-    if (isLoggedIn && (isLoginRoute || state.uri.toString() == '/')) return '/wardrobe';
-    return null;
-  },
+      final token = await AuthService().getToken();
+      final isLoggedIn = token != null;
+      final isLoginRoute = state.uri.toString() == '/login';
+      final isRegisterRoute = state.uri.toString() == '/register';
+      
+      if (!isLoggedIn && !isLoginRoute && !isRegisterRoute) return '/login';
+      if (isLoggedIn && (isLoginRoute || state.uri.toString() == '/')) return '/wardrobe';
+    },
     routes: [
       GoRoute(
         path: '/login',
@@ -63,9 +63,11 @@ void main() async {
       ),
 
       GoRoute(
-      path: '/register',
-      builder: (context, state) => RegisterPage(),
-    ),
+        path: '/register',
+        pageBuilder: (context, state) => NoTransitionPage(
+          child: RegisterPage(),
+        ),
+      ),
 
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -172,10 +174,10 @@ void main() async {
 
             SizedBox(height: 8),
 
-            TextButton(
-              onPressed: () => context.go('/wardrobe'),
-              child: Text('Back to Wardrobe'),
-            ),
+            // TextButton(
+            //   onPressed: () => context.go('/wardrobe'),
+            //   child: Text('Back to Wardrobe'),
+            // ),
           ]
         ),
       ),

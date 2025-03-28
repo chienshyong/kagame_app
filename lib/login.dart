@@ -45,21 +45,15 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false, // Remove built-in back button
-          // title: Row(
-          //   mainAxisAlignment: MainAxisAlignment.center,
-          //   children: [
-          //     Image.asset(
-          //       'lib/assets/app_icon.png',
-          //       width: 40,
-          //       height: 40,
-          //     ),
-          //     SizedBox(width: 10),
-          //     Text('Welcome to KagaMe'),
-          //   ],
-          // ),
+        scrolledUnderElevation: 0, // fix bug of appbar changing colour when scrolling down the page
         ),
 
-      body: 
+      body: SizedBox(
+      height: MediaQuery.of(context).size.height,
+      child:
+      
+      SingleChildScrollView(
+        child:
           Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -191,6 +185,8 @@ class _LoginPageState extends State<LoginPage> {
 
             ],
           ),
+        ),
+      ),
       ),
     );
   }

@@ -36,7 +36,7 @@ class _RegisterPageState extends State<RegisterPage> {
         await authService.login(username, password).timeout(Duration(seconds: 3), onTimeout: () {
           throw Exception('Login request timed out');
         });
-        context.go('/wardrobe');
+        context.go('/profile');
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.toString())),
@@ -55,153 +55,144 @@ class _RegisterPageState extends State<RegisterPage> {
       appBar: AppBar(
         automaticallyImplyLeading: false, // Remove built-in back button
         scrolledUnderElevation: 0,
-
-          // title: Row(
-          //   mainAxisAlignment: MainAxisAlignment.center,
-          //   children: [
-          //     Image.asset(
-          //       'lib/assets/app_icon.png',
-          //       width: 40,
-          //       height: 40,
-          //     ),
-          //     SizedBox(width: 10),
-          //     Text('Welcome to KagaMe'),
-          //   ],
-          // ),
         ),
 
-      body: SingleChildScrollView(
+      body: 
+      SizedBox(
+      height: MediaQuery.of(context).size.height,
+      child:
+      SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          children: [
-            SizedBox(height:100),
-            Image.asset(
-                'lib/assets/app_icon.png',
-                width: 96,
-                height: 96,
+            children: [
+              Image.asset(
+                  'lib/assets/app_icon.png',
+                  width: 96,
+                  height: 96,
+                ),
+
+              Text(
+                'KagaMe',
+                style: TextStyle(
+                  fontSize: 24.0,
+                  fontWeight: FontWeight.bold,
+                  )
               ),
 
-            Text(
-              'KagaMe',
-              style: TextStyle(
-                fontSize: 24.0,
-                fontWeight: FontWeight.bold,
-                )
-            ),
+              Text(
+                'Your Personal AI Stylist',
+                style: TextStyle(
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.bold,
+                  )
+              ),
 
-            Text(
-              'Your Personal AI Stylist',
-              style: TextStyle(
-                fontSize: 16.0,
-                fontWeight: FontWeight.bold,
-                )
-            ),
+              SizedBox(height: 64),
+              
+              // Username field
+              TextField(
+                controller: _usernameController,
+                decoration: InputDecoration(labelText: 'Username'),
+              ),
 
-            SizedBox(height: 64),
-            
-            // Username field
-            TextField(
-              controller: _usernameController,
-              decoration: InputDecoration(labelText: 'Username'),
-            ),
+              // Password field
+              TextField(
+                controller: _passwordController,
+                decoration: InputDecoration(labelText: 'Password'),
+                obscureText: true,
+              ),
+              SizedBox(height: 20),
 
-            // Password field
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(labelText: 'Password'),
-              obscureText: true,
-            ),
-            SizedBox(height: 20),
+              // Register button
+              ElevatedButton(
+                onPressed: _register,
+                child: Text('Register Account'),
+              ),
 
-            // Register button
-            ElevatedButton(
-              onPressed: _register,
-              child: Text('Register Account'),
-            ),
-
-            SizedBox(height: 8),
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: Divider(
-                    thickness: 1,
-                    color: Colors.grey,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: Text(
-                    "or",
-                    style: TextStyle(
-                      fontSize: 12,
+              SizedBox(height: 8),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Divider(
+                      thickness: 1,
                       color: Colors.grey,
                     ),
                   ),
-                ),
-                Expanded(
-                  child: Divider(
-                    thickness: 1,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 8),
-
-            // Login with Google button
-            Container(
-              alignment: Alignment.center,
-              child: 
-                ElevatedButton(
-                  onPressed: () async {
-                    try {
-                      if(await authService.signInWithGoogle()){
-                        context.go('/profile/quiz');
-                      }
-                    } catch (e) {
-                      print("Error signing in with Google: $e");
-                    }
-                  },
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset(
-                        'lib/assets/Google_logo.png',
-                        width: 16,
-                        height: 16,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                    child: Text(
+                      "or",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
                       ),
-                      SizedBox(width: 8),
-                      Text('Login with Google'),
-                    ],
-                  ),
-                  
-                  style:
-                    ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white, // Button background color
-                      foregroundColor: Colors.black, // Text color
-                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(50),
-                        side: BorderSide(color: Colors.grey)
-                      )
                     ),
-                ),
-            ),
-
-            // Clickable text for back to login
-            TextButton(
-              onPressed: () {
-                // Navigate to Login Page
-                context.push('/login');
-              },
-              child: Text(
-                'Back to login page',
-                style: TextStyle(decoration: TextDecoration.underline),
+                  ),
+                  Expanded(
+                    child: Divider(
+                      thickness: 1,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+              SizedBox(height: 8),
+
+              // Login with Google button
+              Container(
+                alignment: Alignment.center,
+                child: 
+                  ElevatedButton(
+                    onPressed: () async {
+                      try {
+                        if(await authService.signInWithGoogle()){
+                          context.go('/profile/quiz');
+                        }
+                      } catch (e) {
+                        print("Error signing in with Google: $e");
+                      }
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'lib/assets/Google_logo.png',
+                          width: 16,
+                          height: 16,
+                        ),
+                        SizedBox(width: 8),
+                        Text('Login with Google'),
+                      ],
+                    ),
+                    
+                    style:
+                      ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white, // Button background color
+                        foregroundColor: Colors.black, // Text color
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50),
+                          side: BorderSide(color: Colors.grey)
+                        )
+                      ),
+                  ),
+              ),
+
+              // Clickable text for back to login
+              TextButton(
+                onPressed: () {
+                  // Navigate to Login Page
+                  context.push('/login');
+                },
+                child: Text(
+                  'Back to login page',
+                  style: TextStyle(decoration: TextDecoration.underline),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    );
+      );
   }
 }

@@ -56,6 +56,7 @@ class _MultiImagePickerPageState extends State<MultiImagePickerPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Images uploaded successfully!')),
       );
+
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to upload images: $e')),
@@ -64,6 +65,7 @@ class _MultiImagePickerPageState extends State<MultiImagePickerPage> {
       setState(() {
         _isLoading = false;
         _uploadProgress = 0.0;
+        _images = [];
       });
     }
   }

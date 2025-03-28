@@ -3,7 +3,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 // import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
-import '../shop/product_detail_page.dart'; 
+import '../shop/product_detail_page.dart';
+import 'dart:ui';
 
 class RecommendPage extends StatefulWidget {
   final String id;
@@ -16,6 +17,9 @@ class RecommendPage extends StatefulWidget {
 class _RecommendPageState extends State<RecommendPage> {
   final AuthService authService = AuthService();
   bool isLoading = true;
+
+  // Track items being replaced
+  Set<String> _loadingReplacementIds = {};
 
   // Placeholder while API is called
   Map<String, dynamic> this_item_jsonResponse = {'image_url': 'https://craftsnippets.com/articles_images/placeholder/placeholder.jpg', 'category': '', 'color': '', 'name': ''};
@@ -90,37 +94,55 @@ class _RecommendPageState extends State<RecommendPage> {
     }
   }
 
-  // // Helper method for showing a dialog where user can enter a new prompt to modify search
-  // Future<String?> _showModifySearchDialog(BuildContext context) async {
-  //     TextEditingController _promptController = TextEditingController();
+  Future<void> _fetchReplacementItem({
+    required String previousRecId,
+    required String dislikeReason,
+    required String itemName,
+  }) async {
+    final token = await authService.getToken();
+    final baseUrl = authService.baseUrl;
+    final uri = Uri.parse(
+      '$baseUrl/wardrobe/feedback_recommendation?previous_rec_id=$previousRecId&dislike_reason=${Uri.encodeComponent(dislikeReason)}',
+    );
 
-  //     return showDialog<String>(
-  //       context: context,
-  //       builder: (context) {
-  //         return AlertDialog(
-  //           title: Text('Modify Search'),
-  //           content: TextField(
-  //             controller: _promptController,
-  //             decoration: InputDecoration(
-  //               hintText: 'Enter additional details...',
-  //             ),
-  //           ),
-  //           actions: [
-  //             TextButton(
-  //               onPressed: () => Navigator.pop(context, null), // Cancel action
-  //               child: Text('Cancel'),
-  //             ),
-  //             TextButton(
-  //               onPressed: () {
-  //                 Navigator.pop(context, _promptController.text); // Confirm action
-  //               },
-  //               child: Text('Search'),
-  //             ),
-  //           ],
-  //         );
-  //       },
-  //     );
-  //   }
+    try {
+      setState(() => _loadingReplacementIds.add(previousRecId));
+      
+      final response = await http.get(
+        uri,
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final rec = json.decode(response.body);
+        final formattedRec = {
+          '_id': rec['_id'] ?? '',
+          'image_url': rec['image_url'] ?? '',
+          'name': rec['name'] ?? '',
+          'category': rec['category'] ?? '',
+          'color': rec['color'] ?? '',
+          'clothing_type': rec['clothing_type'] ?? '',
+          'other_tags': rec['other_tags'] ?? [],
+        };
+
+        setState(() {
+          // Find and replace the disliked item
+          final index = recommended.indexWhere(
+            (item) => item['_id'] == previousRecId
+          );
+          
+          if (index != -1) {
+            recommended[index] = formattedRec;
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching replacement: $e");
+    } finally {
+      setState(() => _loadingReplacementIds.remove(previousRecId));
+    }
+  }
+
 
  /// Shows a dialog with checkboxes for disliked aspects.
   Future<String?> _showDislikeDialog(BuildContext context) async {
@@ -169,10 +191,6 @@ class _RecommendPageState extends State<RecommendPage> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context, null),
-                  child: Text('Cancel'),
-                ),
-                TextButton(
                   onPressed: () {
                     Navigator.pop(context, selectedOption);
                   },
@@ -209,19 +227,23 @@ class _RecommendPageState extends State<RecommendPage> {
     String? clothingType,
     String? otherTags,
     String? color,
+    String? id,
   ) async {
     if (clothingLikes.containsKey(itemName)) {
       clothingLikes.remove(itemName);
       updateClothingLikes(itemName!, false);
     }
+
     List<dynamic> feedbackList = [itemCategory, itemName];
     bool isAdded = false;
+
     if (clothingDislikes.containsKey(itemName)) {
       clothingDislikes.remove(itemName);
     } else {
       clothingDislikes[itemName] = true;
       isAdded = true;
       String? feedbackData = await _showDislikeDialog(context);
+
       if (feedbackData == "Type of item") {
         feedbackList.add("Type of item");
         feedbackList.add(clothingType);
@@ -233,7 +255,16 @@ class _RecommendPageState extends State<RecommendPage> {
         feedbackList.add(color);
       }
     }
-    updateClothingDislikes(itemName!, isAdded, feedbackList);
+
+    await updateClothingDislikes(itemName!, isAdded, feedbackList);
+
+    if (clothingDislikes.containsKey(itemName)) {
+    await _fetchReplacementItem(
+      previousRecId: id!,
+      dislikeReason: feedbackList.join(', '),
+      itemName: itemName,
+    );
+  };
   }
 
   Future<void> updateClothingLikes(String itemName, bool isAdded) async {
@@ -321,7 +352,11 @@ List<Widget> _buildGroupedRecommendations() {
             itemCount: grouped[category]!.length,
             itemBuilder: (context, index) {
               final recommendedProduct = grouped[category]![index];
-              return GestureDetector(
+              final isReplacing = _loadingReplacementIds.contains(recommendedProduct['_id']);
+              
+              return Stack(
+                children:[
+              GestureDetector(
                 onTap: () {
                   Navigator.push(
                     context,
@@ -381,6 +416,7 @@ List<Widget> _buildGroupedRecommendations() {
                                     recommendedProduct['clothing_type']?.toString(),
                                     recommendedProduct['other_tags']?.toString(),
                                     recommendedProduct['color']?.toString(),
+                                    recommendedProduct['_id']?.toString(),
                                   );
                                 });
                               },
@@ -391,6 +427,21 @@ List<Widget> _buildGroupedRecommendations() {
                     ],
                   ),
                 ),
+              ),
+
+              if (isReplacing)
+                Positioned.fill(
+                  child: ClipRect(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                      child: Container(
+                        color: Colors.black.withOpacity(0.3),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                    ),
+                  ),
+                ),
+                ],
               );
             },
           ),
