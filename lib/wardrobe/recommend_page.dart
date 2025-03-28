@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'package:flutter_client_sse/constants/sse_request_type_enum.dart';
 import 'package:http/http.dart' as http;
 // import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
 import '../shop/product_detail_page.dart';
+import 'package:flutter_client_sse/flutter_client_sse.dart'; // Use the correct import for flutter_client_sse
+import 'dart:async';
 import 'dart:ui';
 
 class RecommendPage extends StatefulWidget {
@@ -18,6 +21,10 @@ class _RecommendPageState extends State<RecommendPage> {
   final AuthService authService = AuthService();
   bool isLoading = true;
 
+  /// Main product
+  Map<String, dynamic>? productDoc;
+  bool isLoadingProduct = true;
+
   // Track items being replaced
   Set<String> _loadingReplacementIds = {};
 
@@ -31,12 +38,70 @@ class _RecommendPageState extends State<RecommendPage> {
   Map<String?, dynamic> clothingLikes = {};
   Map<String?, dynamic> clothingDislikes = {};
 
+  String? userGenderCode;
+  bool isLoadingGender = true;
+
+  List<Map<String, dynamic>> wardrobeRecommended = [];
+  bool isLoadingWardrobe = true;
+
   @override
   void initState() {
     super.initState();
+    // _fetchProductDoc();
+    getClothingPreferences();
+    _fetchUserGender();
     fetchThisItemFromApi();
     fetchRecommendationsFromApi();
+    fetchWardrobeRecommendations();
   }
+
+  Future<void> _fetchUserGender() async {
+    setState(() => isLoadingGender = true);
+    final token = await authService.getToken();
+    final baseUrl = authService.baseUrl;
+
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/user/gender'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        setState(() {
+          userGenderCode = json.decode(response.body)['gender_code'];
+          isLoadingGender = false;
+        });
+      }
+    } catch (error) {
+      setState(() => isLoadingGender = false);
+    }
+  }
+
+  /// Grab user's saved clothing preferences.
+  Future<void> getClothingPreferences() async {
+    final String baseUrl = authService.baseUrl;
+    final token = await authService.getToken();
+
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/profile/getclothingprefs'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonResponse = json.decode(response.body);
+        setState(() {
+          clothingLikes =
+              Map<String, dynamic>.from(jsonResponse['clothing_likes'] ?? {});
+          clothingDislikes = Map<String, dynamic>.from(
+              jsonResponse['clothing_dislikes'] ?? {});
+        });
+      }
+    } catch (error) {
+      debugPrint('Error fetching clothing preferences: $error');
+    }
+  }
+
 
   Future<void> fetchThisItemFromApi() async {
     final String baseUrl = authService.baseUrl;
@@ -95,6 +160,7 @@ class _RecommendPageState extends State<RecommendPage> {
   }
 
   Future<void> _fetchReplacementItem({
+    required String startingId,
     required String previousRecId,
     required String dislikeReason,
     required String itemName,
@@ -102,8 +168,7 @@ class _RecommendPageState extends State<RecommendPage> {
     final token = await authService.getToken();
     final baseUrl = authService.baseUrl;
     final uri = Uri.parse(
-      '$baseUrl/wardrobe/feedback_recommendation?previous_rec_id=$previousRecId&dislike_reason=${Uri.encodeComponent(dislikeReason)}',
-    );
+      '$baseUrl/catalogue/feedback_recommendation?starting_id=$startingId&previous_rec_id=$previousRecId&dislike_reason=$dislikeReason');
 
     try {
       setState(() => _loadingReplacementIds.add(previousRecId));
@@ -143,6 +208,30 @@ class _RecommendPageState extends State<RecommendPage> {
     }
   }
 
+  Future<void> fetchWardrobeRecommendations() async {
+  final String baseUrl = authService.baseUrl;
+  final token = await authService.getToken();
+  
+  try {
+    final response = await http.get(
+      Uri.parse('$baseUrl/wardrobe/outfit_from_wardrobe?_id=${widget.id}&additional_prompt=${prompt}'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      setState(() {
+        wardrobeRecommended = data.cast<Map<String, dynamic>>();
+        isLoadingWardrobe = false;
+      });
+    } else {
+      throw Exception('Failed to load wardrobe recommendations');
+    }
+  } catch (error) {
+    setState(() => isLoadingWardrobe = false);
+    debugPrint('Wardrobe recommendation error: $error');
+  }
+  }
 
  /// Shows a dialog with checkboxes for disliked aspects.
   Future<String?> _showDislikeDialog(BuildContext context) async {
@@ -259,12 +348,20 @@ class _RecommendPageState extends State<RecommendPage> {
     await updateClothingDislikes(itemName!, isAdded, feedbackList);
 
     if (clothingDislikes.containsKey(itemName)) {
-    await _fetchReplacementItem(
-      previousRecId: id!,
-      dislikeReason: feedbackList.join(', '),
-      itemName: itemName,
-    );
-  };
+      setState(() {
+        _loadingReplacementIds.add(id!);
+      });
+      await _fetchReplacementItem(
+        startingId: productDoc!['id'],
+        previousRecId: id!,
+        dislikeReason: feedbackList.join(', '),
+        itemName: itemName,
+      );
+
+      setState(() {
+        _loadingReplacementIds.remove(id);
+      });
+    };
   }
 
   Future<void> updateClothingLikes(String itemName, bool isAdded) async {
@@ -309,8 +406,8 @@ class _RecommendPageState extends State<RecommendPage> {
     }
   }
 
-
-List<Widget> _buildGroupedRecommendations() {
+// Widget for showing recommendations by category
+List<Widget> _buildGroupedRecommendations(List<Map<String,dynamic>> items) {
   Map<String, List<Map<String, dynamic>>> grouped = {
     "Tops": [],
     "Bottoms": [],
@@ -318,7 +415,7 @@ List<Widget> _buildGroupedRecommendations() {
   };
 
   // Group recommendations by their 'category' field.
-  for (var item in recommended) {
+  for (var item in items) {
     String category = item['category'] ?? 'Others';
     if (grouped.containsKey(category)) {
       grouped[category]!.add(item);
@@ -356,92 +453,92 @@ List<Widget> _buildGroupedRecommendations() {
               
               return Stack(
                 children:[
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ProductDetailPage(
-                        productId: recommendedProduct['_id'],
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProductDetailPage(
+                            productId: recommendedProduct['_id'],
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: 150,
+                      margin: EdgeInsets.all(8.0),
+                      child: Stack(
+                        children: [
+                          // Product image
+                          Image.network(
+                            recommendedProduct['url'] ?? recommendedProduct['image_url'],
+                            width: 150,
+                            height: 150,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Icon(Icons.error),
+                          ),
+
+                          // Overlay Like/Dislike buttons
+                          Positioned(
+                            right: 8,
+                            bottom: 8,
+                            child: Row(
+                              children: [
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.favorite,
+                                    color: clothingLikes.containsKey(recommendedProduct['name'])
+                                        ? Colors.pink
+                                        : Colors.grey[700],
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      toggleLike(recommendedProduct['name']);
+                                    });
+                                  },
+                                ),
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.thumb_down,
+                                    color: clothingDislikes.containsKey(recommendedProduct['name'])
+                                        ? Colors.red
+                                        : Colors.grey[700],
+                                  ),
+                                  onPressed: () async {
+                                    setState(() {
+                                      toggleDislike(
+                                        recommendedProduct['name'],
+                                        recommendedProduct['category'],
+                                        context,
+                                        recommendedProduct['clothing_type']?.toString(),
+                                        recommendedProduct['other_tags']?.toString(),
+                                        recommendedProduct['color']?.toString(),
+                                        recommendedProduct['_id']?.toString(),
+                                      );
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  );
-                },
-                child: Container(
-                  width: 150,
-                  margin: EdgeInsets.all(8.0),
-                  child: Stack(
-                    children: [
-                      // Product image
-                      Image.network(
-                        recommendedProduct['url'] ?? recommendedProduct['image_url'],
-                        width: 150,
-                        height: 150,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Icon(Icons.error),
-                      ),
-                      // Overlay Like/Dislike buttons
-                      Positioned(
-                        right: 8,
-                        bottom: 8,
-                        child: Row(
-                          children: [
-                            
-                            IconButton(
-                              icon: Icon(
-                                Icons.favorite,
-                                color: clothingLikes.containsKey(recommendedProduct['name'])
-                                    ? Colors.pink
-                                    : Colors.grey[700],
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  toggleLike(recommendedProduct['name']);
-                                });
-                              },
-                            ),
-                            IconButton(
-                              icon: Icon(
-                                Icons.thumb_down,
-                                color: clothingDislikes.containsKey(recommendedProduct['name'])
-                                    ? Colors.red
-                                    : Colors.grey[700],
-                              ),
-                              onPressed: () async {
-                                setState(() {
-                                  toggleDislike(
-                                    recommendedProduct['name'],
-                                    recommendedProduct['category'],
-                                    context,
-                                    recommendedProduct['clothing_type']?.toString(),
-                                    recommendedProduct['other_tags']?.toString(),
-                                    recommendedProduct['color']?.toString(),
-                                    recommendedProduct['_id']?.toString(),
-                                  );
-                                });
-                              },
-                            ),
-                          ],
+                  ),
+
+                  if (isReplacing)
+                    Positioned.fill(
+                      child: ClipRect(
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                          child: Container(
+                            color: Colors.black.withOpacity(0.3),
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-
-              if (isReplacing)
-                Positioned.fill(
-                  child: ClipRect(
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-                      child: Container(
-                        color: Colors.black.withOpacity(0.3),
-                        child: Center(child: CircularProgressIndicator()),
-                      ),
                     ),
-                  ),
-                ),
-                ],
+                    ],
               );
             },
           ),
@@ -451,6 +548,35 @@ List<Widget> _buildGroupedRecommendations() {
   }
   return widgets;
 }
+  Widget _buildWardrobeTab() {
+    return isLoadingWardrobe
+        ? Center(child: CircularProgressIndicator())
+        : RefreshIndicator(
+            onRefresh: fetchWardrobeRecommendations,
+            child: wardrobeRecommended.isEmpty
+                ? Center(child: Text('No matching items in your wardrobe'))
+                : ListView(
+                    shrinkWrap: true,
+                    physics: AlwaysScrollableScrollPhysics(),
+                    children: _buildGroupedRecommendations(wardrobeRecommended),
+                  ),
+          );
+  }
+
+  Widget _buildPartnerBrandsTab() {
+    return isLoading
+        ? Center(child: CircularProgressIndicator())
+        : RefreshIndicator(
+            onRefresh: fetchRecommendationsFromApi,
+            child: recommended.isEmpty
+                ? Center(child: Text('No recommendations available'))
+                : ListView(
+                    shrinkWrap: true,
+                    physics: AlwaysScrollableScrollPhysics(),
+                    children: _buildGroupedRecommendations(recommended),
+                  ),
+          );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -459,12 +585,14 @@ List<Widget> _buildGroupedRecommendations() {
       length: 2,
       child: Scaffold(
         backgroundColor: Colors.white,
+
         appBar: AppBar(
           title: Text('Curated Recommendations'),
         ),
+
         body: Column(
           children: [
-            // Header section: Top section with the shirt image and title, plus the Recommend Again button
+            // Header section: Top section with the shirt image and title
             Column(
               children: [
                 Padding(
@@ -496,31 +624,14 @@ List<Widget> _buildGroupedRecommendations() {
               child: TabBarView(
                 children: [
                   // First tab: From Your Wardrobe
-                  SingleChildScrollView(
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text(
-                          'Recommendations from Your Wardrobe Coming Soon',
-                          style: TextStyle(fontSize: 18),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Second tab: From Partner Brands (with recommendations)
+                  _buildWardrobeTab(),
 
-                      isLoading
-                      ? Center(child: CircularProgressIndicator())
-                      : RefreshIndicator(
-                          onRefresh: fetchRecommendationsFromApi,
-                          child: ListView(
-                            children: _buildGroupedRecommendations(),
-                          ),
-                        ),
+                  // Second tab: From Partner Brands (with recommendations)
+                  _buildPartnerBrandsTab(),
                 ],
               ),
             ),
-          ],
+          ]
         ),
       ),
     );
