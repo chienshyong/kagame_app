@@ -50,7 +50,8 @@ flutter:
   uses-material-design: true
   assets:
     - lib/assets/
-    - lib/assets/stylequiz/
+    - lib/assets/stylequiz/female/
+    - lib/assets/stylequiz/male/
     - lib/assets/countries.txt
 
   fonts:
