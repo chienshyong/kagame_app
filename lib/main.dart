@@ -199,34 +199,41 @@ class MyApp extends StatelessWidget {
       routerConfig: router,
       theme: ThemeData(
         primarySwatch: Colors.blue, // Changes primary color
-        scaffoldBackgroundColor: Colors.white, // Background color
+        scaffoldBackgroundColor: Color(0xFFFFF4E9), // Background color
         textTheme: TextTheme(
           bodyMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         appBarTheme: AppBarTheme(
-          backgroundColor: Colors.white,
+          backgroundColor: Color(0xFFFFF4E9),
           titleTextStyle: TextStyle(color: Colors.black, fontSize: 20),
         ),
         navigationBarTheme: NavigationBarThemeData(
-          backgroundColor: Colors.white, // Background color of NavigationBar
+          backgroundColor: Color(0xFFA47864), // Background color of NavigationBar
           elevation: 10, // Adds a shadow effect
-          indicatorColor: Colors.black12, // Selection indicator color
+          indicatorColor: Color(0xFFFFF4E9), // Selection indicator color
           
           iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
             (Set<WidgetState> states) {
               if (states.contains(WidgetState.selected)) {
                 return IconThemeData(
-                  color: Colors.black, // Color when selected
+                  color:  Color(0xFFA47864), // Color when selected
                   size: 30, // Large icon when selected
                 );
               }
               return IconThemeData(
-                color: Colors.grey, // Color when unselected
+                color: Color(0xFFFFF4E9), // Color when unselected
                 size: 24, // Smaller icon when unselected
               );
             },
           ),
-        )
+
+          labelTextStyle: WidgetStateProperty.all(
+                TextStyle(
+                  color: Color(0xFFFFF4E9), // Color for selected label
+                  fontSize: 12,
+                ),
+          ),
+        ),
       ),
     );
   }

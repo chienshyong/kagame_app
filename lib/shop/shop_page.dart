@@ -559,7 +559,7 @@ Future<void> fetchRecommendedProducts() async {
                     return [
                       // SliverAppBar with logo and search bar
                       SliverAppBar(
-                        backgroundColor: Colors.white,
+                        backgroundColor: Color(0xFFFFF4E9),
                         pinned: false,
                         floating: true,
                         snap: true,
@@ -598,7 +598,7 @@ Future<void> fetchRecommendedProducts() async {
                         pinned: true,
                         delegate: _SliverAppBarDelegate(
                           TabBar(
-                            indicatorColor: Theme.of(context).primaryColor,
+                            indicatorColor: Color(0xFFA47864),
                             labelColor: Colors.black,
                             unselectedLabelColor: Colors.grey,
                             indicatorWeight: 3.0,
@@ -712,7 +712,7 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      color: Colors.white,
+      color: Color(0xFFFFF4E9),
       child: tabBar,
     );
   }

@@ -47,13 +47,14 @@ class _RecommendPageState extends State<RecommendPage> {
   @override
   void initState() {
     super.initState();
-    // _fetchProductDoc();
+    
     getClothingPreferences();
     _fetchUserGender();
     fetchThisItemFromApi();
     fetchRecommendationsFromApi();
     fetchWardrobeRecommendations();
   }
+
 
   Future<void> _fetchUserGender() async {
     setState(() => isLoadingGender = true);
@@ -214,7 +215,7 @@ class _RecommendPageState extends State<RecommendPage> {
   
   try {
     final response = await http.get(
-      Uri.parse('$baseUrl/wardrobe/outfit_from_wardrobe?_id=${widget.id}&additional_prompt=${prompt}'),
+      Uri.parse('$baseUrl/wardrobe/outfit_from_wardrobe?starting_id=${widget.id}&additional_prompt=${prompt}'),
       headers: {'Authorization': 'Bearer $token'},
     );
 
@@ -352,9 +353,9 @@ class _RecommendPageState extends State<RecommendPage> {
         _loadingReplacementIds.add(id!);
       });
       await _fetchReplacementItem(
-        startingId: productDoc!['id'],
-        previousRecId: id!,
-        dislikeReason: feedbackList.join(', '),
+        startingId: id!,
+        previousRecId: id,
+        dislikeReason: feedbackList.toString(),
         itemName: itemName,
       );
 
@@ -584,54 +585,58 @@ List<Widget> _buildGroupedRecommendations(List<Map<String,dynamic>> items) {
       initialIndex: 1, // Automatically select the second tab ("From Partner Brands")
       length: 2,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Color(0xFFFFF4E9),
 
         appBar: AppBar(
           title: Text('Curated Recommendations'),
         ),
 
-        body: Column(
-          children: [
-            // Header section: Top section with the shirt image and title
-            Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.network(
-                        this_item_jsonResponse['image_url'],
-                        width: 200,
-                        height: 150,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            // Tab bar: Displays two tabs, separate from the header section
-            TabBar(
-              labelColor: Colors.black,
-              indicatorColor: Colors.blue,
-              tabs: [
-                Tab(text: 'From Your Wardrobe'),
-                Tab(text: 'From Partner Brands'),
-              ],
-            ),
-            // Expanded TabBarView: Holds the content for each tab
-            Expanded(
-              child: TabBarView(
+        body: Container(
+          color: Color(0xFFFFF4E9),
+          child:
+          Column(
+            children: [
+              // Header section: Top section with the shirt image and title
+              Column(
                 children: [
-                  // First tab: From Your Wardrobe
-                  _buildWardrobeTab(),
-
-                  // Second tab: From Partner Brands (with recommendations)
-                  _buildPartnerBrandsTab(),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.network(
+                          this_item_jsonResponse['image_url'],
+                          width: 200,
+                          height: 150,
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-            ),
-          ]
+              // Tab bar: Displays two tabs, separate from the header section
+              TabBar(
+                labelColor: Colors.black,
+                indicatorColor: Color(0xFFA47864),
+                tabs: [
+                  Tab(text: 'From Your Wardrobe'),
+                  Tab(text: 'From Partner Brands'),
+                ],
+              ),
+              // Expanded TabBarView: Holds the content for each tab
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    // First tab: From Your Wardrobe
+                    _buildWardrobeTab(),
+
+                    // Second tab: From Partner Brands (with recommendations)
+                    _buildPartnerBrandsTab(),
+                  ],
+                ),
+              ),
+            ]
+          ),
         ),
       ),
     );

@@ -276,7 +276,7 @@ class _ItemPageState extends State<ItemPage> {
                       Text('StyleMe'),
                       SizedBox(width: 8),
                       Image.asset(
-                        'lib/assets/shine.png',
+                        'lib/assets/shine_white.png',
                         width: 16,
                         height: 16,
                       ),
@@ -285,8 +285,8 @@ class _ItemPageState extends State<ItemPage> {
                   
                   style:
                     ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue[100], // Button background color
-                      foregroundColor: Colors.black, // Text color
+                      backgroundColor: Color(0xFF5C6B73), // Button background color
+                      foregroundColor: Color(0xFFF9F9F9), // Text color
                       elevation: 5,
                       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     ),
@@ -535,8 +535,14 @@ class _Chip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Chip(
+      backgroundColor: Color(0xFFA47864),
       labelPadding: const EdgeInsets.only(left: 8.0),
-      label: Text(label),
+      label: Text(
+        label,
+        style: const TextStyle(
+          color: Color(0xFFFFF4E9)
+          )
+        ),
       deleteIcon: const Icon(
         Icons.close,
         size: 18,

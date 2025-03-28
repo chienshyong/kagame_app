@@ -77,7 +77,7 @@ class _SearchPageState extends State<SearchPage> with RouteAware{
                     (BuildContext context, bool innerBoxIsScrolled) {
                   return [
                     SliverAppBar(
-                      backgroundColor: Colors.white,
+                      backgroundColor: Color(0xFFFFF4E9),
                       pinned: false,
                       floating: true,
                       snap: true,
