@@ -17,6 +17,86 @@ class ProductDetailPage extends StatefulWidget {
   _ProductDetailPageState createState() => _ProductDetailPageState();
 }
 
+  // Add this class in your file, outside of any existing classes
+class StylePaginationHeader extends StatelessWidget {
+  final String title;
+  final int currentIndex;
+  final int totalStyles;
+  final VoidCallback onPrevious;
+  final VoidCallback onNext;
+  final bool isLoading;
+
+  const StylePaginationHeader({
+    Key? key,
+    required this.title,
+    required this.currentIndex,
+    required this.totalStyles,
+    required this.onPrevious,
+    required this.onNext,
+    this.isLoading = false,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    // Don't show pagination controls if there are no styles
+    final bool showControls = totalStyles > 0 && !isLoading;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 0.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          if (showControls) 
+            Row(
+              children: [
+                // Previous button
+                IconButton(
+                  icon: Icon(Icons.chevron_left),
+                  onPressed: currentIndex > 0 ? onPrevious : null,
+                  color: currentIndex > 0 ? Theme.of(context).primaryColor : Colors.grey,
+                  padding: EdgeInsets.zero,
+                  constraints: BoxConstraints(minWidth: 24, minHeight: 5),
+                  iconSize: 24,
+                ),
+                
+                // Page indicator (e.g. "1/3")
+                Text(
+                  "${currentIndex + 1}/$totalStyles",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                
+                // Next button
+                IconButton(
+                  icon: Icon(Icons.chevron_right),
+                  onPressed: currentIndex < totalStyles - 1 ? onNext : null,
+                  color: currentIndex < totalStyles - 1 ? Theme.of(context).primaryColor : Colors.grey,
+                  padding: EdgeInsets.zero,
+                  constraints: BoxConstraints(minWidth: 24, minHeight: 24),
+                  iconSize: 24,
+                ),
+              ],
+            ),
+          if (isLoading)
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ProductDetailPageState extends State<ProductDetailPage> {
   final AuthService authService = AuthService();
 
@@ -43,6 +123,26 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   /// User's gender code (M, F, or null)
   String? userGenderCode;
   bool isLoadingGender = true;
+
+  // Add these variables in the _ProductDetailPageState class
+int _currentStyleIndex = 0; // Track which style is currently shown
+
+// Methods to handle pagination
+void _nextStyle() {
+  setState(() {
+    if (_currentStyleIndex < recommendedOutfits.length - 1) {
+      _currentStyleIndex++;
+    }
+  });
+}
+
+void _previousStyle() {
+  setState(() {
+    if (_currentStyleIndex > 0) {
+      _currentStyleIndex--;
+    }
+  });
+}
 
   @override
   void dispose() {
@@ -250,9 +350,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       setState(() => isLoadingSimilar = false);
     }
   }
-
-  
-  // ... [other methods remain unchanged]
 
   Future<void> fetchRecommendedOutfits() async {
     if (productDoc == null) return;
@@ -728,7 +825,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       );
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     if (isLoadingProduct) {
@@ -888,7 +985,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           }).toList()
                         : [],
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: 4),
 
                   // Similar Items
                   Text(
@@ -901,10 +998,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ? buildSimilarItems()
                           : Text('No similar items found')),
                   // Recommended Outfits
-                  Text(
-                    'Recommended Outfits',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
                   buildRecommendedOutfitsSection(),
                 ],
               ),
@@ -1163,243 +1256,261 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
-  Widget buildRecommendedOutfitsSection() {
-    final mainCategory = productDoc?['category']?.toLowerCase() ?? '';
-    final mainItemId = productDoc?['id'] ?? '';
+Widget buildRecommendedOutfitsSection() {
+  final mainCategory = productDoc?['category']?.toLowerCase() ?? '';
+  final mainItemId = productDoc?['id'] ?? '';
 
-    try {
-      // First, build widgets for styles that have loaded outfits
-      List<Widget> loadedOutfitWidgets = recommendedOutfits.where((style) {
-        final styleOutfits = style['style_outfits'] as List<dynamic>? ?? [];
-        return styleOutfits.isNotEmpty; // Only include styles with outfits
-      }).map<Widget>((style) {
-        final styleName = style['style_name'] ?? '';
-        final styleOutfits = style['style_outfits'] as List<dynamic>? ?? [];
-
-        // Collect all items across all base recommendations
-        List<dynamic> allItems = [];
-        for (final outfit in styleOutfits) {
-          // Get top_items or fallback to empty list
-          final topItems = outfit['top_items'] as List<dynamic>? ?? [];
-          if (topItems.isNotEmpty) {
-            allItems.addAll(topItems);
-          }
-
-          // Check for bottom_items if they exist
-          final bottomItems = outfit['bottom_items'] as List<dynamic>? ?? [];
-          if (bottomItems.isNotEmpty) {
-            allItems.addAll(bottomItems);
-          }
-
-          // Check for shoe_items if they exist
-          final shoeItems = outfit['shoe_items'] as List<dynamic>? ?? [];
-          if (shoeItems.isNotEmpty) {
-            allItems.addAll(shoeItems);
-          }
-
-          // Check for jacket_items if they exist
-          final jacketItems = outfit['jacket_items'] as List<dynamic>? ?? [];
-          if (jacketItems.isNotEmpty) {
-            allItems.addAll(jacketItems);
-          }
-
-          // Check for accessories_items if they exist
-          final accessoryItems =
-              outfit['accessory_items'] as List<dynamic>? ?? [];
-          if (accessoryItems.isNotEmpty) {
-            allItems.addAll(accessoryItems);
-          }
-
-          // Check for dress_items if they exist
-          final dressItems = outfit['dress_items'] as List<dynamic>? ?? [];
-          if (dressItems.isNotEmpty) {
-            allItems.addAll(dressItems);
-          }
-        }
-
-        // Categorize items into all six categories
-        List<dynamic> tops = [];
-        List<dynamic> bottoms = [];
-        List<dynamic> dresses = [];
-        List<dynamic> shoes = [];
-        List<dynamic> jackets = [];
-        List<dynamic> accessories = [];
-
-        for (final item in allItems) {
-          final category = item['category']?.toLowerCase() ?? '';
-          switch (category) {
-            case 'tops':
-              tops.add(item);
-            case 'bottoms':
-              bottoms.add(item);
-            case 'dresses':
-              dresses.add(item);
-            case 'shoes':
-              shoes.add(item);
-            case 'jackets':
-              jackets.add(item);
-            case 'accessories':
-              accessories.add(item);
-          }
-        }
-
-        // Add main item to its category
-        switch (mainCategory) {
-          case 'tops':
-            tops.insert(0, productDoc!);
-          case 'bottoms':
-            bottoms.insert(0, productDoc!);
-          case 'dresses':
-            dresses.insert(0, productDoc!);
-          case 'shoes':
-            shoes.insert(0, productDoc!);
-          case 'jackets':
-            jackets.insert(0, productDoc!);
-          case 'accessories':
-            accessories.insert(0, productDoc!);
-        }
-
-        // Determine carousel configurations based on main category
-        List<Map<String, dynamic>> carouselConfigs = [];
-        switch (mainCategory) {
-          case 'dresses':
-            carouselConfigs = [
-              {'category': 'Jackets', 'items': jackets},
-              {'category': 'Shoes', 'items': shoes},
-              {'category': 'Accessories', 'items': accessories},
-            ];
-          case 'tops':
-            carouselConfigs = [
-              {'category': 'Jackets', 'items': jackets},
-              {'category': 'Bottoms', 'items': bottoms},
-              {'category': 'Shoes', 'items': shoes},
-              {'category': 'Accessories', 'items': accessories},
-            ];
-            carouselConfigs
-                .removeWhere((config) => config['category'] == 'Dresses');
-          case 'shoes':
-            carouselConfigs = [
-              {'category': 'Tops', 'items': tops},
-              {'category': 'Bottoms', 'items': bottoms},
-              {'category': 'Dresses', 'items': dresses},
-              {'category': 'Jackets', 'items': jackets},
-              {'category': 'Accessories', 'items': accessories},
-            ];
-            carouselConfigs
-                .removeWhere((config) => config['category'] == 'Shoes');
-          case 'accessories':
-            carouselConfigs = [
-              {'category': 'Tops', 'items': tops},
-              {'category': 'Bottoms', 'items': bottoms},
-              {'category': 'Dresses', 'items': dresses},
-              {'category': 'Shoes', 'items': shoes},
-              {'category': 'Jackets', 'items': jackets},
-              {'category': 'Accessories', 'items': accessories},
-            ];
-          case 'jackets':
-            carouselConfigs = [
-              {'category': 'Tops', 'items': tops},
-              {'category': 'Bottoms', 'items': bottoms},
-              {'category': 'Dresses', 'items': dresses},
-              {'category': 'Shoes', 'items': shoes},
-              {'category': 'Accessories', 'items': accessories},
-            ];
-            carouselConfigs
-                .removeWhere((config) => config['category'] == 'Jackets');
-          case 'bottoms':
-            carouselConfigs = [
-              {'category': 'Tops', 'items': tops},
-              {'category': 'Shoes', 'items': shoes},
-              {'category': 'Jackets', 'items': jackets},
-              {'category': 'Accessories', 'items': accessories},
-            ];
-            carouselConfigs
-                .removeWhere((config) => config['category'] == 'Bottoms');
-          default:
-            // For other categories, display all except main category
-            carouselConfigs = [
-              {'category': 'Tops', 'items': tops},
-              {'category': 'Bottoms', 'items': bottoms},
-              {'category': 'Dresses', 'items': dresses},
-              {'category': 'Shoes', 'items': shoes},
-              {'category': 'Jackets', 'items': jackets},
-              {'category': 'Accessories', 'items': accessories},
-            ];
-            carouselConfigs.removeWhere(
-                (config) => config['category'].toLowerCase() == mainCategory);
-            break;
-        }
-
-        // Filter out carousels with empty items
-        carouselConfigs
-            .retainWhere((config) => (config['items'] as List).isNotEmpty);
-
-        // Return compact column layout with minimal padding/margins
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Style name with minimal top margin
-            Padding(
-              padding: const EdgeInsets.only(bottom: 0, top: 16),
-              child: Text(
-                styleName,
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-            ),
-            // Compact spacing
-            ...carouselConfigs.map((config) {
-              return _buildCategoryCarousel(
-                config['category'],
-                config['items'] as List<dynamic>,
-                mainItemId,
-              );
-            }).toList(),
-          ],
-        );
-      }).toList();
-
-      // Add skeleton loaders if still loading (ONLY after all loaded outfits)
-      List<Widget> skeletonWidgets = [];
-      if (isLoadingOutfits) {
-        // Show a fixed number of skeleton loaders (3 feels natural)
-        // You can adjust this number based on how many styles you expect
-        int skeletonCount = 3;
-
-        // Optional: reduce the number of skeletons as real content loads
-        // skeletonCount = skeletonCount - loadedOutfitWidgets.length;
-        // skeletonCount = skeletonCount > 0 ? skeletonCount : 0;
-
-        for (int i = 0; i < skeletonCount; i++) {
-          skeletonWidgets.add(_buildStyleSkeleton("Loading Style..."));
-        }
-      }
-
+  try {
+    // Filter recommendedOutfits to only include styles with outfits
+    final validOutfitStyles = recommendedOutfits.where((style) {
+      final styleOutfits = style['style_outfits'] as List<dynamic>? ?? [];
+      return styleOutfits.isNotEmpty;
+    }).toList();
+    
+    // Determine the total number of valid styles
+    final int totalStyles = validOutfitStyles.length;
+    
+    // Ensure _currentStyleIndex is valid
+    if (_currentStyleIndex >= totalStyles && totalStyles > 0) {
+      _currentStyleIndex = totalStyles - 1;
+    }
+    
+    // Create the style pagination header
+    final paginationHeader = StylePaginationHeader(
+      title: 'Recommended Outfits',
+      currentIndex: _currentStyleIndex,
+      totalStyles: totalStyles,
+      onPrevious: _previousStyle,
+      onNext: _nextStyle,
+      isLoading: isLoadingOutfits,
+    );
+    
+    // If there are no styles yet, or we're still loading initial data
+    if (totalStyles == 0) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // First show all loaded outfit styles
-          ...loadedOutfitWidgets,
-          // Then show skeletons below (if any)
-          ...skeletonWidgets,
-        ],
-      );
-    } catch (e) {
-      debugPrint('Error building recommended outfits: $e');
-      return Column(
-        children: [
-          Text('Error loading outfit recommendations'),
-          Text(e.toString(), style: TextStyle(fontSize: 12, color: Colors.red)),
-          ElevatedButton(
-            onPressed: () {
-              fetchRecommendedOutfits();
-            },
-            child: Text('Try Again'),
-          ),
+          paginationHeader,
+          // Show appropriate loading UI or empty state
+          if (isLoadingOutfits)
+            _buildStyleSkeleton("Loading Style...")
+          else
+            Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: Text(
+                'No outfit recommendations available yet',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 16,
+                ),
+              ),
+            ),
         ],
       );
     }
+    
+    // Get the current style to display
+    final currentStyle = validOutfitStyles[_currentStyleIndex];
+    final styleName = currentStyle['style_name'] ?? '';
+    final styleOutfits = currentStyle['style_outfits'] as List<dynamic>? ?? [];
+    
+    // Collect all items across all base recommendations for the current style
+    List<dynamic> allItems = [];
+    for (final outfit in styleOutfits) {
+      // Process all item categories
+      final categories = [
+        'top_items', 'bottom_items', 'shoe_items', 
+        'jacket_items', 'accessory_items', 'dress_items'
+      ];
+      
+      for (final category in categories) {
+        final items = outfit[category] as List<dynamic>? ?? [];
+        if (items.isNotEmpty) {
+          allItems.addAll(items);
+        }
+      }
+    }
+    
+    // Categorize items into all six categories
+    List<dynamic> tops = [];
+    List<dynamic> bottoms = [];
+    List<dynamic> dresses = [];
+    List<dynamic> shoes = [];
+    List<dynamic> jackets = [];
+    List<dynamic> accessories = [];
+    
+    for (final item in allItems) {
+      final category = item['category']?.toLowerCase() ?? '';
+      switch (category) {
+        case 'tops':
+          tops.add(item);
+          break;
+        case 'bottoms':
+          bottoms.add(item);
+          break;
+        case 'dresses':
+          dresses.add(item);
+          break;
+        case 'shoes':
+          shoes.add(item);
+          break;
+        case 'jackets':
+          jackets.add(item);
+          break;
+        case 'accessories':
+          accessories.add(item);
+          break;
+      }
+    }
+    
+    // Add main item to its category
+    switch (mainCategory) {
+      case 'tops':
+        tops.insert(0, productDoc!);
+        break;
+      case 'bottoms':
+        bottoms.insert(0, productDoc!);
+        break;
+      case 'dresses':
+        dresses.insert(0, productDoc!);
+        break;
+      case 'shoes':
+        shoes.insert(0, productDoc!);
+        break;
+      case 'jackets':
+        jackets.insert(0, productDoc!);
+        break;
+      case 'accessories':
+        accessories.insert(0, productDoc!);
+        break;
+    }
+    
+    // Determine carousel configurations based on main category
+    List<Map<String, dynamic>> carouselConfigs = [];
+    switch (mainCategory) {
+      case 'dresses':
+        carouselConfigs = [
+          {'category': 'Jackets', 'items': jackets},
+          {'category': 'Shoes', 'items': shoes},
+          {'category': 'Accessories', 'items': accessories},
+        ];
+        break;
+      case 'tops':
+        carouselConfigs = [
+          {'category': 'Jackets', 'items': jackets},
+          {'category': 'Bottoms', 'items': bottoms},
+          {'category': 'Shoes', 'items': shoes},
+          {'category': 'Accessories', 'items': accessories},
+        ];
+        carouselConfigs.removeWhere((config) => config['category'] == 'Dresses');
+        break;
+      case 'shoes':
+        carouselConfigs = [
+          {'category': 'Tops', 'items': tops},
+          {'category': 'Bottoms', 'items': bottoms},
+          {'category': 'Dresses', 'items': dresses},
+          {'category': 'Jackets', 'items': jackets},
+          {'category': 'Accessories', 'items': accessories},
+        ];
+        carouselConfigs.removeWhere((config) => config['category'] == 'Shoes');
+        break;
+      case 'accessories':
+        carouselConfigs = [
+          {'category': 'Tops', 'items': tops},
+          {'category': 'Bottoms', 'items': bottoms},
+          {'category': 'Dresses', 'items': dresses},
+          {'category': 'Shoes', 'items': shoes},
+          {'category': 'Jackets', 'items': jackets},
+          {'category': 'Accessories', 'items': accessories},
+        ];
+        break;
+      case 'jackets':
+        carouselConfigs = [
+          {'category': 'Tops', 'items': tops},
+          {'category': 'Bottoms', 'items': bottoms},
+          {'category': 'Dresses', 'items': dresses},
+          {'category': 'Shoes', 'items': shoes},
+          {'category': 'Accessories', 'items': accessories},
+        ];
+        carouselConfigs.removeWhere((config) => config['category'] == 'Jackets');
+        break;
+      case 'bottoms':
+        carouselConfigs = [
+          {'category': 'Tops', 'items': tops},
+          {'category': 'Shoes', 'items': shoes},
+          {'category': 'Jackets', 'items': jackets},
+          {'category': 'Accessories', 'items': accessories},
+        ];
+        carouselConfigs.removeWhere((config) => config['category'] == 'Bottoms');
+        break;
+      default:
+        // For other categories, display all except main category
+        carouselConfigs = [
+          {'category': 'Tops', 'items': tops},
+          {'category': 'Bottoms', 'items': bottoms},
+          {'category': 'Dresses', 'items': dresses},
+          {'category': 'Shoes', 'items': shoes},
+          {'category': 'Jackets', 'items': jackets},
+          {'category': 'Accessories', 'items': accessories},
+        ];
+        carouselConfigs.removeWhere(
+            (config) => config['category'].toLowerCase() == mainCategory);
+        break;
+    }
+    
+    // Filter out carousels with empty items
+    carouselConfigs.retainWhere((config) => (config['items'] as List).isNotEmpty);
+    
+    // Return the styled layout with the pagination header at the top
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Style pagination header with controls
+        paginationHeader,
+        
+        // Style name
+        Padding(
+          padding: const EdgeInsets.only(bottom: 0.0),
+          child: Text(
+            styleName,
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+        
+        // Display each category carousel for the current style
+        ...carouselConfigs.map((config) {
+          return _buildCategoryCarousel(
+            config['category'],
+            config['items'] as List<dynamic>,
+            mainItemId,
+          );
+        }).toList(),
+      ],
+    );
+  } catch (e) {
+    debugPrint('Error building recommended outfits: $e');
+    return Column(
+      children: [
+        StylePaginationHeader(
+          title: 'Recommended Outfits',
+          currentIndex: 0,
+          totalStyles: 0,
+          onPrevious: _previousStyle,
+          onNext: _nextStyle,
+          isLoading: false,
+        ),
+        Text('Error loading outfit recommendations'),
+        Text(e.toString(), style: TextStyle(fontSize: 12, color: Colors.red)),
+        ElevatedButton(
+          onPressed: () {
+            fetchRecommendedOutfits();
+          },
+          child: Text('Try Again'),
+        ),
+      ],
+    );
   }
-
+}
   Widget buildOutfitCard(dynamic outfit) {
     final styleName = outfit['style'];
     final outfitName = outfit['name'];
