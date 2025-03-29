@@ -449,30 +449,31 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   void toggleDislike(
-    String? itemName,
-    String? itemCategory,
-    BuildContext context,
-    String? clothingType,
-    String? otherTags,
-    String? color,
-    String? id,
-  ) async {
-    // If user had liked it, remove the like
+      String? itemName,
+      String? itemCategory,
+      BuildContext context,
+      String? clothingType,
+      String? otherTags,
+      String? color,
+      String? id,
+      ) async {
     if (clothingLikes.containsKey(itemName)) {
       clothingLikes.remove(itemName);
       updateClothingLikes(itemName!, false);
     }
 
-    List<dynamic> feedbackList = [itemCategory, itemName];
-    bool isAdded = false;
     if (clothingDislikes.containsKey(itemName)) {
-      // Undo the dislike
       clothingDislikes.remove(itemName);
+      await updateClothingDislikes(itemName!, false, []);
     } else {
-      // Mark as disliked, show feedback form
-      clothingDislikes[itemName] = true;
-      isAdded = true;
       String? feedbackData = await _feedbackFormBuilder(context);
+
+      if (feedbackData == null) {
+        debugPrint('Feedback form canceled; not triggering dislike.');
+        return;
+      }
+
+      List<dynamic> feedbackList = [itemCategory, itemName];
       if (feedbackData == "Type of item") {
         feedbackList.add("Type of item");
         feedbackList.add(clothingType);
@@ -483,24 +484,26 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         feedbackList.add("Colour");
         feedbackList.add(color);
       }
-    }
-    await updateClothingDislikes(itemName!, isAdded, feedbackList);
 
-    if (clothingDislikes.containsKey(itemName)) {
-      setState(() {
-        _loadingReplacementIds.add(id!);
-      });
+      clothingDislikes[itemName] = true;
+      await updateClothingDislikes(itemName!, true, feedbackList);
 
-      await _fetchReplacementItem(
-        startingId: productDoc!['id'],
-        previousRecId: id!,
-        dislikeReason: feedbackList.toString(),
-        itemName: itemName,
-      );
+      if (clothingDislikes.containsKey(itemName)) {
+        setState(() {
+          _loadingReplacementIds.add(id!);
+        });
 
-      setState(() {
-        _loadingReplacementIds.remove(id);
-      });
+        await _fetchReplacementItem(
+          startingId: productDoc!['id'],
+          previousRecId: id!,
+          dislikeReason: feedbackList.toString(),
+          itemName: itemName,
+        );
+
+        setState(() {
+          _loadingReplacementIds.remove(id);
+        });
+      }
     }
   }
 
