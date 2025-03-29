@@ -22,7 +22,7 @@ import 'shop/shop_page.dart';
 import 'profile/stylequiz.dart';
 
 void main() async {
-  //Init firebase for google authentication
+  // Init firebase for google authentication
   WidgetsFlutterBinding.ensureInitialized();
   // Platform-specific Firebase initialization
   if (Platform.isIOS || Platform.isMacOS) {
@@ -46,14 +46,16 @@ void main() async {
     initialLocation: '/login',
     navigatorKey: _rootNavigatorKey,
     redirect: (BuildContext context, GoRouterState state) async {
-    final token = await AuthService().getToken();
-    final isLoggedIn = token != null;
-    final isLoginRoute = state.uri.toString() == '/login';
+      final token = await AuthService().getToken();
+      final isLoggedIn = token != null;
+      final isLoginRoute = state.uri.toString() == '/login';
+      final isRegisterRoute = state.uri.toString() == '/register';
+      
+      if (!isLoggedIn && !isLoginRoute && !isRegisterRoute) return '/login';
+      if (isLoggedIn && (isLoginRoute || state.uri.toString() == '/')) return '/wardrobe';
 
-    if (!isLoggedIn && !isLoginRoute) return '/login';
-    if (isLoggedIn && (isLoginRoute || state.uri.toString() == '/')) return '/wardrobe';
-    return null;
-  },
+      return null;
+    },
     routes: [
       GoRoute(
         path: '/login',
@@ -63,9 +65,11 @@ void main() async {
       ),
 
       GoRoute(
-      path: '/register',
-      builder: (context, state) => RegisterPage(),
-    ),
+        path: '/register',
+        pageBuilder: (context, state) => NoTransitionPage(
+          child: RegisterPage(),
+        ),
+      ),
 
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -172,10 +176,10 @@ void main() async {
 
             SizedBox(height: 8),
 
-            TextButton(
-              onPressed: () => context.go('/wardrobe'),
-              child: Text('Back to Wardrobe'),
-            ),
+            // TextButton(
+            //   onPressed: () => context.go('/wardrobe'),
+            //   child: Text('Back to Wardrobe'),
+            // ),
           ]
         ),
       ),
@@ -195,34 +199,41 @@ class MyApp extends StatelessWidget {
       routerConfig: router,
       theme: ThemeData(
         primarySwatch: Colors.blue, // Changes primary color
-        scaffoldBackgroundColor: Colors.white, // Background color
+        scaffoldBackgroundColor: Color(0xFFFFF4E9), // Background color
         textTheme: TextTheme(
           bodyMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         appBarTheme: AppBarTheme(
-          backgroundColor: Colors.white,
+          backgroundColor: Color(0xFFFFF4E9),
           titleTextStyle: TextStyle(color: Colors.black, fontSize: 20),
         ),
         navigationBarTheme: NavigationBarThemeData(
-          backgroundColor: Colors.white, // Background color of NavigationBar
+          backgroundColor: Color(0xFFA47864), // Background color of NavigationBar
           elevation: 10, // Adds a shadow effect
-          indicatorColor: Colors.black12, // Selection indicator color
+          indicatorColor: Color(0xFFFFF4E9), // Selection indicator color
           
           iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
             (Set<WidgetState> states) {
               if (states.contains(WidgetState.selected)) {
                 return IconThemeData(
-                  color: Colors.black, // Color when selected
+                  color:  Color(0xFFA47864), // Color when selected
                   size: 30, // Large icon when selected
                 );
               }
               return IconThemeData(
-                color: Colors.grey, // Color when unselected
+                color: Color(0xFFFFF4E9), // Color when unselected
                 size: 24, // Smaller icon when unselected
               );
             },
           ),
-        )
+
+          labelTextStyle: WidgetStateProperty.all(
+                TextStyle(
+                  color: Color(0xFFFFF4E9), // Color for selected label
+                  fontSize: 12,
+                ),
+          ),
+        ),
       ),
     );
   }

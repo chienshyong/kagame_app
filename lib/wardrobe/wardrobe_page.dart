@@ -130,6 +130,7 @@ class _WardrobePageState extends State<WardrobePage> with RouteAware{
       }
       setState(() {
         isFetching = false;
+        isLoading = false;
       });
     } catch (error) {
       print('Error fetching images: $error');
@@ -175,7 +176,7 @@ Widget build(BuildContext context) {
                 (BuildContext context, bool innerBoxIsScrolled) {
               return [
                 SliverAppBar(
-                  backgroundColor: Colors.white,
+                  backgroundColor: Color(0xFFFFF4E9),
                   pinned: false,
                   floating: true,
                   snap: true,
@@ -249,14 +250,15 @@ Widget build(BuildContext context) {
             body: RefreshIndicator(
               onRefresh: refreshImages,
               child: cachedImages.isEmpty
-                ? Center(
+                ? SingleChildScrollView(  // Wrap with SingleChildScrollView
+                  child: Center(
                     child: Text(
                       "Your wardrobe is empty :( \n Add clothes to your wardrobe to get outfit recommendations!",
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                     ),
-                  ) 
-              
+                  ),
+                )
               : Padding( // Images
                 padding: const EdgeInsets.all(8.0),
                 child: Column(

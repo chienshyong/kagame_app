@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
@@ -744,7 +743,7 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
                     return [
                       // SliverAppBar with logo and search bar
                       SliverAppBar(
-                        backgroundColor: Colors.white,
+                        backgroundColor: Color(0xFFFFF4E9),
                         pinned: false,
                         floating: true,
                         snap: true,
@@ -783,7 +782,7 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
                         pinned: true,
                         delegate: _SliverAppBarDelegate(
                           TabBar(
-                            indicatorColor: Theme.of(context).primaryColor,
+                            indicatorColor: Color(0xFFA47864),
                             labelColor: Colors.black,
                             unselectedLabelColor: Colors.grey,
                             indicatorWeight: 3.0,
@@ -923,7 +922,7 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      color: Colors.white,
+      color: Color(0xFFFFF4E9),
       child: tabBar,
     );
   }
