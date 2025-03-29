@@ -5,8 +5,6 @@ import 'dart:async';
 import '../services/auth_service.dart';
 import '../services/search_history_service.dart';
 import 'product_detail_page.dart';
-
-// Import the AdvancedSearchBar from wherever you placed it
 import '../widgets/advanced_search_bar.dart';
 
 class ShopPage extends StatefulWidget {
@@ -16,33 +14,28 @@ class ShopPage extends StatefulWidget {
   _ShopPageState createState() => _ShopPageState();
 }
 
-class _ShopPageState extends State<ShopPage>
-    with SingleTickerProviderStateMixin {
+class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin {
   final AuthService authService = AuthService();
   List<Map<String, dynamic>> products = []; // All products
-  List<Map<String, dynamic>> filteredProducts =
-      []; // Products after search filtering
+  List<Map<String, dynamic>> filteredProducts = []; // Products after search filtering
   List<Map<String, dynamic>> recommendedProducts = []; // Recommended products
-  List<Map<String, dynamic>> filteredRecommendedProducts =
-      []; // Filtered recommended products
+  List<Map<String, dynamic>> filteredRecommendedProducts = []; // Filtered recommended products
   List<String> recentSearches = []; // Recent searches history
 
   bool isLoading = true;
   bool isLoadingRecommendations = true;
   bool isSearching = false; // Flag to indicate search in progress
+  bool isLoadingBackendSearch = false; // Flag for backend search in progress
   String? selectedGender; // Selected gender filter (M, F, U, or null for all)
   String searchQuery = ''; // Search query string
   Timer? _debounce; // For debouncing search requests
+  int _currentTabIndex = 0; // Track current tab index (0=Recommended, 1=All)
 
   @override
   void initState() {
     super.initState();
-    // Fetch products and recommendations
-    fetchRecommendedProducts();
-    fetchProducts();
-      // Load user profile first to get gender for default filter
-  _loadUserGenderAndInitialize();
-
+    // Load user profile first to get gender for default filter
+    _loadUserGenderAndInitialize();
     // Load recent searches
     _loadRecentSearches();
   }
@@ -52,41 +45,40 @@ class _ShopPageState extends State<ShopPage>
     _debounce?.cancel();
     super.dispose();
   }
-// New method to fetch user gender and set default gender filter
-Future<void> _loadUserGenderAndInitialize() async {
-  try {
-    // Get auth token from existing service
-    final String baseUrl = authService.baseUrl;
-    final token = await authService.getToken();
-    
-    // Fetch user gender directly
-    final response = await http.get(
-      Uri.parse('$baseUrl/user/gender'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
-    );
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      final String? genderCode = data['gender_code']; // Will be 'M', 'F', or null
+  // Load user gender and initialize
+  Future<void> _loadUserGenderAndInitialize() async {
+    try {
+      final String baseUrl = authService.baseUrl;
+      final token = await authService.getToken();
       
-      // Set gender filter based on response
-      setState(() {
-        selectedGender = genderCode;
-      });
+      final response = await http.get(
+        Uri.parse('$baseUrl/user/gender'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final String? genderCode = data['gender_code']; // Will be 'M', 'F', or null
+        
+        setState(() {
+          selectedGender = genderCode;
+        });
+      }
+      
+      // Fetch products and recommendations with the gender filter
+      fetchRecommendedProducts();
+      fetchProducts();
+    } catch (error) {
+      print('Error loading user gender: $error');
+      // If there's an error, still load products without gender filter
+      fetchRecommendedProducts();
+      fetchProducts();
     }
-    
-    // Now fetch products and recommendations with the gender filter
-    fetchRecommendedProducts();
-    fetchProducts();
-  } catch (error) {
-    print('Error loading user gender: $error');
-    // If there's an error, still load products without gender filter
-    fetchRecommendedProducts();
-    fetchProducts();
   }
-}
+
   // Load recent searches from storage
   Future<void> _loadRecentSearches() async {
     final searches = await SearchHistoryService.getRecentSearches();
@@ -95,11 +87,11 @@ Future<void> _loadUserGenderAndInitialize() async {
     });
   }
 
-  // Handle search text submission
+  // Handle search text submission with debounce
   void _onSearch(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
 
-    _debounce = Timer(const Duration(milliseconds: 200), () {
+    _debounce = Timer(const Duration(milliseconds: 800), () {
       setState(() {
         isSearching = true;
         searchQuery = query.trim();
@@ -109,16 +101,27 @@ Future<void> _loadUserGenderAndInitialize() async {
         // Save search to history
         SearchHistoryService.saveSearch(query)
             .then((_) => _loadRecentSearches());
-      }
-
-      _filterProducts();
-
-      // Simulate search delay for UI feedback
-      Future.delayed(Duration(milliseconds: 50), () {
+        
+        // Do frontend filtering for immediate feedback
+        _filterProducts();
+        
+        // Only trigger backend search for All Products tab and non-empty queries
+        if (_currentTabIndex == 1 && query.trim().isNotEmpty) {
+          _fetchBackendSearchResults(query);
+        } else {
+          // Just finish the search for recommended tab
+          setState(() {
+            isSearching = false;
+          });
+        }
+      } else {
+        // If query is empty, revert to regular products
         setState(() {
+          filteredProducts = List.from(products);
+          filteredRecommendedProducts = List.from(recommendedProducts);
           isSearching = false;
         });
-      });
+      }
     });
   }
 
@@ -126,11 +129,14 @@ Future<void> _loadUserGenderAndInitialize() async {
   void _onClearSearch() {
     setState(() {
       searchQuery = '';
-      _filterProducts();
+      filteredProducts = List.from(products);
+      filteredRecommendedProducts = List.from(recommendedProducts);
+      isSearching = false;
+      isLoadingBackendSearch = false;
     });
   }
 
-  // Filter products based on search query
+  // Frontend filtering (used for both tabs, but primarily for Recommended tab)
   void _filterProducts() {
     if (searchQuery.isEmpty) {
       setState(() {
@@ -179,6 +185,75 @@ Future<void> _loadUserGenderAndInitialize() async {
     }
   }
 
+  // Fetch backend search results (only for All Products tab)
+  Future<void> _fetchBackendSearchResults(String query) async {
+    setState(() {
+      isLoadingBackendSearch = true;
+    });
+
+    final String baseUrl = authService.baseUrl;
+    final token = await authService.getToken();
+    
+    // Build URI with query and optional gender filter
+    Uri uri;
+    if (selectedGender != null) {
+      uri = Uri.parse('$baseUrl/shop/text-search?query=${Uri.encodeComponent(query)}&gender=$selectedGender');
+    } else {
+      uri = Uri.parse('$baseUrl/shop/text-search?query=${Uri.encodeComponent(query)}');
+    }
+
+    try {
+      final response = await http.get(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        
+        setState(() {
+          // Transform the search results into the expected format
+          List<Map<String, dynamic>> searchResults = data.map((item) {
+            return {
+              'id': item['id']?.toString() ?? '',
+              'url': item['image_url']?.toString() ?? '',
+              'label': item['name']?.toString() ?? '',
+              'price': item['price']?.toString() ?? '',
+              'product_url': item['product_url']?.toString() ?? '',
+              'category': item['category']?.toString() ?? '',
+              'clothing_type': item['clothing_type']?.toString() ?? '',
+              'color': item['color']?.toString() ?? '',
+              'material': item['material']?.toString() ?? '',
+              'other_tags': item['other_tags']?.toString() ?? '',
+              'gender': item['gender']?.toString() ?? 'U',
+            };
+          }).toList();
+          
+          // Update filtered products with backend results
+          filteredProducts = searchResults;
+          
+          isLoadingBackendSearch = false;
+          isSearching = false;
+        });
+      } else {
+        setState(() {
+          isLoadingBackendSearch = false;
+          isSearching = false;
+        });
+        throw Exception('Failed to load search results');
+      }
+    } catch (error) {
+      setState(() {
+        isLoadingBackendSearch = false;
+        isSearching = false;
+      });
+      print('Error fetching search results: $error');
+    }
+  }
+
+  // Fetch regular products
   Future<void> fetchProducts() async {
     setState(() {
       isLoading = true;
@@ -190,9 +265,9 @@ Future<void> _loadUserGenderAndInitialize() async {
     // Build URI with optional gender filter
     Uri uri;
     if (selectedGender != null) {
-      uri = Uri.parse('$baseUrl/shop/items?limit=100&gender=$selectedGender');
+      uri = Uri.parse('$baseUrl/shop/items?limit=500&gender=$selectedGender');
     } else {
-      uri = Uri.parse('$baseUrl/shop/items?limit=100');
+      uri = Uri.parse('$baseUrl/shop/items?limit=500');
     }
 
     try {
@@ -222,7 +297,13 @@ Future<void> _loadUserGenderAndInitialize() async {
               'gender': item['gender']?.toString() ?? 'U',
             };
           }).toList();
-          _filterProducts(); // Apply any current search filter
+          filteredProducts = List.from(products);
+          
+          // Apply any current search filter
+          if (searchQuery.isNotEmpty) {
+            _filterProducts();
+          }
+          
           isLoading = false;
         });
       } else {
@@ -235,7 +316,9 @@ Future<void> _loadUserGenderAndInitialize() async {
       print('Error fetching products: $error');
     }
   }
-Future<void> fetchRecommendedProducts() async {
+
+  // Fetch recommended products
+  Future<void> fetchRecommendedProducts() async {
     setState(() {
       isLoadingRecommendations = true;
     });
@@ -243,7 +326,7 @@ Future<void> fetchRecommendedProducts() async {
     final String baseUrl = authService.baseUrl;
     final token = await authService.getToken();
     
-    // Build URI with optional gender filter, similar to fetchProducts
+    // Build URI with optional gender filter
     Uri uri;
     if (selectedGender != null) {
       uri = Uri.parse('$baseUrl/shop/recommendations-fast?gender=$selectedGender');
@@ -279,6 +362,12 @@ Future<void> fetchRecommendedProducts() async {
             };
           }).toList();
           filteredRecommendedProducts = List.from(recommendedProducts);
+          
+          // Apply any current search filter
+          if (searchQuery.isNotEmpty) {
+            _filterProducts();
+          }
+          
           isLoadingRecommendations = false;
         });
       } else {
@@ -292,140 +381,237 @@ Future<void> fetchRecommendedProducts() async {
     }
   }
 
-  // Function to handle gender filter selection
+  // Handle gender filter change
   void _handleGenderFilterChange(String? gender) {
     setState(() {
       selectedGender = gender;
     });
     fetchProducts(); // Refresh products with the new filter
-    fetchRecommendedProducts(); // Also refresh recommended products with the new filter
+    fetchRecommendedProducts(); // Also refresh recommended products
   }
 
-  Widget buildProductGrid(List<Map<String, dynamic>> productList) {
-    if (productList.isEmpty) {
-      return SliverToBoxAdapter(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 40.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.search_off, size: 64, color: Colors.grey),
-                SizedBox(height: 16),
-                Text(
-                  "No products found",
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[700]),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  "Try adjusting your search or filters",
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-              ],
+  // Build product widgets for the CustomScrollView
+  List<Widget> buildProductWidgets(List<Map<String, dynamic>> productList, bool isBackendSearchLoading) {
+    List<Widget> widgets = [];
+    
+    // Empty state
+    if (productList.isEmpty && !isBackendSearchLoading) {
+      widgets.add(
+        SliverToBoxAdapter(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 40.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.search_off, size: 64, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    "No products found",
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[700]),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    "Try adjusting your search or filters",
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
+        )
       );
+      return widgets;
     }
 
-    return SliverPadding(
-      padding: const EdgeInsets.all(8.0),
-      sliver: SliverGrid(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 8.0,
-          mainAxisSpacing: 8.0,
-          childAspectRatio: 0.7,
-        ),
-        delegate: SliverChildBuilderDelegate(
-          (BuildContext context, int index) {
-            final product = productList[index];
-            return GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        ProductDetailPage(productId: product['id']),
+    // Main product grid
+    widgets.add(
+      SliverPadding(
+        padding: const EdgeInsets.all(8.0),
+        sliver: SliverGrid(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 8.0,
+            mainAxisSpacing: 8.0,
+            childAspectRatio: 0.7,
+          ),
+          delegate: SliverChildBuilderDelegate(
+            (BuildContext context, int index) {
+              final product = productList[index];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          ProductDetailPage(productId: product['id']),
+                    ),
+                  );
+                },
+                child: Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
                   ),
-                );
-              },
-              child: Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Expanded(
-                      child: Hero(
-                        tag: 'product-${product['id']}',
-                        child: Container(
-                          width: double.infinity,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(8.0)),
-                            child: Image.network(
-                              product['url']!,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Center(
-                                      child: Icon(Icons.broken_image,
-                                          size: 40, color: Colors.grey)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Expanded(
+                        child: Hero(
+                          tag: 'product-${product['id']}',
+                          child: Container(
+                            width: double.infinity,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(8.0)),
+                              child: Image.network(
+                                product['url']!,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Center(
+                                        child: Icon(Icons.broken_image,
+                                            size: 40, color: Colors.grey)),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            product['label']!,
-                            style: TextStyle(
-                                fontSize: 14.0, fontWeight: FontWeight.bold),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          SizedBox(height: 4.0),
-                          Text(
-                            product['price']!,
-                            style: TextStyle(
-                              fontSize: 14.0,
-                              fontWeight: FontWeight.w500,
-                              color: Theme.of(context).primaryColor,
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              product['label']!,
+                              style: TextStyle(
+                                  fontSize: 14.0, fontWeight: FontWeight.bold),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                        ],
+                            SizedBox(height: 4.0),
+                            Text(
+                              product['price']!,
+                              style: TextStyle(
+                                fontSize: 14.0,
+                                fontWeight: FontWeight.w500,
+                                color: Theme.of(context).primaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
-          childCount: productList.length,
+              );
+            },
+            childCount: productList.length,
+          ),
         ),
-      ),
+      )
     );
+    
+    // Loading indicator and skeleton cards for backend search
+    if (isBackendSearchLoading) {
+      widgets.add(
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            child: Center(
+              child: Column(
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 8),
+                  Text(
+                    "Finding more products...",
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        )
+      );
+      
+      widgets.add(
+        SliverPadding(
+          padding: const EdgeInsets.all(8.0),
+          sliver: SliverGrid(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 8.0,
+              mainAxisSpacing: 8.0,
+              childAspectRatio: 0.7,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (BuildContext context, int index) {
+                return Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Expanded(
+                        child: Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(8.0)),
+                            color: Colors.grey[300],
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              height: 14.0,
+                              width: double.infinity,
+                              color: Colors.grey[300],
+                            ),
+                            SizedBox(height: 4.0),
+                            Container(
+                              height: 14.0,
+                              width: 80.0,
+                              color: Colors.grey[300],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              childCount: 4, // 4 skeleton loaders
+            ),
+          ),
+        )
+      );
+    }
+    
+    return widgets;
   }
 
+  // Refresh functions
   Future<void> _refreshAllProducts() async {
     await fetchProducts();
+    if (searchQuery.isNotEmpty && _currentTabIndex == 1) {
+      _fetchBackendSearchResults(searchQuery);
+    }
   }
 
   Future<void> _refreshRecommendedProducts() async {
     await fetchRecommendedProducts();
   }
 
-  // Show filter dialog when filter icon is tapped
+  // Show filter dialog
   void _showFilterDialog() {
     showDialog(
       context: context,
@@ -545,8 +731,6 @@ Future<void> fetchRecommendedProducts() async {
 
   @override
   Widget build(BuildContext context) {
-    TextEditingController searchController = TextEditingController();
-
     return Scaffold(
       body: SafeArea(
         child: (isLoading && isLoadingRecommendations)
@@ -603,6 +787,11 @@ Future<void> fetchRecommendedProducts() async {
                             unselectedLabelColor: Colors.grey,
                             indicatorWeight: 3.0,
                             labelStyle: TextStyle(fontWeight: FontWeight.bold),
+                            onTap: (index) {
+                              setState(() {
+                                _currentTabIndex = index;
+                              });
+                            },
                             tabs: [
                               Tab(text: "Recommended For You"),
                               Tab(text: "All Products"),
@@ -624,7 +813,7 @@ Future<void> fetchRecommendedProducts() async {
                                   // Show result count or searching indicator
                                   SliverToBoxAdapter(
                                     child: Padding(
-                                      padding: const EdgeInsets.only(left:20.0),
+                                      padding: const EdgeInsets.only(left: 20.0, top: 8.0),
                                       child: searchQuery.isNotEmpty
                                           ? Row(
                                               mainAxisAlignment:
@@ -638,12 +827,26 @@ Future<void> fetchRecommendedProducts() async {
                                                     color: Colors.grey.shade600,
                                                     fontWeight: FontWeight.w500,
                                                   ),
-                                                ),                                              ],
+                                                ),
+                                                if (isSearching)
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(right: 20.0),
+                                                    child: SizedBox(
+                                                      height: 16,
+                                                      width: 16,
+                                                      child: CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                      ),
+                                                    ),
+                                                  ),
+                                              ],
                                             )
                                           : SizedBox.shrink(),
                                     ),
                                   ),
-                                  buildProductGrid(filteredRecommendedProducts),
+                                  
+                                  // Product grid (no backend search for recommended tab)
+                                  ...buildProductWidgets(filteredRecommendedProducts, false),
                                 ],
                               ),
                             ),
@@ -657,7 +860,7 @@ Future<void> fetchRecommendedProducts() async {
                                   // Show product count or empty state
                                   SliverToBoxAdapter(
                                     child: Padding(
-                                      padding: const EdgeInsets.only(left: 20.0),
+                                      padding: const EdgeInsets.only(left: 20.0, top: 8.0),
                                       child: searchQuery.isNotEmpty
                                           ? Row(
                                               mainAxisAlignment:
@@ -673,18 +876,24 @@ Future<void> fetchRecommendedProducts() async {
                                                   ),
                                                 ),
                                                 if (isSearching)
-                                                  SizedBox(
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(right: 20.0),
+                                                    child: SizedBox(
                                                       height: 16,
                                                       width: 16,
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                              strokeWidth: 2)),
+                                                      child: CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                      ),
+                                                    ),
+                                                  ),
                                               ],
                                             )
                                           : SizedBox.shrink(),
                                     ),
                                   ),
-                                  buildProductGrid(filteredProducts),
+                                  
+                                  // Product grid with potential backend search loading
+                                  ...buildProductWidgets(filteredProducts, isLoadingBackendSearch),
                                 ],
                               ),
                             ),
@@ -697,7 +906,8 @@ Future<void> fetchRecommendedProducts() async {
   }
 }
 
-// Helper class to embed the TabBar in a sliver header.
+
+// Helper class to embed the TabBar in a sliver header
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar tabBar;
   _SliverAppBarDelegate(this.tabBar);
