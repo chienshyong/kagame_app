@@ -7,6 +7,7 @@ import 'firebase_options.dart'; // for DefaultFirebaseOptions
 
 import '../../services/auth_service.dart';
 import 'assets/my_flutter_app_icons.dart';  // Import your generated icon class
+import 'app_theme.dart'; // Import the app theme file
 
 // Page imports
 import 'login.dart';
@@ -197,44 +198,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       routerConfig: router,
-      theme: ThemeData(
-        primarySwatch: Colors.blue, // Changes primary color
-        scaffoldBackgroundColor: Color(0xFFFFF4E9), // Background color
-        textTheme: TextTheme(
-          bodyMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        appBarTheme: AppBarTheme(
-          backgroundColor: Color(0xFFFFF4E9),
-          titleTextStyle: TextStyle(color: Colors.black, fontSize: 20),
-        ),
-        navigationBarTheme: NavigationBarThemeData(
-          backgroundColor: Color(0xFFA47864), // Background color of NavigationBar
-          elevation: 10, // Adds a shadow effect
-          indicatorColor: Color(0xFFFFF4E9), // Selection indicator color
-          
-          iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
-            (Set<WidgetState> states) {
-              if (states.contains(WidgetState.selected)) {
-                return IconThemeData(
-                  color:  Color(0xFFA47864), // Color when selected
-                  size: 30, // Large icon when selected
-                );
-              }
-              return IconThemeData(
-                color: Color(0xFFFFF4E9), // Color when unselected
-                size: 24, // Smaller icon when unselected
-              );
-            },
-          ),
-
-          labelTextStyle: WidgetStateProperty.all(
-                TextStyle(
-                  color: Color(0xFFFFF4E9), // Color for selected label
-                  fontSize: 12,
-                ),
-          ),
-        ),
-      ),
+      theme: AppTheme.themeData, 
     );
   }
 }
