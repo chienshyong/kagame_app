@@ -940,15 +940,13 @@ void _previousStyle() {
                   ),
                   Text(
                     retailerName,
-                    style: TextStyle(fontSize: 20, color: Colors.grey),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
                   ),
                   Text(
                     '\$${price.toString()}',
-                    style: TextStyle(fontSize: 18, color: Colors.green),
+                    style: TextStyle(fontSize: 18, color: const Color(0xFFA47864)), // Primary brown instead of green
                   ),
                   SizedBox(height: 8),
-
-// Add shop now button
                   ElevatedButton.icon(
                     onPressed: () {
                       final productUrl = productDoc!['product_url'] ?? '';
@@ -962,14 +960,13 @@ void _previousStyle() {
                         );
                       }
                     },
-                    icon: Icon(Icons.shopping_bag),
-                    label: Text('SHOP NOW'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    ),
+                  icon: Icon(Icons.shopping_bag),
+                  label: Text('SHOP NOW'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFA47864), // Primary brown color
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
                   ),
                   SizedBox(height: 8),
                   Text(
@@ -1051,7 +1048,8 @@ void _previousStyle() {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis),
                   Text('\$${sp['price']}',
-                      style: TextStyle(fontSize: 14, color: Colors.green)),
+                        style: TextStyle(fontSize: 14, color: const Color(0xFFA47864)), // Primary brown instead of green
+                        ),
                 ],
               ),
             ),
