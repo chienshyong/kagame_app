@@ -157,7 +157,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final String baseUrl = authService.baseUrl;
     final token = await authService.getToken();
     try {
-      String jsonData = jsonEncode(prefsDict);
+      String jsonData = Uri.encodeComponent(jsonEncode(prefsDict));
       final response = await http.get(
         Uri.parse('$baseUrl/profile/getprefsurls?prefs_dict=$jsonData'),
         headers: {'Authorization': 'Bearer $token'},
@@ -179,7 +179,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final String baseUrl = authService.baseUrl;
     final token = await authService.getToken();
     try {
-      String jsonData = jsonEncode(prefsDict);
+      String jsonData = Uri.encodeComponent(jsonEncode(prefsDict));
       final response = await http.get(
         Uri.parse('$baseUrl/profile/getprefsurls?prefs_dict=$jsonData'),
         headers: {'Authorization': 'Bearer $token'},
@@ -352,248 +352,325 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              FutureBuilder<String?>(
-                future: authService.getUsername(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const CircularProgressIndicator();
-                  } else if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
-                    return const Text('No user found.');
-                  } else {
-                    return Text(
-                      'Hello, ${snapshot.data}!',
-                      style: const TextStyle(fontSize: 30.0, color: Colors.black),
-                    );
-                  }
-                },
-              ),
-              Text(
-                "You can tell us as much as you want, but the more we know about you, the better recommendations we can make :)",
-                style: TextStyle(fontSize: 16.0, color: Colors.grey[700]),
-              ),
-              const SizedBox(height: 24),
-
-              // VIEW ONLY MODE
-              if (!_isEditing) ...[
-                Text(
-                  "Gender: $_genderSelected",
-                  style: const TextStyle(fontSize: 16.0),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  "Birthday: ${_birthdayController.text}",
-                  style: const TextStyle(fontSize: 16.0),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  "Location: ${_locationController.text}",
-                  style: const TextStyle(fontSize: 16.0),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  "Style: $_styleResult",
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  "Clothing Likes",
-                  style: const TextStyle(fontSize: 16.0),
-                ),
-                _likesImages.isNotEmpty
-                ? Container(
-                  height: 290,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _likesImages.length,
-                    itemBuilder: (context, index) => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Container(
-                        width: 140,
-                        child: Column(
-                          children: [
-                            Container(
-                              width: 140,
-                              height: 190,
-                              child: Stack(
-                                children: [
-                                  CachedNetworkImage(
-                                    imageUrl: _likesImages.values.elementAt(index),
-                                    width: 140,
-                                    height: 190,
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) =>
-                                        Center(child: CircularProgressIndicator()),
-                                    errorWidget: (context, url, error) =>
-                                        Icon(Icons.error, color: Colors.red),
-                                  ),
-                                  Positioned(
-                                    top: 0,
-                                    right: 0,
-                                    child: IconButton(
-                                      icon: Icon(Icons.close, color: Colors.red),
-                                      onPressed: () {
-                                        removeLike(_likesImages.keys.elementAt(index));
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Container(
-                              width: 140,
-                              child: Text(
-                                _likesImages.keys.elementAt(index),
-                                textAlign: TextAlign.center,
-                                softWrap: true,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                )
-                : Text('No items in likes'),
-                const SizedBox(height: 16),
-                Text(
-                  "Clothing Dislikes",
-                  style: const TextStyle(fontSize: 16.0),
-                ),
-                _dislikesImages.isNotEmpty
-                    ? Container(
-                  height: 290,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _dislikesImages.length,
-                    itemBuilder: (context, index) => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Container(
-                        width: 140,
-                        child: Column(
-                          children: [
-                            Container(
-                              width: 140,
-                              height: 190,
-                              child: Stack(
-                                children: [
-                                  CachedNetworkImage(
-                                    imageUrl: _dislikesImages.values.elementAt(index),
-                                    width: 140,
-                                    height: 190,
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) =>
-                                        Center(child: CircularProgressIndicator()),
-                                    errorWidget: (context, url, error) =>
-                                        Icon(Icons.error, color: Colors.red),
-                                  ),
-                                  Positioned(
-                                    top: 0,
-                                    right: 0,
-                                    child: IconButton(
-                                      icon: Icon(Icons.close, color: Colors.red),
-                                      onPressed: () {
-                                        removeDislike(_dislikesImages.keys.elementAt(index));
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Container(
-                              width: 140,
-                              child: Text(
-                                _dislikesImages.keys.elementAt(index),
-                                textAlign: TextAlign.center,
-                                softWrap: true,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                )
-                    : Text('No items in dislikes'),
-              ]
-
-              // EDIT MODE
-              else ...[
-                DropdownButtonFormField<String>(
-                  value: _genderSelected,
-                  decoration: const InputDecoration(
-                    labelText: "Gender",
-                    border: OutlineInputBorder(),
-                  ),
-                  icon: const Icon(Icons.arrow_downward),
-                  style: const TextStyle(color: Colors.black),
-                  onChanged: (String? value) {
-                    setState(() {
-                      _genderSelected = value!;
-                    });
-                  },
-                  items: _genderDropdownList.map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 16),
-                _buildTextField(
-                  label: 'Birthday (DD/MM/YYYY)',
-                  controller: _birthdayController,
-                  focusNode: _birthdayFocusNode,
-                  nextFocusNode: _locationFocusNode,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    birthdayFormatter,
-                  ],
-                  keyboardType: TextInputType.number,
-                  readOnly: false,
-                ),
-                const SizedBox(height: 16),
-                _buildLocationDropdown(
-                  label: 'Location',
-                  controller: _locationController,
-                  focusNode: _locationFocusNode,
-                  enabled: true,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  "Style: $_styleResult",
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 8),
-                Center(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      await updateProfileData();
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => QuizPage()),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await getProfileData();
+          },
+          child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FutureBuilder<String?>(
+                  future: authService.getUsername(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const CircularProgressIndicator();
+                    } else if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
+                      return const Text('No user found.');
+                    } else {
+                      return Text(
+                        'Hello, ${snapshot.data}!',
+                        style: const TextStyle(fontSize: 30.0, color: Colors.black),
                       );
+                    }
+                  },
+                ),
+                Text(
+                  "You can tell us as much as you want, but the more we know about you, the better recommendations we can make :)",
+                  style: TextStyle(fontSize: 16.0, color: Colors.grey[700]),
+                ),
+                const SizedBox(height: 24),
+
+                // VIEW ONLY MODE
+                if (!_isEditing) ...[
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: "Gender: ",
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        TextSpan(
+                          text: _genderSelected,
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: "Birthday: ",
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        TextSpan(
+                          text: _birthdayController.text,
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: "Location: ",
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        TextSpan(
+                          text: _locationController.text,
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: "Style: ",
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        TextSpan(
+                          text: _styleResult,
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Clothing Likes",
+                    style: const TextStyle(fontSize: 16.0),
+                  ),
+                  _likesImages.isNotEmpty
+                  ? Container(
+                    height: 320,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _likesImages.length,
+                      itemBuilder: (context, index) => Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Container(
+                          width: 140,
+                          child: Column(
+                            children: [
+                              Container(
+                                width: 140,
+                                height: 190,
+                                child: Stack(
+                                  children: [
+                                    CachedNetworkImage(
+                                      imageUrl: _likesImages.values.elementAt(index),
+                                      width: 140,
+                                      height: 190,
+                                      fit: BoxFit.cover,
+                                      placeholder: (context, url) =>
+                                          Center(child: CircularProgressIndicator()),
+                                      errorWidget: (context, url, error) =>
+                                          Icon(Icons.error, color: Colors.red),
+                                    ),
+                                    Positioned(
+                                      top: 0,
+                                      right: 0,
+                                      child: IconButton(
+                                        icon: Icon(Icons.close, color: Colors.red),
+                                        onPressed: () {
+                                          removeLike(_likesImages.keys.elementAt(index));
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Container(
+                                width: 140,
+                                child: Text(
+                                  _likesImages.keys.elementAt(index),
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 16.0,
+                                    fontWeight: FontWeight.normal,
+                                  ),
+                                  softWrap: true,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                  : Text('No items in likes'),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Clothing Dislikes",
+                    style: const TextStyle(fontSize: 16.0),
+                  ),
+                  _dislikesImages.isNotEmpty
+                      ? Container(
+                    height: 290,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _dislikesImages.length,
+                      itemBuilder: (context, index) => Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Container(
+                          width: 140,
+                          child: Column(
+                            children: [
+                              Container(
+                                width: 140,
+                                height: 190,
+                                child: Stack(
+                                  children: [
+                                    CachedNetworkImage(
+                                      imageUrl: _dislikesImages.values.elementAt(index),
+                                      width: 140,
+                                      height: 190,
+                                      fit: BoxFit.cover,
+                                      placeholder: (context, url) =>
+                                          Center(child: CircularProgressIndicator()),
+                                      errorWidget: (context, url, error) =>
+                                          Icon(Icons.error, color: Colors.red),
+                                    ),
+                                    Positioned(
+                                      top: 0,
+                                      right: 0,
+                                      child: IconButton(
+                                        icon: Icon(Icons.close, color: Colors.red),
+                                        onPressed: () {
+                                          removeDislike(_dislikesImages.keys.elementAt(index));
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Container(
+                                width: 140,
+                                child: Text(
+                                  _dislikesImages.keys.elementAt(index),
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 16.0,
+                                    fontWeight: FontWeight.normal,
+                                  ),
+                                  softWrap: true,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                      : Text('No items in dislikes'),
+                ]
+
+                // EDIT MODE
+                else ...[
+                  DropdownButtonFormField<String>(
+                    value: _genderSelected,
+                    decoration: const InputDecoration(
+                      labelText: "Gender",
+                      border: OutlineInputBorder(),
+                    ),
+                    icon: const Icon(Icons.arrow_downward),
+                    style: const TextStyle(color: Colors.black),
+                    onChanged: (String? value) {
                       setState(() {
-                        getProfileData();
+                        _genderSelected = value!;
                       });
                     },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      textStyle: const TextStyle(fontSize: 16),
-                    ),
-                    child: const Text('Find my style'),
+                    items: _genderDropdownList.map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
                   ),
-                ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    label: 'Birthday (DD/MM/YYYY)',
+                    controller: _birthdayController,
+                    focusNode: _birthdayFocusNode,
+                    nextFocusNode: _locationFocusNode,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      birthdayFormatter,
+                    ],
+                    keyboardType: TextInputType.number,
+                    readOnly: false,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildLocationDropdown(
+                    label: 'Location',
+                    controller: _locationController,
+                    focusNode: _locationFocusNode,
+                    enabled: true,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Style: $_styleResult",
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        await updateProfileData();
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => QuizPage()),
+                        );
+                        setState(() {
+                          getProfileData();
+                        });
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        textStyle: const TextStyle(fontSize: 16),
+                      ),
+                      child: const Text('Find my style'),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 24),
               ],
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
         ),
       ),
