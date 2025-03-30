@@ -152,7 +152,9 @@ void main() async {
               GoRoute(
                 path: '/profile',
                 pageBuilder: (context, state) => NoTransitionPage(
-                  child: ProfilePage(),
+                  child: ProfilePage(
+                    initialEditing: state.uri.queryParameters['initialEditing'] == 'true',
+                  ),
                 ),
                 routes: [
                   GoRoute(

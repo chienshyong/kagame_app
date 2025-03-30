@@ -9,7 +9,8 @@ import '../services/auth_service.dart';
 import 'stylequiz.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({Key? key}) : super(key: key);
+  final bool initialEditing;
+  const ProfilePage({Key? key, this.initialEditing = false}) : super(key: key);
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -55,6 +56,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
+    _isEditing = widget.initialEditing;
     getProfileData();
     loadCountriesFile();
   }
@@ -95,9 +97,9 @@ class _ProfilePageState extends State<ProfilePage> {
           _genderSelected = jsonResponse["gender"] ?? "Prefer not to say";
           _birthdayController.text = jsonResponse["birthday"] ?? "";
           _locationController.text = jsonResponse["location"] ?? "";
-          _styleResult = jsonResponse["style"];
-          _clothingLikesDict = jsonResponse["clothing_likes"];
-          _clothingDislikesDict = jsonResponse["clothing_dislikes"];
+          _styleResult = jsonResponse["style"] ?? "Not determined yet";
+          _clothingLikesDict = jsonResponse["clothing_likes"] ?? {};
+          _clothingDislikesDict = jsonResponse["clothing_dislikes"] ?? "";
         });
         await getLikesImageURLs(prefsDict: _clothingLikesDict);
         await getDislikesImageURLs(prefsDict: _clothingDislikesDict);
@@ -152,15 +154,19 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // Get likes/dislikes image urls
   Future<void> getLikesImageURLs({
-    required Map<String, dynamic> prefsDict
+    required Map<String, dynamic> prefsDict,
   }) async {
     final String baseUrl = authService.baseUrl;
     final token = await authService.getToken();
     try {
-      String jsonData = Uri.encodeComponent(jsonEncode(prefsDict));
-      final response = await http.get(
-        Uri.parse('$baseUrl/profile/getprefsurls?prefs_dict=$jsonData'),
-        headers: {'Authorization': 'Bearer $token'},
+      String jsonData = jsonEncode(prefsDict);
+      final response = await http.post(
+        Uri.parse('$baseUrl/profile/getprefsurls'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonData,
       );
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonResponse = json.decode(response.body);
@@ -174,15 +180,19 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> getDislikesImageURLs({
-    required Map<String, dynamic> prefsDict
+    required Map<String, dynamic> prefsDict,
   }) async {
     final String baseUrl = authService.baseUrl;
     final token = await authService.getToken();
     try {
-      String jsonData = Uri.encodeComponent(jsonEncode(prefsDict));
-      final response = await http.get(
-        Uri.parse('$baseUrl/profile/getprefsurls?prefs_dict=$jsonData'),
-        headers: {'Authorization': 'Bearer $token'},
+      String jsonData = jsonEncode(prefsDict);
+      final response = await http.post(
+        Uri.parse('$baseUrl/profile/getprefsurls'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonData,
       );
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonResponse = json.decode(response.body);
@@ -191,7 +201,7 @@ class _ProfilePageState extends State<ProfilePage> {
         });
       }
     } catch (error) {
-      print('Error fetching likes images: $error');
+      print('Error fetching dislikes images: $error');
     }
   }
 
@@ -359,6 +369,7 @@ class _ProfilePageState extends State<ProfilePage> {
           child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
