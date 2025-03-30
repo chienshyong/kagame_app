@@ -118,7 +118,7 @@ class _QuizPageState extends State<QuizPage> {
     },
     {
       "question": "How do you put together an outfit?",
-      "options": ["I coordinate colours and patterns for a polished, structured look.",
+      "options": ["I coordinate colours & patterns for a polished look.",
         "I add bold accessories, dark colours, or unique details.",
         "I make sure my outfit looks expensive and put-together.",
         "I add playful, bold pieces to stand out.",
@@ -276,10 +276,18 @@ class _QuizPageState extends State<QuizPage> {
               )
             else
               Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: List.generate(question["options"].length, (index) {
-                  return ElevatedButton(
-                    onPressed: () => _nextQuestion(index),
-                    child: Text(question["options"][index]),
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: ElevatedButton(
+                      onPressed: () => _nextQuestion(index),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        minimumSize: Size(double.infinity, 48),
+                      ),
+                      child: Text(question["options"][index]),
+                    ),
                   );
                 }),
               ),

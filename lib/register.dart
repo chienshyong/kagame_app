@@ -36,7 +36,7 @@ class _RegisterPageState extends State<RegisterPage> {
         await authService.login(username, password).timeout(Duration(seconds: 3), onTimeout: () {
           throw Exception('Login request timed out');
         });
-        context.go('/profile');
+        context.go('/profile?initialEditing=true');
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.toString())),
