@@ -6,6 +6,8 @@ import '../services/auth_service.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/event_bus_service.dart';
+import 'dart:async';
 
 class WardrobePage extends StatefulWidget {
   WardrobePage({Key? key}) : super(key: key);
@@ -24,11 +26,18 @@ class _WardrobePageState extends State<WardrobePage> with RouteAware{
   // Cache Manager
   final BaseCacheManager cacheManager = DefaultCacheManager();
 
+  late StreamSubscription refreshSubscription;
+
   @override
   void initState() {
     super.initState();
     loadPersistedImages().then((_) {
       fetchImagesFromApi(); // Fetch new images in the background
+    });
+
+    // Listen for refresh events
+    refreshSubscription = eventBus.on<WardrobeRefreshEvent>().listen((event) {
+      refreshImages();
     });
   }
 

@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:material_tag_editor/tag_editor.dart';
 import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
+import '../services/event_bus_service.dart';
 
 class ItemPage extends StatefulWidget {
   final String id;
@@ -124,6 +125,10 @@ class _ItemPageState extends State<ItemPage> {
         'Content-Type': 'application/json',
       }
     );
+
+    //Refresh the wardrobe
+      eventBus.fire(WardrobeRefreshEvent());
+
     if (response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Item deleted')),

@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../../services/auth_service.dart';
+import '../services/event_bus_service.dart';
 
 class MultiImagePickerPage extends StatefulWidget {
   @override
@@ -56,6 +57,9 @@ class _MultiImagePickerPageState extends State<MultiImagePickerPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Images uploaded successfully!')),
       );
+
+      // Refresh the wardrobe
+      eventBus.fire(WardrobeRefreshEvent());
 
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
