@@ -1340,7 +1340,7 @@ Widget buildRecommendedOutfitsSection() {
     List<dynamic> bottoms = [];
     List<dynamic> dresses = [];
     List<dynamic> shoes = [];
-    List<dynamic> jackets = [];
+    List<dynamic> outerwear = [];
     List<dynamic> accessories = [];
     
     for (final item in allItems) {
@@ -1358,8 +1358,8 @@ Widget buildRecommendedOutfitsSection() {
         case 'shoes':
           shoes.add(item);
           break;
-        case 'jackets':
-          jackets.add(item);
+        case 'outerwear':
+          outerwear.add(item);
           break;
         case 'accessories':
           accessories.add(item);
@@ -1381,8 +1381,8 @@ Widget buildRecommendedOutfitsSection() {
       case 'shoes':
         shoes.insert(0, productDoc!);
         break;
-      case 'jackets':
-        jackets.insert(0, productDoc!);
+      case 'outerwear':
+        outerwear.insert(0, productDoc!);
         break;
       case 'accessories':
         accessories.insert(0, productDoc!);
@@ -1394,14 +1394,14 @@ Widget buildRecommendedOutfitsSection() {
     switch (mainCategory) {
       case 'dresses':
         carouselConfigs = [
-          {'category': 'Jackets', 'items': jackets},
+          {'category': 'Outerwear', 'items': outerwear},
           {'category': 'Shoes', 'items': shoes},
           {'category': 'Accessories', 'items': accessories},
         ];
         break;
       case 'tops':
         carouselConfigs = [
-          {'category': 'Jackets', 'items': jackets},
+          {'category': 'Outerwear', 'items': outerwear},
           {'category': 'Bottoms', 'items': bottoms},
           {'category': 'Shoes', 'items': shoes},
           {'category': 'Accessories', 'items': accessories},
@@ -1413,7 +1413,7 @@ Widget buildRecommendedOutfitsSection() {
           {'category': 'Tops', 'items': tops},
           {'category': 'Bottoms', 'items': bottoms},
           {'category': 'Dresses', 'items': dresses},
-          {'category': 'Jackets', 'items': jackets},
+          {'category': 'Outerwear', 'items': outerwear},
           {'category': 'Accessories', 'items': accessories},
         ];
         carouselConfigs.removeWhere((config) => config['category'] == 'Shoes');
@@ -1424,11 +1424,11 @@ Widget buildRecommendedOutfitsSection() {
           {'category': 'Bottoms', 'items': bottoms},
           {'category': 'Dresses', 'items': dresses},
           {'category': 'Shoes', 'items': shoes},
-          {'category': 'Jackets', 'items': jackets},
+          {'category': 'Outerwear', 'items': outerwear},
           {'category': 'Accessories', 'items': accessories},
         ];
         break;
-      case 'jackets':
+      case 'outerwear':
         carouselConfigs = [
           {'category': 'Tops', 'items': tops},
           {'category': 'Bottoms', 'items': bottoms},
@@ -1436,13 +1436,13 @@ Widget buildRecommendedOutfitsSection() {
           {'category': 'Shoes', 'items': shoes},
           {'category': 'Accessories', 'items': accessories},
         ];
-        carouselConfigs.removeWhere((config) => config['category'] == 'Jackets');
+        carouselConfigs.removeWhere((config) => config['category'] == 'Outerwear');
         break;
       case 'bottoms':
         carouselConfigs = [
           {'category': 'Tops', 'items': tops},
           {'category': 'Shoes', 'items': shoes},
-          {'category': 'Jackets', 'items': jackets},
+          {'category': 'Outerwear', 'items': outerwear},
           {'category': 'Accessories', 'items': accessories},
         ];
         carouselConfigs.removeWhere((config) => config['category'] == 'Bottoms');
@@ -1454,7 +1454,7 @@ Widget buildRecommendedOutfitsSection() {
           {'category': 'Bottoms', 'items': bottoms},
           {'category': 'Dresses', 'items': dresses},
           {'category': 'Shoes', 'items': shoes},
-          {'category': 'Jackets', 'items': jackets},
+          {'category': 'Outerwear', 'items': outerwear},
           {'category': 'Accessories', 'items': accessories},
         ];
         carouselConfigs.removeWhere(
