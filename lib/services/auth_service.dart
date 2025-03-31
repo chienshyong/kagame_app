@@ -5,6 +5,8 @@ import '../config.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart' as fcm;
 
 class AuthService {
   final String baseUrl = Config.apiUrl;
@@ -73,6 +75,9 @@ Future<void> login(String username, String password) async {
   Future<void> logout() async {
     await storage.delete(key: 'token');
     await storage.delete(key: 'username');
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    await fcm.DefaultCacheManager().emptyCache();
   }
   
   //Google sign in
