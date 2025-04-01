@@ -131,13 +131,12 @@ class AppTheme {
       colorScheme: ColorScheme.light(
         primary: primaryColor,
         secondary: secondaryColor,
-        surface: Colors.white,
-        background: backgroundColor,
+        surface: backgroundColor,
         error: Colors.red,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
         onSurface: textPrimary,
-        onBackground: textPrimary,
+
         onError: Colors.white,
         brightness: Brightness.light,
       ),

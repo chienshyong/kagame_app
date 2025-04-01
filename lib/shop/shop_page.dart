@@ -694,40 +694,6 @@ class _ShopPageState extends State<ShopPage> with SingleTickerProviderStateMixin
     }
   }
 
-  // Remove a search from history
-  void _removeSearchFromHistory(String query) {
-    SearchHistoryService.removeSearch(query).then((_) => _loadRecentSearches());
-  }
-
-  // Clear all search history
-  void _clearSearchHistory() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Clear Search History'),
-          content:
-              Text('Are you sure you want to clear all your recent searches?'),
-          actions: [
-            TextButton(
-              child: Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text('Clear'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                SearchHistoryService.clearSearches()
-                    .then((_) => _loadRecentSearches());
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {

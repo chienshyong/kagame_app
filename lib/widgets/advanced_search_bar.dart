@@ -33,7 +33,6 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar> {
   // App color theme constants
   static const Color primaryColor = Color(0xFFA47864); // Brown
   static const Color secondaryColor = Color(0xFF5C6B73); // Blue-gray
-  static const Color backgroundColor = Color(0xFFFFF4E9); // Light cream
   
   @override
   void initState() {

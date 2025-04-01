@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
-import 'package:flutter_client_sse/constants/sse_request_type_enum.dart';
 import 'package:http/http.dart' as http;
 // import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
 import '../shop/product_detail_page.dart';
-import 'package:flutter_client_sse/flutter_client_sse.dart'; // Use the correct import for flutter_client_sse
 import 'dart:async';
 import 'dart:ui';
 
