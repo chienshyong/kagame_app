@@ -283,10 +283,13 @@ class _QuizPageState extends State<QuizPage> {
                     child: ElevatedButton(
                       onPressed: () => _nextQuestion(index),
                       style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                          padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
                         minimumSize: Size(double.infinity, 48),
                       ),
-                      child: Text(question["options"][index]),
+                      child: Text(
+                        question["options"][index],
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   );
                 }),
