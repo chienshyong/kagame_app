@@ -167,7 +167,7 @@ class _RecommendPageState extends State<RecommendPage> {
     final token = await authService.getToken();
     final baseUrl = authService.baseUrl;
     final uri = Uri.parse(
-      '$baseUrl/catalogue/feedback_recommendation?starting_id=$startingId&previous_rec_id=$previousRecId&dislike_reason=$dislikeReason');
+      '$baseUrl/wardrobe/feedback_recommendation?starting_id=$startingId&previous_rec_id=$previousRecId&dislike_reason=$dislikeReason');
 
     try {
       setState(() => _loadingReplacementIds.add(previousRecId));
