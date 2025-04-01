@@ -1348,22 +1348,16 @@ Widget buildRecommendedOutfitsSection() {
       switch (category) {
         case 'tops':
           tops.add(item);
-          break;
         case 'bottoms':
           bottoms.add(item);
-          break;
         case 'dresses':
           dresses.add(item);
-          break;
         case 'shoes':
           shoes.add(item);
-          break;
         case 'outerwear':
           outerwear.add(item);
-          break;
         case 'accessories':
           accessories.add(item);
-          break;
       }
     }
     
@@ -1371,22 +1365,16 @@ Widget buildRecommendedOutfitsSection() {
     switch (mainCategory) {
       case 'tops':
         tops.insert(0, productDoc!);
-        break;
       case 'bottoms':
         bottoms.insert(0, productDoc!);
-        break;
       case 'dresses':
         dresses.insert(0, productDoc!);
-        break;
       case 'shoes':
         shoes.insert(0, productDoc!);
-        break;
       case 'outerwear':
         outerwear.insert(0, productDoc!);
-        break;
       case 'accessories':
         accessories.insert(0, productDoc!);
-        break;
     }
     
     // Determine carousel configurations based on main category
@@ -1398,7 +1386,6 @@ Widget buildRecommendedOutfitsSection() {
           {'category': 'Shoes', 'items': shoes},
           {'category': 'Accessories', 'items': accessories},
         ];
-        break;
       case 'tops':
         carouselConfigs = [
           {'category': 'Outerwear', 'items': outerwear},
@@ -1407,7 +1394,6 @@ Widget buildRecommendedOutfitsSection() {
           {'category': 'Accessories', 'items': accessories},
         ];
         carouselConfigs.removeWhere((config) => config['category'] == 'Dresses');
-        break;
       case 'shoes':
         carouselConfigs = [
           {'category': 'Tops', 'items': tops},
@@ -1417,7 +1403,6 @@ Widget buildRecommendedOutfitsSection() {
           {'category': 'Accessories', 'items': accessories},
         ];
         carouselConfigs.removeWhere((config) => config['category'] == 'Shoes');
-        break;
       case 'accessories':
         carouselConfigs = [
           {'category': 'Tops', 'items': tops},
@@ -1427,7 +1412,6 @@ Widget buildRecommendedOutfitsSection() {
           {'category': 'Outerwear', 'items': outerwear},
           {'category': 'Accessories', 'items': accessories},
         ];
-        break;
       case 'outerwear':
         carouselConfigs = [
           {'category': 'Tops', 'items': tops},
@@ -1437,7 +1421,6 @@ Widget buildRecommendedOutfitsSection() {
           {'category': 'Accessories', 'items': accessories},
         ];
         carouselConfigs.removeWhere((config) => config['category'] == 'Outerwear');
-        break;
       case 'bottoms':
         carouselConfigs = [
           {'category': 'Tops', 'items': tops},
@@ -1446,7 +1429,6 @@ Widget buildRecommendedOutfitsSection() {
           {'category': 'Accessories', 'items': accessories},
         ];
         carouselConfigs.removeWhere((config) => config['category'] == 'Bottoms');
-        break;
       default:
         // For other categories, display all except main category
         carouselConfigs = [
@@ -1459,7 +1441,6 @@ Widget buildRecommendedOutfitsSection() {
         ];
         carouselConfigs.removeWhere(
             (config) => config['category'].toLowerCase() == mainCategory);
-        break;
     }
     
     // Filter out carousels with empty items
