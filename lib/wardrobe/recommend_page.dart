@@ -351,8 +351,8 @@ class _RecommendPageState extends State<RecommendPage> {
         _loadingReplacementIds.add(id!);
       });
       await _fetchReplacementItem(
-        startingId: id!,
-        previousRecId: id,
+        startingId: widget.id,
+        previousRecId: id!,
         dislikeReason: feedbackList.toString(),
         itemName: itemName,
       );
@@ -406,7 +406,7 @@ class _RecommendPageState extends State<RecommendPage> {
   }
 
 // Widget for showing recommendations by category
-List<Widget> _buildGroupedRecommendations(List<Map<String,dynamic>> items) {
+List<Widget> _buildGroupedRecommendations(List<Map<String,dynamic>> items, {bool showFeedback = true}) {
   Map<String, List<Map<String, dynamic>>> grouped = {
     "Tops": [],
     "Bottoms": [],
@@ -433,16 +433,16 @@ List<Widget> _buildGroupedRecommendations(List<Map<String,dynamic>> items) {
 
   for (String category in displayOrder) {
     if (grouped.containsKey(category) && grouped[category]!.isNotEmpty) {
-      widgets.add(Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-        child: Text(
-          category,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-      ));
+      // widgets.add(Padding(
+      //   padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+      //   child: Text(
+      //     category,
+      //     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      //   ),
+      // ));
       widgets.add(
         Container(
-          height: 220,
+          height: 160,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: grouped[category]!.length,
@@ -463,67 +463,75 @@ List<Widget> _buildGroupedRecommendations(List<Map<String,dynamic>> items) {
                         ),
                       );
                     },
-                    child: Container(
-                      width: 150,
-                      margin: EdgeInsets.all(8.0),
-                      child: Stack(
-                        children: [
-                          // Product image
-                          Image.network(
-                            recommendedProduct['url'] ?? recommendedProduct['image_url'],
-                            width: 150,
-                            height: 150,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Icon(Icons.error),
-                          ),
+                    child: 
+                        Container(
+                          width: MediaQuery.of(context).size.width,
+                          margin: EdgeInsets.all(8.0),
+                          alignment: Alignment.center,
+                          child: Stack(
+                            children: [
+                              // Product image
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12.0),
+                                child:
+                                  Image.network(
+                                    recommendedProduct['url'] ?? recommendedProduct['image_url'],
+                                    width: 150,
+                                    height: 150,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) => Icon(Icons.error),
+                                  ),
+                              ),
 
-                          // Overlay Like/Dislike buttons
-                          Positioned(
-                            right: 8,
-                            bottom: 8,
-                            child: Row(
-                              children: [
-                                IconButton(
-                                  icon: Icon(
-                                    Icons.favorite,
-                                    color: clothingLikes.containsKey(recommendedProduct['name'])
-                                        ? Colors.pink
-                                        : Colors.grey[700],
+                              if(showFeedback)
+                                // Overlay Like/Dislike buttons
+                                Positioned(
+                                  right: 8,
+                                  bottom: 8,
+                                  child: Row(
+                                    children: [
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.favorite,
+                                          color: clothingLikes.containsKey(recommendedProduct['name'])
+                                              ? Colors.pink
+                                              : Colors.grey[700],
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            toggleLike(recommendedProduct['name']);
+                                          });
+                                        },
+                                      ),
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.thumb_down,
+                                          color: clothingDislikes.containsKey(recommendedProduct['name'])
+                                              ? Colors.red
+                                              : Colors.grey[700],
+                                        ),
+                                        onPressed: () async {
+                                          setState(() {
+                                            toggleDislike(
+                                              recommendedProduct['name'],
+                                              recommendedProduct['category'],
+                                              context,
+                                              recommendedProduct['clothing_type']?.toString(),
+                                              recommendedProduct['other_tags']?.toString(),
+                                              recommendedProduct['color']?.toString(),
+                                              recommendedProduct['_id']?.toString(),
+                                            );
+                                          });
+                                        },
+                                      ),
+                                    ],
                                   ),
-                                  onPressed: () {
-                                    setState(() {
-                                      toggleLike(recommendedProduct['name']);
-                                    });
-                                  },
                                 ),
-                                IconButton(
-                                  icon: Icon(
-                                    Icons.thumb_down,
-                                    color: clothingDislikes.containsKey(recommendedProduct['name'])
-                                        ? Colors.red
-                                        : Colors.grey[700],
-                                  ),
-                                  onPressed: () async {
-                                    setState(() {
-                                      toggleDislike(
-                                        recommendedProduct['name'],
-                                        recommendedProduct['category'],
-                                        context,
-                                        recommendedProduct['clothing_type']?.toString(),
-                                        recommendedProduct['other_tags']?.toString(),
-                                        recommendedProduct['color']?.toString(),
-                                        recommendedProduct['_id']?.toString(),
-                                      );
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
                     ),
-                  ),
+                  
 
                   if (isReplacing)
                     Positioned.fill(
@@ -557,7 +565,7 @@ List<Widget> _buildGroupedRecommendations(List<Map<String,dynamic>> items) {
                 : ListView(
                     shrinkWrap: true,
                     physics: AlwaysScrollableScrollPhysics(),
-                    children: _buildGroupedRecommendations(wardrobeRecommended),
+                    children: _buildGroupedRecommendations(wardrobeRecommended, showFeedback: false),
                   ),
           );
   }

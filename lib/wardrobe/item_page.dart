@@ -259,7 +259,7 @@ class _ItemPageState extends State<ItemPage> {
                           borderRadius: BorderRadius.circular(10.0),
                         ),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: Color(0xFFFFF4E9),
                       ),
                     ),
                 ],
@@ -303,7 +303,7 @@ class _ItemPageState extends State<ItemPage> {
             SizedBox(height: 8),
             Text("Tags:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             Wrap(
-              spacing: 6.0,
+              spacing: 4.0,
               children: _tagvalues.map((tag) => Chip(label: Text(tag))).toList(),
             ),
             SizedBox(height: 20),
@@ -540,7 +540,7 @@ class _Chip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Chip(
-      backgroundColor: Color(0xFFA47864),
+      backgroundColor: Color.fromARGB(153, 164, 120, 100),
       labelPadding: const EdgeInsets.only(left: 8.0),
       label: Text(
         label,

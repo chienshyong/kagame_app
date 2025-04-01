@@ -66,7 +66,7 @@ class _RegisterPageState extends State<RegisterPage> {
         child: Column(
             children: [
               Image.asset(
-                  'lib/assets/app_icon.png',
+                  'lib/assets/app_icon_transparent.png',
                   width: 96,
                   height: 96,
                 ),
