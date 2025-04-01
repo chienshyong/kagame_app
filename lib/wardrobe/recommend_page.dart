@@ -442,7 +442,7 @@ List<Widget> _buildGroupedRecommendations(List<Map<String,dynamic>> items, {bool
       // ));
       widgets.add(
         Container(
-          height: 160,
+          height: 200,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: grouped[category]!.length,
@@ -477,7 +477,7 @@ List<Widget> _buildGroupedRecommendations(List<Map<String,dynamic>> items, {bool
                                   Image.network(
                                     recommendedProduct['url'] ?? recommendedProduct['image_url'],
                                     width: 150,
-                                    height: 150,
+                                    height: MediaQuery.of(context).size.height,
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) => Icon(Icons.error),
                                   ),
