@@ -1337,7 +1337,10 @@ Widget buildRecommendedOutfitsSection() {
         }
       }
     }
-    
+    // ---> ADD DE-DUPLICATION HERE <---
+    final seenIds = <String>{};
+    allItems.retainWhere((item) => seenIds.add(item['id'] as String));
+        
     // Categorize items into all six categories
     List<dynamic> tops = [];
     List<dynamic> bottoms = [];
