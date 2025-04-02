@@ -820,11 +820,22 @@ void _previousStyle() {
     final Uri url = Uri.parse(urlString);
 
     // Then open the URL using the url_launcher API
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    } else {
+    try {
+      final bool launched = await launchUrl(
+        url,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched) {
+        // Handle case where launch failed but no exception was thrown
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open the product URL')),
+        );
+      }
+    } catch (e) {
+      // Handle any exceptions during launch
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not open the product URL')),
+        SnackBar(content: Text('Failed to open URL: $e')),
       );
     }
   }
