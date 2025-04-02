@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-// import 'package:go_router/go_router.dart';
+import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
 import '../shop/product_detail_page.dart';
 import 'dart:async';
@@ -454,14 +454,19 @@ List<Widget> _buildGroupedRecommendations(List<Map<String,dynamic>> items, {bool
                 children:[
                   GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ProductDetailPage(
-                            productId: recommendedProduct['_id'],
+                      if (showFeedback) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ProductDetailPage(
+                              productId: recommendedProduct['_id'],
+                            ),
                           ),
-                        ),
-                      );
+                        );
+                      }
+                      else { //Push wardrobe page
+                        context.push('/wardrobe/item/${recommendedProduct['_id']!}');
+                      }
                     },
                     child: 
                         Container(
