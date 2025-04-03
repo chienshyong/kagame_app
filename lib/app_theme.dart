@@ -117,7 +117,7 @@ class AppTheme {
       
       // Chip theme
       chipTheme: ChipThemeData(
-        backgroundColor: primaryColor.withValues(alpha: 26),
+        backgroundColor: primaryColor.withOpacity(0.1),
         disabledColor: Colors.grey.shade300,
         selectedColor: primaryColor,
         secondarySelectedColor: primaryColor,

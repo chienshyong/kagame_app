@@ -309,29 +309,31 @@ class _RecommendPageState extends State<RecommendPage> {
 
   // Toggle dislike state for an item with feedback
   void toggleDislike(
-    String? itemName,
-    String? itemCategory,
-    BuildContext context,
-    String? clothingType,
-    String? otherTags,
-    String? color,
-    String? id,
-  ) async {
+      String? itemName,
+      String? itemCategory,
+      BuildContext context,
+      String? clothingType,
+      String? otherTags,
+      String? color,
+      String? id,
+      ) async {
     if (clothingLikes.containsKey(itemName)) {
       clothingLikes.remove(itemName);
       updateClothingLikes(itemName!, false);
     }
 
-    List<dynamic> feedbackList = [itemCategory, itemName];
-    bool isAdded = false;
-
     if (clothingDislikes.containsKey(itemName)) {
       clothingDislikes.remove(itemName);
+      await updateClothingDislikes(itemName!, false, []);
     } else {
-      clothingDislikes[itemName] = true;
-      isAdded = true;
       String? feedbackData = await _showDislikeDialog(context);
 
+      if (feedbackData == null) {
+        debugPrint('Feedback form cancelled; not triggering dislike.');
+        return;
+      }
+
+      List<dynamic> feedbackList = [itemCategory, itemName];
       if (feedbackData == "Type of item") {
         feedbackList.add("Type of item");
         feedbackList.add(clothingType);
@@ -342,25 +344,27 @@ class _RecommendPageState extends State<RecommendPage> {
         feedbackList.add("Colour");
         feedbackList.add(color);
       }
+
+      clothingDislikes[itemName] = true;
+      await updateClothingDislikes(itemName!, true, feedbackList);
+
+      if (clothingDislikes.containsKey(itemName)) {
+        setState(() {
+          _loadingReplacementIds.add(id!);
+        });
+
+        await _fetchReplacementItem(
+          startingId: productDoc!['id'],
+          previousRecId: id!,
+          dislikeReason: feedbackList.toString(),
+          itemName: itemName,
+        );
+
+        setState(() {
+          _loadingReplacementIds.remove(id);
+        });
+      }
     }
-
-    await updateClothingDislikes(itemName!, isAdded, feedbackList);
-
-    if (clothingDislikes.containsKey(itemName)) {
-      setState(() {
-        _loadingReplacementIds.add(id!);
-      });
-      await _fetchReplacementItem(
-        startingId: widget.id,
-        previousRecId: id!,
-        dislikeReason: feedbackList.toString(),
-        itemName: itemName,
-      );
-
-      setState(() {
-        _loadingReplacementIds.remove(id);
-      });
-    };
   }
 
   Future<void> updateClothingLikes(String itemName, bool isAdded) async {
@@ -544,7 +548,7 @@ List<Widget> _buildGroupedRecommendations(List<Map<String,dynamic>> items, {bool
                         child: BackdropFilter(
                           filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
                           child: Container(
-                            color: Colors.black.withValues(alpha: (0.3 * 255)),
+                            color: Colors.black.withOpacity(0.3),
                             child: Center(child: CircularProgressIndicator()),
                           ),
                         ),

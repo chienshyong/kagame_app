@@ -566,7 +566,7 @@ void _previousStyle() {
       String? feedbackData = await _feedbackFormBuilder(context);
 
       if (feedbackData == null) {
-        debugPrint('Feedback form canceled; not triggering dislike.');
+        debugPrint('Feedback form cancelled; not triggering dislike.');
         return;
       }
 
@@ -898,7 +898,7 @@ void _previousStyle() {
                               : Colors.grey,
                           shadows: [
                             Shadow(
-                              color: Colors.white.withValues(alpha: 26),
+                              color: Colors.white.withOpacity(0.1),
                               blurRadius: 20,
                             ),
                           ],
@@ -917,7 +917,7 @@ void _previousStyle() {
                               : Colors.grey,
                           shadows: [
                             Shadow(
-                              color: Colors.white.withValues(alpha: 26),
+                              color: Colors.white.withOpacity(0.1),
                               blurRadius: 20,
                             ),
                           ],
@@ -1142,7 +1142,7 @@ void _previousStyle() {
                                           : Colors.grey,
                                       shadows: [
                                         Shadow(
-                                          color: Colors.white.withValues(alpha: 26),
+                                          color: Colors.white.withOpacity(0.1),
                                           blurRadius: 20,
                                         ),
                                       ],
@@ -1162,7 +1162,7 @@ void _previousStyle() {
                                           : Colors.grey,
                                       shadows: [
                                         Shadow(
-                                          color: Colors.white.withValues(alpha: 26),
+                                          color: Colors.white.withOpacity(0.1),
                                           blurRadius: 20,
                                         ),
                                       ],
@@ -1191,7 +1191,7 @@ void _previousStyle() {
                                     filter: ImageFilter.blur(
                                         sigmaX: 5.0, sigmaY: 5.0),
                                     child: Container(
-                                      color: Colors.black.withValues(alpha: (0.3 * 255)),
+                                      color: Colors.black.withOpacity(0.3),
                                       child: Center(
                                         child: CircularProgressIndicator(),
                                       ),
