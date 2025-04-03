@@ -87,7 +87,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: (0.05 * 255)),
             blurRadius: 4,
             offset: Offset(0, 2),
           ),
@@ -100,7 +100,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar> {
             width: 50,
             child: Icon(
               Icons.search,
-              color: _isFocused ? primaryColor : secondaryColor.withOpacity(0.7),
+              color: _isFocused ? primaryColor : secondaryColor.withValues(alpha: (0.7 * 255)),
               size: _isFocused ? 24 : 22,
             ),
           ),
@@ -114,7 +114,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar> {
                 hintText: widget.hintText,
                 hintStyle: TextStyle(
                   fontSize: 15, 
-                  color: secondaryColor.withOpacity(0.6),
+                  color: secondaryColor.withValues(alpha: (0.6 * 255)),
                   fontWeight: FontWeight.w400,
                 ),
                 border: InputBorder.none,
@@ -157,9 +157,9 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar> {
               padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
               margin: EdgeInsets.only(right: 8.0),
               decoration: BoxDecoration(
-                color: primaryColor.withOpacity(0.1),
+                color: primaryColor.withValues(alpha: (0.1 * 255)),
                 borderRadius: BorderRadius.circular(16.0),
-                border: Border.all(color: primaryColor.withOpacity(0.2), width: 0.5),
+                border: Border.all(color: primaryColor.withValues(alpha: (0.2 * 255)), width: 0.5),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
