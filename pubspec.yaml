@@ -1,9 +1,9 @@
-name: kagame_app
-description: A new Fluttershy project.
+name: KagaMe
+description: KagaMe - Virtual Stylist and Digital Wardrobe.
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 0.0.1+4
+version: 1.0.3+1
 
 environment:
   sdk: ^3.1.1
