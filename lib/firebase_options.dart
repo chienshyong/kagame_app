@@ -66,7 +66,7 @@ class DefaultFirebaseOptions {
     storageBucket: 'kagame-432309.firebasestorage.app',
     androidClientId: '593204508901-li9o8cioopbqfhkmn8bh2bs35mobc6vn.apps.googleusercontent.com',
     iosClientId: '593204508901-f995pgea9cvvg1n64fv5gq0qcho9m7me.apps.googleusercontent.com',
-    iosBundleId: 'com.kagameteam.kagameApp',
+    iosBundleId: 'com.kagameteam.KagaMe',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(

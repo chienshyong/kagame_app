@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart' as fcm;
+import 'apple_auth_helper.dart';
 
 class AuthService {
   final String baseUrl = Config.apiUrl;
@@ -116,5 +117,55 @@ Future<void> login(String username, String password) async {
       return true;
     }
     return false;
+  }
+  
+  // Apple sign in
+  Future<bool> signInWithApple() async {
+    try {
+      // Use simplified helper for Apple Sign In
+      final UserCredential? userCredential = await AppleAuthHelper.signInWithApple();
+      
+      if (userCredential == null || userCredential.user == null) {
+        print("Failed to get user from Apple Sign In");
+        return false;
+      }
+      
+      // Get and store display name
+      String? displayName = userCredential.user?.displayName;
+      if (displayName == null || displayName.isEmpty) {
+        displayName = userCredential.user?.email?.split('@')[0] ?? 'Apple User';
+      }
+      
+      // Store username
+      await storage.write(key: 'username', value: displayName);
+      
+      // Send token to backend
+      try {
+        final idToken = await userCredential.user?.getIdToken();
+        
+        if (idToken == null) {
+          throw Exception("Failed to get Firebase ID token");
+        }
+        
+        final response = await http.post(
+          Uri.parse('$baseUrl/applelogin'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'id_token': idToken}),
+        ).timeout(const Duration(seconds: 10));
+        
+        if (response.statusCode == 200) {
+          final responseJson = jsonDecode(response.body);
+          await storage.write(key: 'token', value: responseJson['access_token']);
+        }
+      } catch (backendError) {
+        // Continue with login even if backend fails
+        print("Backend error: $backendError");
+      }
+      
+      return true;
+    } catch (e) {
+      print("Apple Sign In failed: $e");
+      rethrow;
+    }
   }
 }

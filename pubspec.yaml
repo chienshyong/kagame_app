@@ -35,6 +35,8 @@ dependencies:
   dropdown_search: ^5.0.6
   url_launcher: ^6.1.5 
   event_bus: ^2.0.0
+  sign_in_with_apple: ^6.1.4
+  crypto: ^3.0.6
 
 flutter_icons:
   android: true
