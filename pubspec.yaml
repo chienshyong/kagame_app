@@ -40,6 +40,8 @@ flutter_icons:
   android: true
   ios: true
   image_path: "lib/assets/app_icon.png"  # Path to your logo image
+  adaptive_icon_background: "#FFF4E9"
+  adaptive_icon_foreground: "lib/assets/app_icon_transparent_padded.png"
 
 dev_dependencies:
   flutter_test:
