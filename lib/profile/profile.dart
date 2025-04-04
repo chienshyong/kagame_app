@@ -224,7 +224,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
 
     if (response.statusCode == 200) {
-      context.go('/login');
       // Account deletion successful.
       // Redirect the user to the login screen or show a success message.
     } else {
@@ -661,7 +660,89 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     )
                         : Text('No items in dislikes'),
+
+                                      // Buttons at the bottom
+              Container(
+                margin: EdgeInsets.only(top: 8.0),
+                  child:
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Flexible(
+                          child:
+                            Container(
+                              margin: EdgeInsets.only(right: 4.0),
+                              child: 
+                                ElevatedButton(
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          title: const Text('Delete Your Account?'),
+                                          content: const Text(
+                                            'Deleting your account will permamnently remove all your user data.'
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              child: const Text('Cancel'),
+                                              onPressed: () {
+                                                Navigator.of(context).pop(); // Dismiss the dialog
+                                              },
+                                            ),
+                                            ElevatedButton(
+                                              child: const Text('Confirm'),
+                                              onPressed: () async {
+                                                await deleteUserAccount();
+                                                await authService.logout();
+                                                context.go('/login');
+                                              },
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  },
+                                  
+                                  child: const Text('Delete Account'),
+                                  style: ElevatedButton.styleFrom(
+                                    foregroundColor: Colors.white,
+                                    backgroundColor: Colors.red[400],
+                                    textStyle: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                        ),
+
+                        Flexible(
+                          child:
+                            Container(
+                              margin: EdgeInsets.only(right: 4.0),
+                              child: 
+                                ElevatedButton(
+                                  onPressed: () async {
+                                    await authService.logout();
+                                    context.go('/login');
+                                  },
+                                  child: const Text('Log Out'),
+                                  style: ElevatedButton.styleFrom(
+                                    textStyle: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                            ),
+                          ),
+                        ]
+                      ),
+                    ),
                   ]
+
+                  
 
                   // EDIT MODE
                   else ...[
