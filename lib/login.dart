@@ -80,6 +80,26 @@ class _LoginPageState extends State<LoginPage> {
                   )
               ),
 
+              SizedBox(height: 24),
+
+              Text(
+                'Kagami (かがみ): Mirror',
+                style: TextStyle(
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.w300,
+                  fontStyle: FontStyle.italic,
+                  )
+              ),
+
+              Text(
+                'Reflect Your Style, Redefine Your Wardrobe',
+                style: TextStyle(
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.w300,
+                  fontStyle: FontStyle.italic,
+                  )
+              ),
+
               SizedBox(height: 64),
 
               TextField(
