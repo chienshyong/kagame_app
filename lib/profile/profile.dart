@@ -7,6 +7,7 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../services/auth_service.dart';
 import 'stylequiz.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfilePage extends StatefulWidget {
   final bool initialEditing;
@@ -450,6 +451,19 @@ class _ProfilePageState extends State<ProfilePage> {
                     "You can tell us as much as you want, but the more we know about you, the better recommendations we can make :)",
                     style: TextStyle(fontSize: 16.0, color: Colors.grey[700]),
                   ),
+
+                  TextButton(
+                    onPressed: () async {
+                      final Uri url = Uri.parse('https://kagame.webflow.io/privacy-policy');
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url); // Launch the URL
+                      } else {
+                        throw 'Could not launch $url'; // Handle error if the URL can't be launched
+                      }
+                    },
+                    child: const Text('Privacy Policy'),
+                  ),
+
                   const SizedBox(height: 24),
 
                   // VIEW ONLY MODE
@@ -668,14 +682,38 @@ class _ProfilePageState extends State<ProfilePage> {
                     )
                         : Text('No items in dislikes'),
 
-                                      // Buttons at the bottom
+               // Buttons at the bottom
               Container(
+                width: double.infinity,
                 margin: EdgeInsets.only(top: 8.0),
                   child:
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      // mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        Flexible(
+
+                        Container(
+                          child:
+                            Container(
+                              margin: EdgeInsets.only(right: 4.0),
+                              child: 
+                                ElevatedButton(
+                                  onPressed: () async {
+                                    await authService.logout();
+                                    context.go('/login');
+                                  },
+                                  child: const Text('Log Out'),
+                                  style: ElevatedButton.styleFrom(
+                                    textStyle: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                            ),
+                          ),
+
+                        Container(
                           child:
                             Container(
                               margin: EdgeInsets.only(right: 4.0),
@@ -724,26 +762,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                         ),
 
-                        Flexible(
-                          child:
-                            Container(
-                              margin: EdgeInsets.only(right: 4.0),
-                              child: 
-                                ElevatedButton(
-                                  onPressed: () async {
-                                    await authService.logout();
-                                    context.go('/login');
-                                  },
-                                  child: const Text('Log Out'),
-                                  style: ElevatedButton.styleFrom(
-                                    textStyle: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                            ),
-                          ),
+                        
                         ]
                       ),
                     ),
