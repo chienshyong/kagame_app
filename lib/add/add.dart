@@ -117,64 +117,95 @@ class _MultiImagePickerPageState extends State<MultiImagePickerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Add to your Wardrobe'),
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(15.0),
-            child: Text(
-              'Upload photos of your clothing to your wardrobe. Our virtual assistant will label and sort them automatically!',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-          ),
-          Expanded(
-            child: GridView.builder(
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 4.0,
-                mainAxisSpacing: 4.0,
-              ),
-              itemCount: _images.length,
-              itemBuilder: (context, index) {
-                return Image.file(
-                  _images[index],
-                  fit: BoxFit.cover,
-                );
-              },
-            ),
-          ),
-          if (_isLoading)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
+      body: NestedScrollView(
+        headerSliverBuilder:
+            (BuildContext context, bool innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              backgroundColor: Color(0xFFFFF4E9),
+              pinned: false,
+              floating: true,
+              snap: true,
+              toolbarHeight: 80.0,
+              titleSpacing: 12,
+              title: Row(
                 children: [
-                  Text('Uploading... ($_currentUploadIndex/${_images.length})'),
-                  LinearProgressIndicator(value: _uploadProgress),
+                  GestureDetector(
+                    child: Image.asset(
+                      'lib/assets/KagaMe.png',
+                      width: 120.0,
+                      height: 60.0,
+                    ),
+                  ),
                 ],
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  onPressed: _pickImages,
-                  child: Text('Pick Images'),
-                ),
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _confirmSelection,
-                  child: _isLoading
-                      ? CircularProgressIndicator(color: Colors.white)
-                      : Text('Confirm'),
-                ),
-              ],
+          ];
+        },
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0), // Adjust value as needed
+              child: Text(
+                'Add Clothes',
+                style: const TextStyle(fontSize: 30.0, color: Colors.black),
+              ),
             ),
-          ),
-        ],
-      ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                'Upload photos of your clothing to your wardrobe. Our virtual assistant will label and sort them automatically!',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+            ),
+            Expanded(
+              child: GridView.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 4.0,
+                  mainAxisSpacing: 4.0,
+                ),
+                itemCount: _images.length,
+                itemBuilder: (context, index) {
+                  return Image.file(
+                    _images[index],
+                    fit: BoxFit.cover,
+                  );
+                },
+              ),
+            ),
+            if (_isLoading)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    Text('Uploading... ($_currentUploadIndex/${_images.length})'),
+                    LinearProgressIndicator(value: _uploadProgress),
+                  ],
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: _pickImages,
+                    child: Text('Pick Images'),
+                  ),
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _confirmSelection,
+                    child: _isLoading
+                        ? CircularProgressIndicator(color: Colors.white)
+                        : Text('Confirm'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      )
     );
   }
 }
