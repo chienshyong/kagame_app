@@ -1,7 +1,5 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:math';
-import 'package:crypto/crypto.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config.dart';
 
@@ -9,7 +7,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart' as fcm;
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'apple_auth_helper.dart';
 
 class AuthService {
