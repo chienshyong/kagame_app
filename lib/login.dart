@@ -182,13 +182,42 @@ class _LoginPageState extends State<LoginPage> {
                   ElevatedButton(
                     onPressed: () async {
                       try {
-                        if(await authService.signInWithApple()){
+                        // Show loading indicator
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (BuildContext context) {
+                            return Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          },
+                        );
+                        
+                        final result = await authService.signInWithApple();
+                        
+                        // Close loading indicator
+                        Navigator.of(context).pop();
+                        
+                        if(result) {
                           context.go('/wardrobe');
                         }
                       } catch (e) {
+                        // Close loading indicator if it's shown
+                        if (Navigator.canPop(context)) {
+                          Navigator.of(context).pop();
+                        }
+                        
                         print("Error signing in with Apple: $e");
+                        
+                        String errorMessage = "Apple sign in failed. Please try again.";
+                        if (e.toString().contains("not available on this device")) {
+                          errorMessage = "Sign in with Apple requires iOS 13 or later.";
+                        } else if (e.toString().contains("canceled")) {
+                          errorMessage = "Sign in was canceled.";
+                        }
+                        
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Apple sign in failed. Please try again.")),
+                          SnackBar(content: Text(errorMessage)),
                         );
                       }
                     },
