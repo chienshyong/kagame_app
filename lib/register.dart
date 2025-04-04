@@ -83,27 +83,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 'Your Personal AI Stylist',
                 style: TextStyle(
                   fontSize: 16.0,
-                  fontWeight: FontWeight.bold,
-                  )
-              ),
-
-              SizedBox(height: 24),
-
-              Text(
-                'Kagami (かがみ): Mirror',
-                style: TextStyle(
-                  fontSize: 16.0,
                   fontWeight: FontWeight.w300,
-                  fontStyle: FontStyle.italic,
-                  )
-              ),
-
-              Text(
-                'Reflect Your Style, Redefine Your Wardrobe',
-                style: TextStyle(
-                  fontSize: 16.0,
-                  fontWeight: FontWeight.w300,
-                  fontStyle: FontStyle.italic,
                   )
               ),
 
