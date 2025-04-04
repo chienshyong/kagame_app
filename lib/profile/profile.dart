@@ -10,7 +10,10 @@ import 'stylequiz.dart';
 
 class ProfilePage extends StatefulWidget {
   final bool initialEditing;
-  const ProfilePage({Key? key, this.initialEditing = false}) : super(key: key);
+  const ProfilePage({
+    Key? key,
+    this.initialEditing = false
+  }) : super(key: key);
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -24,10 +27,8 @@ class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController _birthdayController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
-  final TextEditingController _clothingPrefsController =
-      TextEditingController();
-  final TextEditingController _clothingDislikesController =
-      TextEditingController();
+  final TextEditingController _clothingPrefsController = TextEditingController();
+  final TextEditingController _clothingDislikesController = TextEditingController();
 
   // FocusNodes
   final FocusNode _ageFocusNode = FocusNode();
@@ -384,20 +385,26 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 if (_isEditing)
                   IconButton(
-                    icon: const Icon(Icons.save),
+                    icon: const Icon(Icons.check),
                     onPressed: () {
-                      if (_validateBirthday(_birthdayController.text)) {
-                        updateProfileData().then((_) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Profile Updated.")),
-                          );
-                          setState(() {
-                            _isEditing = false;
+                      if (_genderSelected.isNotEmpty) {
+                        if (_validateBirthday(_birthdayController.text)) {
+                          updateProfileData().then((_) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Profile Updated.")),
+                            );
+                            setState(() {
+                              _isEditing = false;
+                            });
                           });
-                        });
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Invalid birthday date.")),
+                          );
+                        }
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Invalid birthday date.")),
+                          const SnackBar(content: Text("Please select a gender")),
                         );
                       }
                     },
@@ -681,13 +688,13 @@ class _ProfilePageState extends State<ProfilePage> {
                                         return AlertDialog(
                                           title: const Text('Delete Your Account?'),
                                           content: const Text(
-                                            'Deleting your account will permamnently remove all your user data.'
+                                            'Deleting your account will permanently remove all your user data.'
                                           ),
                                           actions: [
                                             TextButton(
                                               child: const Text('Cancel'),
                                               onPressed: () {
-                                                Navigator.of(context).pop(); // Dismiss the dialog
+                                                Navigator.of(context).pop();
                                               },
                                             ),
                                             ElevatedButton(
@@ -795,14 +802,20 @@ class _ProfilePageState extends State<ProfilePage> {
                     Center(
                       child: ElevatedButton(
                         onPressed: () async {
-                          await updateProfileData();
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => QuizPage()),
-                          );
-                          setState(() {
-                            getProfileData();
-                          });
+                          if (_genderSelected.isEmpty || _genderSelected == "Prefer not to say") {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Please select gender before proceeding")),
+                            );
+                          } else {
+                            await updateProfileData();
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => QuizPage(gender: _genderSelected)),
+                            );
+                            setState(() {
+                              getProfileData();
+                            });
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),

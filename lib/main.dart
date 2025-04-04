@@ -160,7 +160,8 @@ void main() async {
                   GoRoute(
                     path: 'quiz',
                     builder: (context, state) {
-                      return QuizPage();
+                      final gender = state.extra as String? ?? '';
+                      return QuizPage(gender: gender);
                     },
                   ),
                 ],

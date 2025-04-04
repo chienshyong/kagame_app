@@ -1,19 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
+import 'profile.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:convert';
 
 class QuizPage extends StatefulWidget {
+  final String gender;
+  QuizPage({required this.gender});
   @override
   _QuizPageState createState() => _QuizPageState();
 }
 
 class _QuizPageState extends State<QuizPage> {
-  final AuthService authService = AuthService();
-
   bool? _isMale;
+  final AuthService authService = AuthService();
   int _currentQuestionIndex = 0;
   Map<String, int> _styleCount = {}; //track frequency of styles
+
+  @override
+  void initState() {
+    super.initState();
+    _isMale = widget.gender == 'Male';
+  }
 
   final List<Map<String, dynamic>> _maleQuestions = [
     {
@@ -188,7 +197,23 @@ class _QuizPageState extends State<QuizPage> {
   void _showResults() async {
     String resultStyle = _calculateStyle();
     await postResult(resultStyle);
-    Navigator.pop(context);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Your Style is: $resultStyle'),
+        actions: [
+          TextButton(
+            child: Text('OK'),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ProfilePage(initialEditing: false),
+              ));
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   String _calculateStyle() {
