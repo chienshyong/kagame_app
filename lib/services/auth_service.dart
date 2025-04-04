@@ -1,5 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:math';
+import 'package:crypto/crypto.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config.dart';
 
@@ -8,6 +10,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart' as fcm;
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'apple_auth_helper.dart';
 
 class AuthService {
   final String baseUrl = Config.apiUrl;
@@ -119,57 +122,81 @@ Future<void> login(String username, String password) async {
     return false;
   }
   
-  // Apple sign in
+  // Apple sign in - Simplified version
   Future<bool> signInWithApple() async {
+    print("🍎 Starting simplified Apple Sign In process");
+    
     try {
-      // Request credential for the user
-      final appleCredential = await SignInWithApple.getAppleIDCredential(
-        scopes: [
-          AppleIDAuthorizationScopes.email,
-          AppleIDAuthorizationScopes.fullName,
-        ],
-      );
+      // Use helper class that tries multiple approaches
+      final UserCredential? userCredential = await AppleAuthHelper.signInWithApple();
       
-      // Create an OAuthCredential from the credential returned by Apple
-      final oauthCredential = OAuthProvider("apple.com").credential(
-        idToken: appleCredential.identityToken,
-        accessToken: appleCredential.authorizationCode,
-      );
+      if (userCredential == null || userCredential.user == null) {
+        print("❌ Failed to get user from Apple Sign In");
+        return false;
+      }
       
-      // Sign in the user with Firebase
-      final UserCredential userCredential = 
-          await FirebaseAuth.instance.signInWithCredential(oauthCredential);
+      print("✅ Apple Sign In successful!");
+      print("🍎 User ID: ${userCredential.user?.uid}");
+      print("🍎 Email: ${userCredential.user?.email}");
       
-      print("Signed in with Apple as ${userCredential.user?.displayName ?? userCredential.user?.email}");
-      
-      // Use email as display name if no name is provided
+      // Get and store display name
       String? displayName = userCredential.user?.displayName;
       if (displayName == null || displayName.isEmpty) {
-        displayName = userCredential.user?.email?.split('@')[0]; // Use the part before @ as display name
+        // Fall back to email prefix if available
+        displayName = userCredential.user?.email?.split('@')[0] ?? 'Apple User';
+        print("🍎 Using email-derived display name: $displayName");
       }
       
+      // Store username
       await storage.write(key: 'username', value: displayName);
+      print("✅ Stored username: $displayName");
       
-      // Get Firebase ID Token
-      User? user = FirebaseAuth.instance.currentUser;
-      String? idToken = await user?.getIdToken();
-      
-      // Get session token from backend
-      final response = await http.post(
-        Uri.parse('$baseUrl/applelogin'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'id_token': idToken}),
-      );
-      
-      if (response.statusCode == 200) {
-        final responseJson = jsonDecode(response.body);
-        await storage.write(key: 'token', value: responseJson['access_token']);
-        return true;
+      // Send token to backend
+      try {
+        print("🍎 Getting Firebase ID token for backend");
+        final idToken = await userCredential.user?.getIdToken();
+        
+        if (idToken == null) {
+          print("❌ Firebase ID token is null");
+          throw Exception("Failed to get Firebase ID token");
+        }
+        
+        print("✅ Got Firebase token (${idToken.length} chars)");
+        print("🍎 Sending token to backend");
+        
+        final response = await http.post(
+          Uri.parse('$baseUrl/applelogin'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'id_token': idToken}),
+        ).timeout(const Duration(seconds: 10));
+        
+        print("🍎 Backend response status: ${response.statusCode}");
+        
+        if (response.statusCode == 200) {
+          final responseJson = jsonDecode(response.body);
+          await storage.write(key: 'token', value: responseJson['access_token']);
+          print("✅ Successfully saved backend token");
+        } else {
+          print("❌ Backend login failed: ${response.statusCode}");
+          // Continue with login even if backend token exchange fails
+        }
+      } catch (backendError) {
+        print("❌ Backend error: $backendError");
+        // Continue with login even if backend fails
       }
-      return false;
+      
+      return true;
     } catch (e) {
-      print("Error signing in with Apple: $e");
-      return false;
+      print("❌ Apple Sign In failed: $e");
+      
+      // Show detailed error if it's an Apple error code
+      if (e.toString().contains("1000")) {
+        print("❌ Error 1000 - Provider configuration issue");
+        print("❌ Make sure Sign in with Apple is enabled in Apple Developer Portal");
+        print("❌ Verify Firebase has Apple provider enabled");
+      }
+      
+      rethrow;
     }
   }
 }
