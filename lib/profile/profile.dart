@@ -24,8 +24,10 @@ class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController _birthdayController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
-  final TextEditingController _clothingPrefsController = TextEditingController();
-  final TextEditingController _clothingDislikesController = TextEditingController();
+  final TextEditingController _clothingPrefsController =
+      TextEditingController();
+  final TextEditingController _clothingDislikesController =
+      TextEditingController();
 
   // FocusNodes
   final FocusNode _ageFocusNode = FocusNode();
@@ -44,7 +46,11 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _isEditing = false;
 
   // Gender dropdown
-  List<String> _genderDropdownList = <String>["Prefer not to say", "Female", "Male"];
+  List<String> _genderDropdownList = <String>[
+    "Prefer not to say",
+    "Female",
+    "Male"
+  ];
   String _genderSelected = "Prefer not to say";
 
   // Clothing likes and dislikes
@@ -142,7 +148,8 @@ class _ProfilePageState extends State<ProfilePage> {
   // Load countries into the dropdown
   Future<void> loadCountriesFile() async {
     try {
-      String fileContent = await rootBundle.loadString('lib/assets/countries.txt');
+      String fileContent =
+          await rootBundle.loadString('lib/assets/countries.txt');
       List<String> countriesList = fileContent.split('\n');
       setState(() {
         countries = countriesList;
@@ -205,7 +212,29 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void removeLike (String? itemName) async {
+  Future<void> deleteUserAccount() async {
+    final token = await authService.getToken(); // Obtain the user's token
+    final baseUrl = authService.baseUrl;
+
+    final response = await http.delete(
+      Uri.parse('$baseUrl/deleteuser'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      context.go('/login');
+      // Account deletion successful.
+      // Redirect the user to the login screen or show a success message.
+    } else {
+      // Handle errors as needed.
+      final errorMessage = json.decode(response.body)['detail'];
+      throw Exception('Failed to delete account: $errorMessage');
+    }
+  }
+
+  void removeLike(String? itemName) async {
     final String baseUrl = authService.baseUrl;
     final token = await authService.getToken();
 
@@ -232,7 +261,7 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
-  void removeDislike (String? itemName) async {
+  void removeDislike(String? itemName) async {
     final String baseUrl = authService.baseUrl;
     final token = await authService.getToken();
 
@@ -261,7 +290,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // Birthday formatter
   final birthdayFormatter = TextInputFormatter.withFunction(
-        (oldValue, newValue) {
+    (oldValue, newValue) {
       String text = newValue.text;
       int selectionIndex = newValue.selection.end;
 
@@ -299,7 +328,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
     try {
       DateTime parsedDate = DateTime(year, month, day);
-      if (parsedDate.day != day || parsedDate.month != month || parsedDate.year != year) {
+      if (parsedDate.day != day ||
+          parsedDate.month != month ||
+          parsedDate.year != year) {
         return false;
       }
       return true;
@@ -365,8 +396,8 @@ class _ProfilePageState extends State<ProfilePage> {
       body: RefreshIndicator(
         onRefresh: () async {
           await getProfileData();
-          },
-          child: Padding(
+        },
+        child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -378,12 +409,15 @@ class _ProfilePageState extends State<ProfilePage> {
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const CircularProgressIndicator();
-                    } else if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
+                    } else if (snapshot.hasError ||
+                        !snapshot.hasData ||
+                        snapshot.data == null) {
                       return const Text('No user found.');
                     } else {
                       return Text(
                         'Hello, ${snapshot.data}!',
-                        style: const TextStyle(fontSize: 30.0, color: Colors.black),
+                        style: const TextStyle(
+                            fontSize: 30.0, color: Colors.black),
                       );
                     }
                   },
@@ -485,65 +519,72 @@ class _ProfilePageState extends State<ProfilePage> {
                     style: const TextStyle(fontSize: 16.0),
                   ),
                   _likesImages.isNotEmpty
-                  ? Container(
-                    height: 320,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _likesImages.length,
-                      itemBuilder: (context, index) => Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Container(
-                          width: 140,
-                          child: Column(
-                            children: [
-                              Container(
+                      ? Container(
+                          height: 320,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _likesImages.length,
+                            itemBuilder: (context, index) => Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: Container(
                                 width: 140,
-                                height: 190,
-                                child: Stack(
+                                child: Column(
                                   children: [
-                                    CachedNetworkImage(
-                                      imageUrl: _likesImages.values.elementAt(index),
+                                    Container(
                                       width: 140,
                                       height: 190,
-                                      fit: BoxFit.cover,
-                                      placeholder: (context, url) =>
-                                          Center(child: CircularProgressIndicator()),
-                                      errorWidget: (context, url, error) =>
-                                          Icon(Icons.error, color: Colors.red),
+                                      child: Stack(
+                                        children: [
+                                          CachedNetworkImage(
+                                            imageUrl: _likesImages.values
+                                                .elementAt(index),
+                                            width: 140,
+                                            height: 190,
+                                            fit: BoxFit.cover,
+                                            placeholder: (context, url) => Center(
+                                                child:
+                                                    CircularProgressIndicator()),
+                                            errorWidget:
+                                                (context, url, error) => Icon(
+                                                    Icons.error,
+                                                    color: Colors.red),
+                                          ),
+                                          Positioned(
+                                            top: 0,
+                                            right: 0,
+                                            child: IconButton(
+                                              icon: Icon(Icons.close,
+                                                  color: Colors.red),
+                                              onPressed: () {
+                                                removeLike(_likesImages.keys
+                                                    .elementAt(index));
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                    Positioned(
-                                      top: 0,
-                                      right: 0,
-                                      child: IconButton(
-                                        icon: Icon(Icons.close, color: Colors.red),
-                                        onPressed: () {
-                                          removeLike(_likesImages.keys.elementAt(index));
-                                        },
+                                    const SizedBox(height: 4),
+                                    Container(
+                                      width: 140,
+                                      child: Text(
+                                        _likesImages.keys.elementAt(index),
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          fontSize: 16.0,
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                        softWrap: true,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                              const SizedBox(height: 4),
-                              Container(
-                                width: 140,
-                                child: Text(
-                                  _likesImages.keys.elementAt(index),
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    fontSize: 16.0,
-                                    fontWeight: FontWeight.normal,
-                                  ),
-                                  softWrap: true,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
-                  )
-                  : Text('No items in likes'),
+                        )
+                      : Text('No items in likes'),
                   const SizedBox(height: 16),
                   Text(
                     "Clothing Dislikes",
@@ -551,64 +592,157 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   _dislikesImages.isNotEmpty
                       ? Container(
-                    height: 290,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _dislikesImages.length,
-                      itemBuilder: (context, index) => Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Container(
-                          width: 140,
-                          child: Column(
-                            children: [
-                              Container(
+                          height: 290,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _dislikesImages.length,
+                            itemBuilder: (context, index) => Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: Container(
                                 width: 140,
-                                height: 190,
-                                child: Stack(
+                                child: Column(
                                   children: [
-                                    CachedNetworkImage(
-                                      imageUrl: _dislikesImages.values.elementAt(index),
+                                    Container(
                                       width: 140,
                                       height: 190,
-                                      fit: BoxFit.cover,
-                                      placeholder: (context, url) =>
-                                          Center(child: CircularProgressIndicator()),
-                                      errorWidget: (context, url, error) =>
-                                          Icon(Icons.error, color: Colors.red),
+                                      child: Stack(
+                                        children: [
+                                          CachedNetworkImage(
+                                            imageUrl: _dislikesImages.values
+                                                .elementAt(index),
+                                            width: 140,
+                                            height: 190,
+                                            fit: BoxFit.cover,
+                                            placeholder: (context, url) => Center(
+                                                child:
+                                                    CircularProgressIndicator()),
+                                            errorWidget:
+                                                (context, url, error) => Icon(
+                                                    Icons.error,
+                                                    color: Colors.red),
+                                          ),
+                                          Positioned(
+                                            top: 0,
+                                            right: 0,
+                                            child: IconButton(
+                                              icon: Icon(Icons.close,
+                                                  color: Colors.red),
+                                              onPressed: () {
+                                                removeDislike(_dislikesImages
+                                                    .keys
+                                                    .elementAt(index));
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                    Positioned(
-                                      top: 0,
-                                      right: 0,
-                                      child: IconButton(
-                                        icon: Icon(Icons.close, color: Colors.red),
-                                        onPressed: () {
-                                          removeDislike(_dislikesImages.keys.elementAt(index));
-                                        },
+                                    const SizedBox(height: 4),
+                                    Container(
+                                      width: 140,
+                                      child: Text(
+                                        _dislikesImages.keys.elementAt(index),
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          fontSize: 16.0,
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                        softWrap: true,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                              const SizedBox(height: 4),
-                              Container(
-                                width: 140,
-                                child: Text(
-                                  _dislikesImages.keys.elementAt(index),
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    fontSize: 16.0,
-                                    fontWeight: FontWeight.normal,
+                            ),
+                          ),
+                        )
+                      : Text('No items in dislikes'),
+
+                  // Log Out and Delete Account Buttons
+                  Container(
+                      margin: EdgeInsets.only(top: 8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Flexible(
+                            child: Container(
+                              margin: EdgeInsets.only(right: 4.0),
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                          title: const Text(
+                                            'Delete Your Account?',
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          content: const Text(
+                                            'Deleting your account will permanently erase all your data.',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              child: const Text('Cancel'),
+                                              onPressed: () {
+                                                Navigator.of(context)
+                                                    .pop(); // Dismiss the dialog
+                                              },
+                                            ),
+                                            ElevatedButton(
+                                                child: const Text('Confirm'),
+                                                onPressed: () {
+                                                  setState(() async {
+                                                    await deleteUserAccount();
+                                                    await authService.logout();
+                                                    context.go('/login');
+
+                                                  });
+                                                })
+                                          ]);
+                                    },
+                                  );
+                                },
+                                child: const Text('Delete Account'),
+                                style: ElevatedButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  backgroundColor: Colors.red[400],
+                                  textStyle: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  softWrap: true,
                                 ),
                               ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
-                  )
-                      : Text('No items in dislikes'),
+                          Flexible(
+                            child: Container(
+                              margin: EdgeInsets.only(right: 4.0),
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  setState(() async {
+                                    await authService.logout();
+                                    context.go('/login');
+                                  });
+                                },
+                                child: const Text('Log Out'),
+                                style: ElevatedButton.styleFrom(
+                                  textStyle: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ))
                 ]
 
                 // EDIT MODE
@@ -626,7 +760,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         _genderSelected = value!;
                       });
                     },
-                    items: _genderDropdownList.map<DropdownMenuItem<String>>((String value) {
+                    items: _genderDropdownList
+                        .map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
                         child: Text(value),
@@ -656,7 +791,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   const SizedBox(height: 16),
                   Text(
                     "Style: $_styleResult",
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(height: 8),
                   Center(
@@ -672,7 +808,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         });
                       },
                       style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 12),
                         textStyle: const TextStyle(fontSize: 16),
                       ),
                       child: const Text('Find my style'),
@@ -706,7 +843,8 @@ class _ProfilePageState extends State<ProfilePage> {
       inputFormatters: inputFormatters,
       maxLines: maxLines,
       readOnly: readOnly,
-      textInputAction: nextFocusNode != null ? TextInputAction.next : TextInputAction.done,
+      textInputAction:
+          nextFocusNode != null ? TextInputAction.next : TextInputAction.done,
       onSubmitted: (_) {
         if (nextFocusNode != null) {
           FocusScope.of(context).requestFocus(nextFocusNode);
@@ -733,8 +871,8 @@ class _ProfilePageState extends State<ProfilePage> {
       selectedItem: controller.text.isNotEmpty ? controller.text : null,
       onChanged: enabled
           ? (value) {
-        controller.text = value ?? '';
-      }
+              controller.text = value ?? '';
+            }
           : null,
       popupProps: PopupProps.menu(
         showSearchBox: true,
