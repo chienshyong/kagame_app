@@ -171,6 +171,50 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                   ),
               ),
+              
+              SizedBox(height: 8),
+              
+              // Sign in with Apple button - Only show on iOS
+              if (Theme.of(context).platform == TargetPlatform.iOS)
+              Container(
+                alignment: Alignment.center,
+                child: 
+                  ElevatedButton(
+                    onPressed: () async {
+                      try {
+                        if(await authService.signInWithApple()){
+                          context.go('/wardrobe');
+                        }
+                      } catch (e) {
+                        print("Error signing in with Apple: $e");
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Apple sign in failed. Please try again.")),
+                        );
+                      }
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.apple,
+                          size: 18,
+                        ),
+                        SizedBox(width: 8),
+                        Text('Sign in with Apple'),
+                      ],
+                    ),
+                    
+                    style:
+                      ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black, // Button background color
+                        foregroundColor: Colors.white, // Text color
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50),
+                        )
+                      ),
+                  ),
+              ),
 
               // Clickable text for new user registration
               TextButton(
