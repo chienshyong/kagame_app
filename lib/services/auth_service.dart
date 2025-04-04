@@ -119,47 +119,33 @@ Future<void> login(String username, String password) async {
     return false;
   }
   
-  // Apple sign in - Simplified version
+  // Apple sign in
   Future<bool> signInWithApple() async {
-    print("🍎 Starting simplified Apple Sign In process");
-    
     try {
-      // Use helper class that tries multiple approaches
+      // Use simplified helper for Apple Sign In
       final UserCredential? userCredential = await AppleAuthHelper.signInWithApple();
       
       if (userCredential == null || userCredential.user == null) {
-        print("❌ Failed to get user from Apple Sign In");
+        print("Failed to get user from Apple Sign In");
         return false;
       }
-      
-      print("✅ Apple Sign In successful!");
-      print("🍎 User ID: ${userCredential.user?.uid}");
-      print("🍎 Email: ${userCredential.user?.email}");
       
       // Get and store display name
       String? displayName = userCredential.user?.displayName;
       if (displayName == null || displayName.isEmpty) {
-        // Fall back to email prefix if available
         displayName = userCredential.user?.email?.split('@')[0] ?? 'Apple User';
-        print("🍎 Using email-derived display name: $displayName");
       }
       
       // Store username
       await storage.write(key: 'username', value: displayName);
-      print("✅ Stored username: $displayName");
       
       // Send token to backend
       try {
-        print("🍎 Getting Firebase ID token for backend");
         final idToken = await userCredential.user?.getIdToken();
         
         if (idToken == null) {
-          print("❌ Firebase ID token is null");
           throw Exception("Failed to get Firebase ID token");
         }
-        
-        print("✅ Got Firebase token (${idToken.length} chars)");
-        print("🍎 Sending token to backend");
         
         final response = await http.post(
           Uri.parse('$baseUrl/applelogin'),
@@ -167,32 +153,18 @@ Future<void> login(String username, String password) async {
           body: jsonEncode({'id_token': idToken}),
         ).timeout(const Duration(seconds: 10));
         
-        print("🍎 Backend response status: ${response.statusCode}");
-        
         if (response.statusCode == 200) {
           final responseJson = jsonDecode(response.body);
           await storage.write(key: 'token', value: responseJson['access_token']);
-          print("✅ Successfully saved backend token");
-        } else {
-          print("❌ Backend login failed: ${response.statusCode}");
-          // Continue with login even if backend token exchange fails
         }
       } catch (backendError) {
-        print("❌ Backend error: $backendError");
         // Continue with login even if backend fails
+        print("Backend error: $backendError");
       }
       
       return true;
     } catch (e) {
-      print("❌ Apple Sign In failed: $e");
-      
-      // Show detailed error if it's an Apple error code
-      if (e.toString().contains("1000")) {
-        print("❌ Error 1000 - Provider configuration issue");
-        print("❌ Make sure Sign in with Apple is enabled in Apple Developer Portal");
-        print("❌ Verify Firebase has Apple provider enabled");
-      }
-      
+      print("Apple Sign In failed: $e");
       rethrow;
     }
   }
