@@ -1,22 +1,15 @@
 // lib/widgets/wardrobe_visualization_widget.dart
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
-import '../services/auth_service.dart'; // Keep for potential fallback or other uses
-// Import StylePaginationHeader if it's in its own file
-// import 'style_pagination_header.dart';
-import '../shop/product_detail_page.dart'; // Or wherever StylePaginationHeader is defined
-
+import '../shop/product_detail_page.dart'; // where StylePaginationHeader is defined
 class WardrobeVisualizationWidget extends StatefulWidget {
   final Map<String, dynamic>? visualizationData;
   final bool isLoading;
-  // AuthService might not be strictly needed anymore if backend provides all URLs
-  final AuthService authService;
 
   const WardrobeVisualizationWidget({
     Key? key,
     required this.visualizationData,
     required this.isLoading,
-    required this.authService,
   }) : super(key: key);
 
   @override
