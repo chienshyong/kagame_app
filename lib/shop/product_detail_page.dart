@@ -7,6 +7,7 @@ import '../services/auth_service.dart';
 import 'package:flutter_client_sse/flutter_client_sse.dart'; // Use the correct import for flutter_client_sse
 import 'dart:async';
 import 'package:shimmer/shimmer.dart';
+import '../widgets/wardrobe_visualization_widget.dart'; // <-- Import the new widget
 
 class ProductDetailPage extends StatefulWidget {
   final String productId;
@@ -111,6 +112,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   List<dynamic> recommendedOutfits = [];
   bool isLoadingOutfits = false;
   StreamSubscription<SSEModel>? _outfitSubscription; // Add this line
+
+  /// Matching wardrobe items
+  Map<String, dynamic>? matchingWardrobeItemsData;
+  bool isLoadingWardrobeItems = false;
 
   /// Clothing preferences (likes & dislikes)
   Map<String?, dynamic> clothingLikes = {};
@@ -838,6 +843,220 @@ void _previousStyle() {
       );
     }
   }
+  /// Fetch matching wardrobe items for the current shop item
+  Future<void> _fetchMatchingWardrobeItems() async {
+    if (productDoc == null) return;
+
+    // Check if data is already fetched to avoid redundant calls within the same modal session
+    if (matchingWardrobeItemsData != null && !isLoadingWardrobeItems) {
+      debugPrint("Matching wardrobe items already loaded.");
+      // Trigger a rebuild of the modal content if it's already open
+       // This requires passing a StateSetter down or using a different state management approach.
+       // For simplicity, we'll rely on the StatefulBuilder in _showWardrobeVisualizationModal.
+      return;
+    }
+
+    debugPrint("Fetching matching wardrobe items..."); // Add log
+    setState(() => isLoadingWardrobeItems = true);
+
+    // Refresh the modal state if it's open
+    // This is tricky without direct access to the modal's StateSetter.
+    // The StatefulBuilder inside the modal will handle rebuilds when isLoadingWardrobeItems changes.
+
+
+    final token = await authService.getToken();
+    final baseUrl = authService.baseUrl;
+    final String productId = productDoc!['id'] ?? '';
+    // Ensure product ID is valid before making the call
+    if (productId.isEmpty) {
+      debugPrint("Product ID is empty, cannot fetch matching items.");
+      setState(() => isLoadingWardrobeItems = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+         SnackBar(content: Text('Error: Product ID missing.')),
+       );
+      return;
+    }
+
+    final uri = Uri.parse('$baseUrl/catalogue/matching-wardrobe-items/$productId');
+    debugPrint("Calling URL: $uri"); // Log the URL
+
+    try {
+      final response = await http.get(
+        uri,
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+       debugPrint("Response Status Code: ${response.statusCode}"); // Log status code
+       debugPrint("Response Body: ${response.body}"); // Log body (can be long)
+
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+         debugPrint("Successfully fetched and decoded matching wardrobe items.");
+        // Check if the response structure is as expected
+        if (data is Map<String, dynamic> && data.containsKey('shop_item') && data.containsKey('matching_styles')) {
+          setState(() {
+            matchingWardrobeItemsData = data;
+            isLoadingWardrobeItems = false;
+             debugPrint("State updated with matching wardrobe items data.");
+          });
+        } else {
+           throw Exception('Invalid response structure from API');
+        }
+
+      } else {
+        // Log detailed error from backend if available
+        String errorDetail = 'Failed to load matching wardrobe items';
+        try {
+          final errorData = json.decode(response.body);
+          errorDetail = errorData['detail'] ?? errorDetail;
+        } catch (_) {
+          // Ignore if response body is not valid JSON
+          errorDetail = response.body; // Show raw body on error
+        }
+         debugPrint("API Error (${response.statusCode}): $errorDetail");
+        throw Exception('API Error (${response.statusCode}): $errorDetail');
+      }
+    } catch (error, stackTrace) { // Catch stacktrace too
+      debugPrint('Error fetching matching wardrobe items: $error');
+       debugPrint('Stack trace: $stackTrace'); // Log stacktrace
+      setState(() => isLoadingWardrobeItems = false);
+
+      // Show error to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not load wardrobe items: $error')),
+      );
+    }
+  }
+
+  /// Shows the modal with matching wardrobe items
+  void _showWardrobeVisualizationModal(BuildContext context) {
+    // Fetch data *only* if it's not already loaded and not currently loading.
+    if (matchingWardrobeItemsData == null && !isLoadingWardrobeItems) {
+      _fetchMatchingWardrobeItems();
+    } else if (matchingWardrobeItemsData != null) {
+      // Data already exists, ensure loading is false
+       if (isLoadingWardrobeItems) {
+         setState(() => isLoadingWardrobeItems = false);
+       }
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (BuildContext modalContext) { // Use modalContext to avoid shadowing
+        return DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (BuildContext context, ScrollController scrollController) {
+            // Use StatefulBuilder to manage the state *within* the modal
+            return StatefulBuilder(
+              builder: (BuildContext context, StateSetter modalSetState) {
+
+                 // Re-bind state variables inside the builder to ensure updates are reflected
+                 bool currentLoadingState = isLoadingWardrobeItems;
+                 Map<String, dynamic>? currentData = matchingWardrobeItemsData;
+
+                 // We need to listen to changes in the parent state (_ProductDetailPageState)
+                 // and trigger updates in the modal using modalSetState.
+                 // A more robust way involves ValueNotifiers or other state management,
+                 // but for simplicity, we rely on the initial fetch trigger and StatefulBuilder.
+                 // If _fetchMatchingWardrobeItems is called again *while modal is open*,
+                 // we need a way to update the modal. Let's modify _fetch...
+
+                 // Let's refine the fetch logic: pass modalSetState to it
+                 Future<void> fetchAndUpdateModal() async {
+                    if (productDoc == null) return;
+
+                    modalSetState(() => isLoadingWardrobeItems = true); // Show loading in modal
+
+                    final token = await authService.getToken();
+                    final baseUrl = authService.baseUrl;
+                    final String productId = productDoc!['id'] ?? '';
+                     if (productId.isEmpty) { /* handle error */ return; }
+                    final uri = Uri.parse('$baseUrl/catalogue/matching-wardrobe-items/$productId');
+
+                    try {
+                      final response = await http.get(uri, headers: {'Authorization': 'Bearer $token'});
+                      if (modalContext.mounted) { // Check if modal is still visible
+                          if (response.statusCode == 200) {
+                            final data = json.decode(response.body);
+                            if (data is Map<String, dynamic> && data.containsKey('shop_item') && data.containsKey('matching_styles')) {
+                                modalSetState(() {
+                                  matchingWardrobeItemsData = data; // Update parent state variable
+                                  isLoadingWardrobeItems = false;
+                                });
+                                // Also update parent state if necessary, though modal relies on its own builder now
+                                if(mounted) {
+                                   setState((){
+                                      matchingWardrobeItemsData = data;
+                                      isLoadingWardrobeItems = false;
+                                   });
+                                }
+                            } else { throw Exception('Invalid response structure'); }
+                          } else { throw Exception('API Error: ${response.statusCode}'); }
+                      }
+                    } catch (error) {
+                       debugPrint('Error fetching in modal: $error');
+                       if (modalContext.mounted) {
+                          modalSetState(() => isLoadingWardrobeItems = false);
+                          // Optionally show error within the modal
+                       }
+                        // Update parent state as well
+                         if(mounted) {
+                           setState(() => isLoadingWardrobeItems = false);
+                         }
+                    }
+                 }
+
+                 // Trigger fetch if needed when modal builds
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (matchingWardrobeItemsData == null && !isLoadingWardrobeItems) {
+                       fetchAndUpdateModal();
+                    }
+                  });
+
+
+                return Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header (Keep as is)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text('Visualize with Your Wardrobe', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                          ),
+                          IconButton(icon: Icon(Icons.close), onPressed: () => Navigator.pop(modalContext)), // Use modalContext
+                        ],
+                      ),
+                      Divider(),
+
+                      // Content Area using the new Widget
+                      Expanded(
+                        child: WardrobeVisualizationWidget(
+                          visualizationData: currentData, // Pass current data from modal state
+                          isLoading: currentLoadingState, // Pass current loading state
+                          authService: authService,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -960,26 +1179,47 @@ void _previousStyle() {
                     style: TextStyle(fontSize: 18, color: const Color(0xFFA47864)), // Primary brown instead of green
                   ),
                   SizedBox(height: 8),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      final productUrl = productDoc!['product_url'] ?? '';
-                      final productId = productDoc!['id'] ?? '';
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            final productUrl = productDoc!['product_url'] ?? '';
+                            final productId = productDoc!['id'] ?? '';
 
-                      if (productUrl.isNotEmpty) {
-                        _openProductUrl(productUrl, productId);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('No product URL available')),
-                        );
-                      }
-                    },
-                  icon: Icon(Icons.shopping_bag),
-                  label: Text('SHOP NOW'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFA47864), // Primary brown color
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
+                            if (productUrl.isNotEmpty) {
+                              _openProductUrl(productUrl, productId);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('No product URL available')),
+                              );
+                            }
+                          },
+                          icon: Icon(Icons.shopping_bag),
+                          label: Text('SHOP NOW'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFA47864), // Primary brown color
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            _showWardrobeVisualizationModal(context);
+                          },
+                          icon: Icon(Icons.checkroom),
+                          label: Text('VISUALIZE WITH YOUR WARDROBE'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFFA47864),
+                            side: BorderSide(color: const Color(0xFFA47864)),
+                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   SizedBox(height: 8),
                   Text(
@@ -1428,12 +1668,12 @@ Widget buildRecommendedOutfitsSection() {
     final mainItemAlreadyAdded = allItems.any((item) => item['id'] == mainItemId);
     if (!mainItemAlreadyAdded) {
         switch (mainCategory) {
-            case 'tops': tops.insert(0, productDoc!); break;
-            case 'bottoms': bottoms.insert(0, productDoc!); break;
-            case 'dresses': dresses.insert(0, productDoc!); break;
-            case 'shoes': shoes.insert(0, productDoc!); break;
-            case 'outerwear': case 'jackets': outerwear.insert(0, productDoc!); break;
-            case 'accessories': accessories.insert(0, productDoc!); break;
+            case 'tops': tops.insert(0, productDoc!); 
+            case 'bottoms': bottoms.insert(0, productDoc!); 
+            case 'dresses': dresses.insert(0, productDoc!); 
+            case 'shoes': shoes.insert(0, productDoc!); 
+            case 'outerwear': case 'jackets': outerwear.insert(0, productDoc!); 
+            case 'accessories': accessories.insert(0, productDoc!); 
         }
     }
 
