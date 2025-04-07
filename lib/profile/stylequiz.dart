@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
-import 'profile.dart';
-//import 'package:go_router/go_router.dart';
 import 'dart:convert';
 
 class QuizPage extends StatefulWidget {
   final String gender;
-  QuizPage({required this.gender});
+  final VoidCallback onQuizComplete;
+  QuizPage({required this.gender, required this.onQuizComplete});
   @override
   _QuizPageState createState() => _QuizPageState();
 }
@@ -205,10 +205,9 @@ class _QuizPageState extends State<QuizPage> {
           TextButton(
             child: Text('OK'),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ProfilePage(initialEditing: false),
-              ));
+              Navigator.pop(context);
+              widget.onQuizComplete();
+              context.go('/profile?initialEditing=false');
             },
           ),
         ],
