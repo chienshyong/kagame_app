@@ -160,8 +160,10 @@ void main() async {
                   GoRoute(
                     path: 'quiz',
                     builder: (context, state) {
-                      final gender = state.extra as String? ?? '';
-                      return QuizPage(gender: gender);
+                      final extra = state.extra as Map<String, dynamic>? ?? {};
+                      final gender = extra['gender'] as String? ?? '';
+                      final onQuizComplete = extra['onQuizComplete'] as VoidCallback? ?? () {};
+                      return QuizPage(gender: gender, onQuizComplete: onQuizComplete);
                     },
                   ),
                 ],

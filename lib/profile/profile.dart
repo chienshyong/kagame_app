@@ -6,7 +6,6 @@ import 'package:http/http.dart' as http;
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../services/auth_service.dart';
-import 'stylequiz.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -287,6 +286,18 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() {
       getProfileData();
     });
+  }
+
+  // Updated style quiz and then return in view-only mode
+  @override
+  void didUpdateWidget(covariant ProfilePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialEditing == false && _isEditing == true) {
+      setState(() {
+        updateProfileData();
+        _isEditing = false;
+      });
+    }
   }
 
   // Birthday formatter
@@ -827,10 +838,10 @@ class _ProfilePageState extends State<ProfilePage> {
                             );
                           } else {
                             await updateProfileData();
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => QuizPage(gender: _genderSelected)),
-                            );
+                            await context.push('/profile/quiz', extra: {
+                              'gender': _genderSelected,
+                              'onQuizComplete': getProfileData,
+                            });
                             setState(() {
                               getProfileData();
                             });
