@@ -354,7 +354,7 @@ class _RecommendPageState extends State<RecommendPage> {
         });
 
         await _fetchReplacementItem(
-          startingId: productDoc!['id'],
+          startingId: widget.id,
           previousRecId: id!,
           dislikeReason: feedbackList.toString(),
           itemName: itemName,
