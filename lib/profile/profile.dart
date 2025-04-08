@@ -23,6 +23,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final AuthService authService = AuthService();
 
   // Controllers
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController _birthdayController = TextEditingController();
@@ -64,6 +65,7 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _isEditing = widget.initialEditing;
+    initUsername();
     getProfileData();
     loadCountriesFile();
   }
@@ -87,6 +89,12 @@ class _ProfilePageState extends State<ProfilePage> {
     _clothingDislikesFocusNode.dispose();
 
     super.dispose();
+  }
+
+  //Init username
+  Future<void> initUsername() async {
+    final username = await authService.getUsername();
+    _usernameController.text = username ?? '';
   }
 
   // Fetch profile data
@@ -118,6 +126,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // Update profile data
   Future<void> updateProfileData() async {
+    await authService.setUsername(_usernameController.text);
+
     final String baseUrl = authService.baseUrl;
     final token = await authService.getToken();
 
@@ -439,24 +449,43 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
+              physics: _isEditing
+                ? const NeverScrollableScrollPhysics()
+                : const AlwaysScrollableScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  FutureBuilder<String?>(
-                    future: authService.getUsername(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const CircularProgressIndicator();
-                      } else if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
-                        return const Text('No user found.');
-                      } else {
-                        return Text(
-                          'Hello, ${snapshot.data}!',
-                          style: const TextStyle(fontSize: 30.0, color: Colors.black),
-                        );
-                      }
-                    },
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'Hello, ',
+                        style: TextStyle(fontSize: 30.0, color: Colors.black, fontWeight: FontWeight.bold),
+                      ),
+                      Expanded(
+                        child: _isEditing
+                          ? TextField(
+                              controller: _usernameController,
+                              style: const TextStyle(
+                                fontSize: 30.0,
+                                color: Colors.black,
+                              ),
+                              decoration: const InputDecoration(
+                                isCollapsed: true,
+                                border: InputBorder.none,
+                                hintText: 'Enter username',
+                              ),
+                              keyboardType: TextInputType.text,
+                              autofocus: false,
+                            )
+                          : Text(
+                              _usernameController.text.isNotEmpty
+                                  ? _usernameController.text
+                                  : 'No user found.',
+                              style: const TextStyle(fontSize: 30.0, color: Colors.black),
+                            ),
+                      ),
+                    ],
                   ),
                   Text(
                     "You can tell us as much as you want, but the more we know about you, the better recommendations we can make :)",

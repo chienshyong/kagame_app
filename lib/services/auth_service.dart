@@ -73,6 +73,10 @@ Future<void> login(String username, String password) async {
     return await storage.read(key: 'username');
   }
 
+  Future<void> setUsername(String newUsername) async {
+    return await storage.write(key: 'username', value: newUsername);
+  }
+
   Future<void> logout() async {
     await storage.delete(key: 'token');
     await storage.delete(key: 'username');
