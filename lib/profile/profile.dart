@@ -492,19 +492,24 @@ class _ProfilePageState extends State<ProfilePage> {
                     style: TextStyle(fontSize: 16.0, color: Colors.grey[700]),
                   ),
 
-                  TextButton(
-                    onPressed: () async {
-                      final Uri url = Uri.parse('https://kagame.webflow.io/privacy-policy');
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(url); // Launch the URL
-                      } else {
-                        throw 'Could not launch $url'; // Handle error if the URL can't be launched
-                      }
-                    },
-                    child: const Text('Privacy Policy'),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      onPressed: () async {
+                        final Uri url = Uri.parse('https://kagame.webflow.io/privacy-policy');
+                        if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+                          throw Exception('Could not launch $url');
+                        }
+                      },
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        alignment: Alignment.center,
+                      ),
+                      child: const Text('Privacy Policy'),
+                    ),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
 
                   // VIEW ONLY MODE
                   if (!_isEditing) ...[
