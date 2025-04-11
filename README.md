@@ -1,11 +1,19 @@
-# Kagame App
+# KagaMe App
 
-## Installation
+The frontend code for KagaMe, a virtual stylist and digital wardrobe app.
+
+The backend code can be found [here](https://github.com/chienshyong/kagame-backend).
+
+## Building and Running
 
 - Install Android studio https://developer.android.com/studio/install#windows
 - Install Flutter from VS Code https://docs.flutter.dev/get-started/install/windows/mobile
 - `flutter doctor` to check reqs (install cmdline-tools, license)
 - Developed on Flutter version 3.24.3, Java (JDK) version 21
+- `flutter run` after setting up an emulator or connected device
+
+## Deployment
+- `flutter build appbundle` to create an `.aab` package to upload onto the Play Store.
 
 ## Project Structure
 
